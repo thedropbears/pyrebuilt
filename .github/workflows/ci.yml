@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.x"
+      - name: Install dependencies
+        run: |
+          uv sync --locked
+          uv pip install pytest-github-actions-annotate-failures
+      - run: uv run robotpy coverage test
+      - run: uv run coverage xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: |
+            coverage.xml
+            .coverage*
+          include-hidden-files: true
+
+  report-coverage:
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-data
+      - uses: codecov/codecov-action@v4
+        with:
+          use_oidc: true
+
+  mypy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.x"
+      - name: Install dependencies
+        run: |
+          uv sync --locked
+      - name: mypy
+        uses: liskin/gh-problem-matcher-wrap@v3
+        with:
+          linters: mypy
+          run: uv run mypy --show-column-numbers .

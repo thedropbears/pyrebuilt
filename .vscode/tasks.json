@@ -1,0 +1,47 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "deploy with netconsole",
+            "type": "process",
+            "group": "build",
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "robotpy",
+                "deploy",
+                "--nc"
+            ]
+        },
+        {
+            "label": "deploy",
+            "type": "process",
+            "group":{
+                "kind": "build",
+                "isDefault": true
+            },
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "robotpy",
+                "deploy"
+            ]
+        },
+        {
+            "label": "test",
+            "type": "process",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "command": "${command:python.interpreterPath}",
+            "args": [
+                "-m",
+                "robotpy",
+                "test"
+            ]
+        }
+    ]
+}
