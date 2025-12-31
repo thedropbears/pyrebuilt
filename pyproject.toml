@@ -17,6 +17,13 @@ warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
 
+[tool.poe.tasks]
+deploy = "robotpy deploy"
+download = "robotpy sync --no-install"
+sim = "robotpy sim"
+test = "robotpy test"
+type-check = "mypy ."
+
 [tool.pyright]
 exclude = [
     "ctre_sim",
