@@ -1,6 +1,6 @@
 # pyrebuilt
 
-The Drop Bears' robot code for FRC 2026
+The Drop Bears' robot code for FRC REBUILT 2026
 
 ## Setup
 
