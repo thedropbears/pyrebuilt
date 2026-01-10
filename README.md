@@ -24,20 +24,18 @@ uv run robotpy sync --no-install
 [pre-commit][] is configured to run our formatters and linters.
 These are enforced for all code committed to this project.
 
-To use pre-commit, you must install it outside of this project's virtual environment.
-Either use your system package manager, or use `uv tool`:
-
-```sh
-uv tool install pre-commit --with pre-commit-uv
-```
+We recommend using [prek][] to run our pre-commit hooks.
+See the [prek installation docs][] to install prek.
 
 You can then set up the pre-commit hooks to run on commit:
 
 ```sh
-pre-commit install
+prek install
 ```
 
 [pre-commit]: https://pre-commit.com
+[prek]: https://prek.j178.dev
+[prek installation docs]: https://prek.j178.dev/installation/
 
 ### IDE setup
 
