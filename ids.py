@@ -33,7 +33,6 @@ class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
 
-
 @enum.unique
 class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
@@ -51,7 +50,6 @@ class PwmChannel(enum.IntEnum):
 
     STARBOARD_VISION_SERVO = 0
     PORT_VISION_SERVO = 8
-
 
 
 @enum.unique
