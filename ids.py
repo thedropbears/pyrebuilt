@@ -17,11 +17,6 @@ class TalonId(enum.IntEnum):
     DRIVE_FR = 4
     STEER_FR = 8
 
-    TOP_FLYWHEEL = 10
-    BOTTOM_FLYWHEEL = 9
-
-    INTAKE = 15
-
 
 @enum.unique
 class CancoderId(enum.IntEnum):
@@ -37,16 +32,6 @@ class CancoderId(enum.IntEnum):
 class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
-    CLIMBER = 2
-
-    CORAL_PLACER = 20
-
-    INJECTOR_1 = 10
-    INJECTOR_2 = 11
-
-    INTAKE_ARM = 4
-
-    WRIST = 5
 
 
 @enum.unique
@@ -56,18 +41,6 @@ class DioChannel(enum.IntEnum):
     STARBOARD_VISION_ENCODER = 1
 
     SWERVE_COAST_SWITCH = 2
-
-    INTAKE_ENCODER = 3
-
-    CLIMBER_ENCODER = 4
-
-    ALGAE_INTAKE_SWITCH = 5
-
-    LEFT_CLIMBER_SWITCH = 6
-
-    RIGHT_CLIMBER_SWITCH = 7
-
-    WRIST_ENCODER = 8
 
     PORT_VISION_ENCODER = 9
 
@@ -79,7 +52,6 @@ class PwmChannel(enum.IntEnum):
     STARBOARD_VISION_SERVO = 0
     PORT_VISION_SERVO = 8
 
-    LIGHT_STRIP = 2
 
 
 @enum.unique
