@@ -86,9 +86,9 @@ dev = [
 prerelease = "allow"
 
 [project]
-name = "pyreefscape"
+name = "pyrebuilt"
 version = "0.0.0"
-description = "The Drop Bears' FRC 2025 robot code"
+description = "The Drop Bears' FRC 2026 robot code"
 authors = [{ name = "The Drop Bears", email = "enquiries@thedropbears.org.au" }]
 readme = "README.md"
 license = { text = "MIT" }
@@ -98,7 +98,7 @@ dependencies = [
     "numpy~=2.2",
     "phoenix6~=25.4.0",
     "robotpy-ctre~=2025.0.3",
-    "robotpy[apriltag]==2025.3.2.1",
+    "robotpy[apriltag]==2025.3.2.2",
     "robotpy-rev~=2025.0.3",
     "robotpy-wpilib-utilities==2025.1.0",
     "photonlibpy~=2025.3.1",
