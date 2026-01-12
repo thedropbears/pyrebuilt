@@ -4,6 +4,8 @@ from phoenix6.controls import DutyCycleOut
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 
+from ids import TalonId
+
 
 class ShooterComponent:
     desired_output = will_reset_to(0.0)
@@ -11,7 +13,7 @@ class ShooterComponent:
     FLYWHEEL_OUTPUT = tunable(0.5)
 
     def __init__(self) -> None:
-        self.flywheel_motor = TalonFX(device_id=1)
+        self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
         flywheel_config = self.flywheel_motor.configurator
         motor_config = MotorOutputConfigs()
         motor_config.inverted = InvertedValue(False)
