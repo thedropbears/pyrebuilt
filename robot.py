@@ -7,6 +7,7 @@ from phoenix6.configs import Slot0Configs
 
 from components.chassis import ChassisComponent, SwerveConfig
 from components.shooter import ShooterComponent
+from components.transporter import TransporterComponent
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
@@ -15,6 +16,7 @@ class MyRobot(magicbot.MagicRobot):
     # Components
     chassis: ChassisComponent
     shooter: ShooterComponent
+    transporter: TransporterComponent
     max_speed = tunable(3.5)  # m/s
     lower_max_speed = tunable(2.0)  # m/s
     max_spin_rate = tunable(2.8)  # m/s
@@ -142,8 +144,10 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.shooter.set_speed()
+            self.transporter.set_speed()
 
         self.shooter.execute()
+        self.transporter.execute()
 
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
