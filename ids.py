@@ -17,6 +17,8 @@ class TalonId(enum.IntEnum):
     DRIVE_FR = 4
     STEER_FR = 8
 
+    FLYWHEEL = 9
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
