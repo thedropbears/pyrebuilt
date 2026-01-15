@@ -16,7 +16,6 @@ from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
 
-# ignore
 class MyRobot(magicbot.MagicRobot):
     # Components
     chassis: ChassisComponent

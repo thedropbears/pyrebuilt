@@ -25,8 +25,6 @@ from utilities.functions import clamp
 from utilities.game import APRILTAGS_2D, apriltag_layout
 from utilities.rev import configure_through_bore_encoder
 
-# ignore
-
 
 @wpiutil.wpistruct.make_wpistruct
 @dataclass
