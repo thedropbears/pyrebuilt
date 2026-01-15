@@ -6,6 +6,7 @@ from magicbot import tunable
 from phoenix6.configs import Slot0Configs
 
 from components.chassis import ChassisComponent, SwerveConfig
+from components.vision import VisualLocalizer
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
