@@ -144,7 +144,7 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.shooter.set_speed()
-            self.transporter.set_speed()
+            self.transporter.intake()
 
         self.shooter.execute()
         self.transporter.execute()

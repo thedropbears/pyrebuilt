@@ -20,7 +20,7 @@ class TransporterComponent:
 
         configure_spark_ephemeral(self.transporter_motor, motor_config)
 
-    def set_speed(self) -> None:
+    def intake(self) -> None:
         self.desired_output = self.TRANSPORTER_OUTPUT
 
     def execute(self) -> None:
