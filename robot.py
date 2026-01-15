@@ -15,7 +15,6 @@ from components.vision import VisualLocalizer
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
-#ignore this
 class MyRobot(magicbot.MagicRobot):
     # Components
     chassis: ChassisComponent
