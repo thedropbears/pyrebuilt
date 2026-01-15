@@ -1,14 +1,8 @@
+import rev
 from magicbot import tunable, will_reset_to
 
 from ids import SparkId
-
-
-class _SimMotor:
-    def __init__(self) -> None:
-        self.output = 0.0
-
-    def set(self, output: float) -> None:
-        self.output = output
+from utilities.rev import configure_spark_ephemeral
 
 
 class TransporterComponent:
@@ -17,14 +11,6 @@ class TransporterComponent:
     TRANSPORTER_OUTPUT = tunable(0.5)
 
     def __init__(self) -> None:
-        try:
-            import rev
-
-            from utilities.rev import configure_spark_ephemeral
-        except ModuleNotFoundError:
-            self.transporter_motor = _SimMotor()
-            return
-
         self.transporter_motor = rev.SparkMax(
             SparkId.TRANSPORTER, rev.SparkLowLevel.MotorType.kBrushless
         )
