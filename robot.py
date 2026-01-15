@@ -12,7 +12,6 @@ from utilities.scalers import rescale_js
 
 
 class MyRobot(magicbot.MagicRobot):
-    # Controllers
     # Components
     chassis: ChassisComponent
     shooter: ShooterComponent
