@@ -14,17 +14,17 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
         with:
-          version: "0.6.x"
+          version: "0.9.x"
       - name: Install dependencies
         run: |
           uv sync --locked
           uv pip install pytest-github-actions-annotate-failures
       - run: uv run robotpy coverage test
       - run: uv run coverage xml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: coverage-data
           path: |
@@ -39,11 +39,11 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
         with:
           name: coverage-data
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           use_oidc: true
 
@@ -52,10 +52,10 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
         with:
-          version: "0.6.x"
+          version: "0.9.x"
       - name: Install dependencies
         run: |
           uv sync --locked

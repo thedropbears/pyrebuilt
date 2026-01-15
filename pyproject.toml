@@ -92,28 +92,27 @@ description = "The Drop Bears' FRC 2026 robot code"
 authors = [{ name = "The Drop Bears", email = "enquiries@thedropbears.org.au" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<3.15"
 
 dependencies = [
-    "numpy~=2.2",
-    "phoenix6~=25.4.0",
-    "robotpy-ctre~=2025.0.3",
-    "robotpy[apriltag]==2025.3.2.2",
-    "robotpy-rev~=2025.0.3",
-    "robotpy-wpilib-utilities==2025.1.0",
-    "photonlibpy~=2025.3.1",
-    "sleipnirgroup-choreolib~=2025.0.3",
+    "numpy~=2.3",
+    "phoenix6~=26.1.0",
+    "robotpy-ctre~=2026.1.0",
+    "robotpy[apriltag]==2026.1.1",
+    "robotpy-rev~=2026.0.0",
+    "robotpy-wpilib-utilities~=2026.0.1",
+    "photonlibpy @ git+https://github.com/PhotonVision/photonvision.git@efd2c528e5b484c295db7675c45c7067cc799783#subdirectory=photon-lib/py",
+    "sleipnirgroup-choreolib~=2026.0.1",
 ]
 
 [tool.robotpy]
 requires = [
-    "numpy==2.2.1.dev0; platform_machine == 'roborio'",
-    "phoenix6~=25.4.0",
-    "robotpy-ctre~=2025.0.3",
-    "robotpy-rev~=2025.0.3",
-    "robotpy-wpilib-utilities==2025.1.0",
-    "photonlibpy==2025.3.1",
-    "sleipnirgroup-choreolib>=2025.0.3",
+    "phoenix6~=26.1.0",
+    "robotpy-ctre~=2026.1.0",
+    "robotpy-rev~=2026.0.0",
+    "robotpy-wpilib-utilities==2026.0.1",
+    "photonlibpy @ git+https://github.com/PhotonVision/photonvision.git@efd2c528e5b484c295db7675c45c7067cc799783#subdirectory=photon-lib/py",
+    "sleipnirgroup-choreolib~=2026.0.1",
 ]
-robotpy_version = "2025.3.2.2"
-robotpy_extras = ["apriltag"]
+robotpy_version = "2026.1.1"
+components = ["apriltag"]
