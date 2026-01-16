@@ -38,7 +38,7 @@ class SparkId(enum.IntEnum):
 
     CLIMBER = 4
 
-    INTAKE = 1
+    INTAKE = 10
 
 
 @enum.unique
