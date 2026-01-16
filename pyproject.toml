@@ -101,7 +101,7 @@ dependencies = [
     "robotpy[apriltag]==2026.1.1",
     "robotpy-rev==2026.0.0",
     "robotpy-wpilib-utilities~=2026.0.1",
-    "photonlibpy @ git+https://github.com/PhotonVision/photonvision.git@efd2c528e5b484c295db7675c45c7067cc799783#subdirectory=photon-lib/py",
+    "photonlibpy==2026.1.1rc3",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
 
@@ -111,7 +111,7 @@ requires = [
     "robotpy-ctre~=2026.1.0",
     "robotpy-rev==2026.0.0",
     "robotpy-wpilib-utilities==2026.0.1",
-    "photonlibpy @ git+https://github.com/PhotonVision/photonvision.git@efd2c528e5b484c295db7675c45c7067cc799783#subdirectory=photon-lib/py",
+    "photonlibpy==2026.1.1rc3",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
 robotpy_version = "2026.1.1"

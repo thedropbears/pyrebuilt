@@ -378,8 +378,8 @@ wheels = [
 
 [[package]]
 name = "photonlibpy"
-version = "2026.1.1rc2"
-source = { git = "https://github.com/PhotonVision/photonvision.git?subdirectory=photon-lib%2Fpy&rev=efd2c528e5b484c295db7675c45c7067cc799783#efd2c528e5b484c295db7675c45c7067cc799783" }
+version = "2026.1.1rc3"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "opencv-python", marker = "platform_machine != 'roborio'" },
@@ -388,6 +388,10 @@ dependencies = [
     { name = "robotpy-cscore" },
     { name = "robotpy-wpimath" },
     { name = "wpilib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/60/b3/20ac0ba8f218e5e67576b284e4464384e6fba11b42dc29c5c7505c25dbf8/photonlibpy-2026.1.1rc3.tar.gz", hash = "sha256:d90c929c8a3fae03a6d1ad9c4e4165432fe97d0cd667bb1b4006f74dbc9bc991", size = 46802, upload-time = "2026-01-16T02:21:19.718Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/d3/551c28ed17410ba399427b6d18fc7132729fa94a881503a2882ecec7b475/photonlibpy-2026.1.1rc3-py3-none-any.whl", hash = "sha256:71a3bed171e18c6cbf82b1bf5c2167840f64d7babfdc8c26b06111b7cf498753", size = 63911, upload-time = "2026-01-16T02:21:18.518Z" },
 ]
 
 [[package]]
@@ -532,7 +536,7 @@ dev = [
 requires-dist = [
     { name = "numpy", specifier = "~=2.3" },
     { name = "phoenix6", specifier = "~=26.1.0" },
-    { name = "photonlibpy", git = "https://github.com/PhotonVision/photonvision.git?subdirectory=photon-lib%2Fpy&rev=efd2c528e5b484c295db7675c45c7067cc799783" },
+    { name = "photonlibpy", specifier = "==2026.1.1rc3" },
     { name = "robotpy", extras = ["apriltag"], specifier = "==2026.1.1" },
     { name = "robotpy-ctre", specifier = "~=2026.1.0" },
     { name = "robotpy-rev", specifier = "==2026.0.0" },
