@@ -8,7 +8,7 @@ from utilities.rev import configure_spark_ephemeral
 class IntakeComponent:
     desired_output = will_reset_to(0.0)
 
-    INTAKE_OUTPUT = tunable(0.5)
+    intake_output = tunable(0.5)
 
     def __init__(self) -> None:
         self.motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
@@ -20,7 +20,7 @@ class IntakeComponent:
         configure_spark_ephemeral(self.motor, motor_config)
 
     def intake(self) -> None:
-        self.desired_output = IntakeComponent.INTAKE_OUTPUT
+        self.desired_output = self.intake_output
 
     def execute(self) -> None:
         self.motor.set(self.desired_output)
