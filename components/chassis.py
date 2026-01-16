@@ -11,6 +11,7 @@ from phoenix6.configs import (
     FeedbackConfigs,
     MotorOutputConfigs,
     Slot0Configs,
+    TalonFXConfiguration,
 )
 from phoenix6.controls import PositionVoltage, VelocityVoltage, VoltageOut
 from phoenix6.hardware import CANcoder, Pigeon2, TalonFX
@@ -84,58 +85,55 @@ class SwerveModule:
         # Configure steer motor
         steer_config = self.steer.configurator
 
-        steer_motor_config = MotorOutputConfigs()
-        steer_motor_config.neutral_mode = NeutralModeValue.BRAKE
+        self.steer_motor_out_config = MotorOutputConfigs()
+        self.steer_motor_out_config.neutral_mode = NeutralModeValue.BRAKE
         # The SDS Mk4i rotation has one pair of gears.
-        steer_motor_config.inverted = InvertedValue.CLOCKWISE_POSITIVE
-        self.steer_motor_out_config = steer_motor_config
+        self.steer_motor_out_config.inverted = InvertedValue.CLOCKWISE_POSITIVE
 
         steer_gear_ratio_config = FeedbackConfigs().with_sensor_to_mechanism_ratio(
             1 / config.steer_ratio
         )
 
-        # configuration for motor pid
-        steer_pid = config.steer_gains
+        # configuration for motor closecd loop behaviour
         steer_closed_loop_config = ClosedLoopGeneralConfigs()
         steer_closed_loop_config.continuous_wrap = True
 
-        steer_config.apply(steer_motor_config)
-        steer_config.apply(steer_pid, 0.01)
-        steer_config.apply(steer_gear_ratio_config)
-        steer_config.apply(steer_closed_loop_config)
+        steer_config.apply(
+            TalonFXConfiguration()
+            .with_motor_output(self.steer_motor_out_config)
+            .with_feedback(steer_gear_ratio_config)
+            .with_slot0(config.steer_gains)
+            .with_closed_loop_general(steer_closed_loop_config)
+        )
 
         # Configure drive motor
         drive_config = self.drive.configurator
 
-        drive_motor_config = MotorOutputConfigs()
-        drive_motor_config.neutral_mode = NeutralModeValue.BRAKE
-        drive_motor_config.inverted = (
+        self.drive_motor_out_config = MotorOutputConfigs()
+        self.drive_motor_out_config.neutral_mode = NeutralModeValue.BRAKE
+        self.drive_motor_out_config.inverted = (
             InvertedValue.CLOCKWISE_POSITIVE
             if config.reverse_drive
             else InvertedValue.COUNTER_CLOCKWISE_POSITIVE
         )
-        self.drive_motor_out_config = drive_motor_config
 
         drive_gear_ratio_config = FeedbackConfigs().with_sensor_to_mechanism_ratio(
             1 / (config.wheel_circumference * config.drive_ratio)
         )
 
-        # configuration for motor pid and feedforward
-        self.drive_pid = (
-            Slot0Configs()
-            .with_k_p(config.drive_gains.k_p)
-            .with_k_i(config.drive_gains.k_i)
-            .with_k_d(config.drive_gains.k_d)
-        )
+        # configuration for motor feedforward
         self.drive_ff = SimpleMotorFeedforwardMeters(
             kS=config.drive_gains.k_s,
             kV=config.drive_gains.k_v,
             kA=config.drive_gains.k_a,
         )
 
-        drive_config.apply(drive_motor_config)
-        drive_config.apply(self.drive_pid, 0.01)
-        drive_config.apply(drive_gear_ratio_config)
+        drive_config.apply(
+            TalonFXConfiguration()
+            .with_motor_output(self.drive_motor_out_config)
+            .with_feedback(drive_gear_ratio_config)
+            .with_slot0(config.drive_gains)
+        )
 
         self.central_angle = Rotation2d(position.x, position.y)
         self.module_locked = False

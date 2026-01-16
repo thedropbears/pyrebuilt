@@ -1,5 +1,5 @@
 from magicbot import tunable, will_reset_to
-from phoenix6.configs import MotorOutputConfigs
+from phoenix6.configs import TalonFXConfiguration
 from phoenix6.controls import DutyCycleOut
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
@@ -15,9 +15,9 @@ class ShooterComponent:
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
         flywheel_config = self.flywheel_motor.configurator
-        motor_config = MotorOutputConfigs()
-        motor_config.inverted = InvertedValue(False)
-        motor_config.neutral_mode = NeutralModeValue.COAST
+        motor_config = TalonFXConfiguration()
+        motor_config.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+        motor_config.motor_output.neutral_mode = NeutralModeValue.COAST
 
         flywheel_config.apply(motor_config)
 
