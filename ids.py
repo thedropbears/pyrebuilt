@@ -38,6 +38,8 @@ class SparkId(enum.IntEnum):
 
     CLIMBER = 4
 
+    INTAKE = 1
+
 
 @enum.unique
 class DioChannel(enum.IntEnum):
