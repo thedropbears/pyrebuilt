@@ -34,6 +34,7 @@ class CancoderId(enum.IntEnum):
 class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
+    TRANSPORTER = 5
 
 @enum.unique
 class DioChannel(enum.IntEnum):
