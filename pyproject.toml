@@ -75,9 +75,9 @@ ignore = [
 
 [dependency-groups]
 dev = [
-    "coverage>=7.6.10",
+    "coverage>=7.10.2",
     "hypothesis>=6.112.1",
-    "mypy>=1.8.0",
+    "mypy>=1.19.1",
     "pytest>=7.2.0",
     "pytest-integration>=0.2.3",
 ]
@@ -92,28 +92,27 @@ description = "The Drop Bears' FRC 2026 robot code"
 authors = [{ name = "The Drop Bears", email = "enquiries@thedropbears.org.au" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 
 dependencies = [
-    "numpy~=2.2",
-    "phoenix6~=25.4.0",
-    "robotpy-ctre~=2025.0.3",
-    "robotpy[apriltag]==2025.3.2.2",
-    "robotpy-rev~=2025.0.3",
-    "robotpy-wpilib-utilities==2025.1.0",
-    "photonlibpy~=2025.3.1",
-    "sleipnirgroup-choreolib~=2025.0.3",
+    "numpy~=2.3",
+    "phoenix6~=26.1.0",
+    "robotpy-ctre~=2026.1.0",
+    "robotpy[apriltag]==2026.1.1",
+    "robotpy-rev==2026.0.0",
+    "robotpy-wpilib-utilities~=2026.0.1",
+    "photonlibpy==2026.1.1rc3",
+    "sleipnirgroup-choreolib~=2026.0.1",
 ]
 
 [tool.robotpy]
 requires = [
-    "numpy==2.2.1.dev0; platform_machine == 'roborio'",
-    "phoenix6~=25.4.0",
-    "robotpy-ctre~=2025.0.3",
-    "robotpy-rev~=2025.0.3",
-    "robotpy-wpilib-utilities==2025.1.0",
-    "photonlibpy==2025.3.1",
-    "sleipnirgroup-choreolib>=2025.0.3",
+    "phoenix6~=26.1.0",
+    "robotpy-ctre~=2026.1.0",
+    "robotpy-rev==2026.0.0",
+    "robotpy-wpilib-utilities==2026.0.1",
+    "photonlibpy==2026.1.1rc3",
+    "sleipnirgroup-choreolib~=2026.0.1",
 ]
-robotpy_version = "2025.3.2.2"
-robotpy_extras = ["apriltag"]
+robotpy_version = "2026.1.1"
+components = ["apriltag"]

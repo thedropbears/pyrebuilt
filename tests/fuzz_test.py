@@ -35,7 +35,10 @@ class AllTheThings:
     def __init__(self) -> None:
         self.dios = [
             dio
-            for dio in map(wpilib.simulation.DIOSim, range(hal.getNumDigitalChannels()))
+            for dio in map(
+                wpilib.simulation.DIOSim,
+                range(wpilib.SensorUtil.getNumDigitalChannels()),
+            )
             if dio.getInitialized()
         ]
 
