@@ -54,7 +54,7 @@ class DioChannel(enum.IntEnum):
 
     # SWERVE_COAST_SWITCH = 2
 
-    PORT_VISION_ENCODER = 9  # TODO Recheck this value
+    PORT_VISION_ENCODER = 0
 
 
 @enum.unique
@@ -63,7 +63,7 @@ class PwmChannel(enum.IntEnum):
 
     # STARBOARD_VISION_SERVO = 0
 
-    PORT_VISION_SERVO = 8  # TODO Recheck this value
+    PORT_VISION_SERVO = 0
 
 
 @enum.unique

@@ -101,28 +101,18 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis_wheel_base = 0.467
 
             self.port_vision_name = "port_turret"
-            self.port_vision_turret_pos = Translation3d(
-                -0.010, 0.300, 0.660
-            )  # TODO Recheck this value
-            self.port_vision_turret_rot = Rotation2d.fromDegrees(
-                90.0
-            )  # TODO Recheck this value
-            self.port_vision_camera_offset = Translation3d(
-                0.021, 0, 0
-            )  # TODO Recheck this value
-            self.port_vision_camera_pitch = math.radians(
-                10.0
-            )  # TODO Recheck this value
-            self.port_vision_encoder_offset = Rotation2d(
-                6.103
-            )  # TODO Recheck this value
+            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
+            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
+            self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
+            self.port_vision_camera_pitch = math.radians(-10.0)
+            self.port_vision_encoder_offset = Rotation2d(6.103)
             self.port_vision_servo_offsets = ServoOffsets(
                 neutral=Rotation2d(1.052),
-                full_range=Rotation2d(3.121),  # TODO Recheck this value
+                full_range=Rotation2d(3.121),
             )
             self.port_vision_rotation_range = (
-                Rotation2d(1.733),  # TODO Recheck this value
-                Rotation2d(5.034),  # TODO Recheck this value
+                Rotation2d(4.59),
+                Rotation2d(1.25),
             )
 
         else:
@@ -149,17 +139,15 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis_wheel_base = 0.517
 
             self.port_vision_name = "port_turret"
-            self.port_vision_turret_pos = Translation3d(
-                -0.010, 0.300, 0.660
-            )  # TODO Recheck this value
+            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
             self.port_vision_turret_rot = Rotation2d.fromDegrees(
-                90.0
+                350.0
             )  # TODO Recheck this value
             self.port_vision_camera_offset = Translation3d(
                 0.021, 0, 0
             )  # TODO Recheck this value
             self.port_vision_camera_pitch = math.radians(
-                10.0
+                -10.0
             )  # TODO Recheck this value
             self.port_vision_encoder_offset = Rotation2d(
                 6.103
