@@ -5,6 +5,7 @@ import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
 
+from autonomous.auto_base import AutoBase
 from components.chassis import ChassisComponent, SwerveConfig
 from components.shooter import ShooterComponent
 from components.transporter import TransporterComponent
@@ -151,6 +152,12 @@ class MyRobot(magicbot.MagicRobot):
 
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
+
+        selected_auto = self._automodes.chooser.getSelected()
+        if isinstance(selected_auto, AutoBase):
+            intended_start_pose = selected_auto.get_starting_pose()
+            if intended_start_pose is not None:
+                self.field.getObject("Intended start pos").setPose(intended_start_pose)
 
         self.chassis.update_alliance()
         self.chassis.update_odometry()
