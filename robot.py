@@ -72,8 +72,6 @@ class MyRobot(magicbot.MagicRobot):
 
         self.status_lights_strip_length = 112 * 4
 
-        # self.starboard_vision_encoder_id = DioChannel.STARBOARD_VISION_ENCODER
-        # self.starboard_vision_servo_id = PwmChannel.STARBOARD_VISION_SERVO
         self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
         self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
 
@@ -140,25 +138,17 @@ class MyRobot(magicbot.MagicRobot):
 
             self.port_vision_name = "port_turret"
             self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
-            self.port_vision_turret_rot = Rotation2d.fromDegrees(
-                350.0
-            )  # TODO Recheck this value
-            self.port_vision_camera_offset = Translation3d(
-                0.021, 0, 0
-            )  # TODO Recheck this value
-            self.port_vision_camera_pitch = math.radians(
-                -10.0
-            )  # TODO Recheck this value
-            self.port_vision_encoder_offset = Rotation2d(
-                6.103
-            )  # TODO Recheck this value
+            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
+            self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
+            self.port_vision_camera_pitch = math.radians(-10.0)
+            self.port_vision_encoder_offset = Rotation2d(6.103)
             self.port_vision_servo_offsets = ServoOffsets(
                 neutral=Rotation2d(1.052),
-                full_range=Rotation2d(3.121),  # TODO Recheck this value
+                full_range=Rotation2d(3.121),
             )
             self.port_vision_rotation_range = (
-                Rotation2d(1.733),  # TODO Recheck this value
-                Rotation2d(5.034),  # TODO Recheck this value
+                Rotation2d(1.733),
+                Rotation2d(5.034),
             )
 
     def teleopInit(self) -> None:
