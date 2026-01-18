@@ -1,6 +1,8 @@
 from magicbot import tunable, will_reset_to
 from phoenix6 import configs, controls
+from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
+from phoenix6.signals import MotorAlignmentValue
 
 from ids import TalonId
 
@@ -10,7 +12,12 @@ class ShooterComponent:
     desired_rps = tunable(30)
 
     def __init__(self) -> None:
-        self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
+        self.flywheel_motor_left = TalonFX(
+            device_id=TalonId.FLYWHEEL_LEFT
+        )  # Defined from behind shooter
+        self.flywheel_motor_right = TalonFX(
+            device_id=TalonId.FLYWHEEL_RIGHT
+        )  # Defined from behind shooter
 
         gains_cfg = (
             configs.Slot0Configs()
@@ -22,12 +29,18 @@ class ShooterComponent:
             .with_k_a(0.0053959)
         )
 
-        self.flywheel_motor.configurator.apply(
+        self.flywheel_motor_left.configurator.apply(
             configs.TalonFXConfiguration().with_slot0(gains_cfg)
+        )
+
+        self.flywheel_motor_right.set_control(
+            Follower(
+                TalonId.FLYWHEEL_LEFT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)
+            )
         )
 
     def shoot(self) -> None:
         self.set_rps = self.target_rps
 
     def execute(self) -> None:
-        self.flywheel_motor.set_control(controls.VelocityVoltage(self.desired_rps))
+        self.flywheel_motor_left.set_control(controls.VelocityVoltage(self.desired_rps))
