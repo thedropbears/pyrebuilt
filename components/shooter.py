@@ -18,10 +18,9 @@ class ShooterComponent:
 
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
-        flywheel_cfg = configs.TalonFXConfiguration()
-
         self.velocity_voltage = controls.VelocityVoltage(0).with_slot(0)
 
+        flywheel_cfg = configs.TalonFXConfiguration()
         flywheel_cfg.slot0.k_p = self.k_p
         flywheel_cfg.slot0.k_i = self.k_i
         flywheel_cfg.slot0.k_d = self.k_d
