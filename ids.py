@@ -36,6 +36,8 @@ class SparkId(enum.IntEnum):
 
     TRANSPORTER = 5
 
+    CLIMBER = 4
+
 
 @enum.unique
 class DioChannel(enum.IntEnum):
