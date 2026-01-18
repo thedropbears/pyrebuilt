@@ -8,6 +8,7 @@ from phoenix6.configs import Slot0Configs
 from autonomous.auto_base import AutoBase
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
+from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
 from components.transporter import TransporterComponent
 from ids import DioChannel, PwmChannel, RioSerialNumber
@@ -20,6 +21,7 @@ class MyRobot(magicbot.MagicRobot):
     shooter: ShooterComponent
     transporter: TransporterComponent
     climber: ClimberComponent
+    intake: IntakeComponent
     max_speed = tunable(3.5)  # m/s
     lower_max_speed = tunable(2.0)  # m/s
     max_spin_rate = tunable(2.8)  # m/s
@@ -155,9 +157,13 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
+        if self.gamepad.getRightTriggerAxis() > 0.5:
+            self.intake.intake()
+
         self.shooter.execute()
         self.transporter.execute()
         self.climber.execute()
+        self.intake.execute()
 
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
