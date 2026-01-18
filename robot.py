@@ -23,9 +23,9 @@ class MyRobot(magicbot.MagicRobot):
     climber: ClimberComponent
     intake: IntakeComponent
     max_speed = tunable(3.5)  # m/s
-    lower_max_speed = tunable(2.0)  # m/s
+    lower_max_speed = tunable(0.25)  # m/s
     max_spin_rate = tunable(2.8)  # m/s
-    lower_max_spin_rate = tunable(2.0)  # m/s
+    lower_max_spin_rate = tunable(0.25)  # m/s
     inclination_angle = tunable(0.0)
     dpad_max_speed = tunable(0.4)
     is_robot_oriented = tunable(False)
