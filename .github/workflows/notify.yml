@@ -1,0 +1,40 @@
+---
+name: Send Slack notifications
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Not exactly the same as pyproject.toml tool.robotpy but close enough
+      - uv.lock
+
+permissions:
+  contents: read
+
+jobs:
+  deps:
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Post a message in a channel
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":mega: Robot dependencies have been updated!"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: >-
+                    :mega: Robot dependencies have been updated! Please rebase all open PRs,
+                    and download the new dependencies by following the
+                    <${{ github.server_url }}/${{ github.repository }}#install-dependencies|instructions in the readme>.
+              - type: "context"
+                elements:
+                  - type: "mrkdwn"
+                    text: >-
+                      Triggered on ${{ github.event_name }} for commit
+                      <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>
