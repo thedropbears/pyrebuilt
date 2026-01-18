@@ -6,37 +6,28 @@ from ids import TalonId
 
 
 class ShooterComponent:
-    set_rps = will_reset_to(0.0)
-    desired_rps = tunable(1)
-
-    k_p = 0.057491
-    k_i = 0
-    k_d = 0
-    k_s = 0.0511005
-    k_v = 0.10978
-    k_a = 0.0053959
+    target_rps = will_reset_to(0.0)
+    desired_rps = tunable(30)
 
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
-        self.velocity_voltage = controls.VelocityVoltage(0).with_slot(0)
 
-        flywheel_cfg = configs.TalonFXConfiguration()
-        flywheel_cfg.slot0.k_p = self.k_p
-        flywheel_cfg.slot0.k_i = self.k_i
-        flywheel_cfg.slot0.k_d = self.k_d
-        flywheel_cfg.slot0.k_s = self.k_s
-        flywheel_cfg.slot0.k_v = self.k_v
-        flywheel_cfg.slot0.k_a = self.k_a
+        gains_cfg = (
+            configs.Slot0Configs()
+            .with_k_p(0.057491)
+            .with_k_i(0)
+            .with_k_d(0)
+            .with_k_s(0.0511005)
+            .with_k_v(0.10978)
+            .with_k_a(0.0053959)
+        )
 
-        flywheel_cfg.voltage.peak_forward_voltage = 12
-        flywheel_cfg.voltage.peak_reverse_voltage = -12
-
-        self.flywheel_motor.configurator.apply(flywheel_cfg)
+        self.flywheel_motor.configurator.apply(
+            configs.TalonFXConfiguration().with_slot0(gains_cfg)
+        )
 
     def shoot(self) -> None:
-        self.set_rps = self.desired_rps
+        self.set_rps = self.target_rps
 
     def execute(self) -> None:
-        self.flywheel_motor.set_control(
-            self.velocity_voltage.with_velocity(self.set_rps)
-        )
+        self.flywheel_motor.set_control(controls.VelocityVoltage(self.desired_rps))
