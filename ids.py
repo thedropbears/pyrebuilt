@@ -20,6 +20,8 @@ class TalonId(enum.IntEnum):
     FLYWHEEL = 9
     FEEDER = 11
 
+    CLIMBER = 12
+
     INDEXER = 14
     INTAKE = 15
 
@@ -38,7 +40,7 @@ class CancoderId(enum.IntEnum):
 class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
-    CLIMBER = 4
+    CLIMBER_SENSOR = 4
 
     HOOD = 10
     TURRET = 2
