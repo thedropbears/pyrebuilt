@@ -20,6 +20,8 @@ class TalonId(enum.IntEnum):
     FLYWHEEL_LEFT = 9
     FLYWHEEL_RIGHT = 67  # TODO Change this value to the correct one
 
+    FEEDER = 11
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):

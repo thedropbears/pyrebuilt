@@ -3,13 +3,17 @@ from phoenix6 import configs, controls
 from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import MotorAlignmentValue
+from phoenix5 import TalonSRX, ControlMode
 
 from ids import TalonId
 
 
 class ShooterComponent:
-    target_rps = will_reset_to(0.0)
-    desired_rps = tunable(30)
+    target_shooter_rps = will_reset_to(0.0)
+    desired_shooter_rps = tunable(30)
+
+    target_feeder_percentage = will_reset_to(0)
+    desired_feeder_percentage = tunable(1)
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -18,6 +22,8 @@ class ShooterComponent:
         self.flywheel_motor_right = TalonFX(
             device_id=TalonId.FLYWHEEL_RIGHT
         )  # Defined from behind shooter
+        self.feeder_motor = TalonSRX(TalonId.FEEDER)
+        self.feeder_motor.setInverted(True)
 
         gains_cfg = (
             configs.Slot0Configs()
@@ -40,7 +46,10 @@ class ShooterComponent:
         )
 
     def shoot(self) -> None:
-        self.set_rps = self.target_rps
+        self.target_shooter_rps = self.desired_shooter_rps
+        self.target_feeder_percentage = self.desired_feeder_percentage
+
 
     def execute(self) -> None:
-        self.flywheel_motor_left.set_control(controls.VelocityVoltage(self.desired_rps))
+        self.flywheel_motor_left.set_control(controls.VelocityVoltage(self.target_shooter_rps))
+        self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
