@@ -27,12 +27,12 @@ class ShooterComponent:
 
         gains_cfg = (
             configs.Slot0Configs()
-            .with_k_p(0.057491)
+            .with_k_p(0.036653)
             .with_k_i(0)
             .with_k_d(0)
-            .with_k_s(0.0511005)
-            .with_k_v(0.10978)
-            .with_k_a(0.0053959)
+            .with_k_s(0.086321)
+            .with_k_v(0.11159)
+            .with_k_a(0.0038097)
         )
 
         self.flywheel_motor_left.configurator.apply(
