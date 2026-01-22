@@ -18,9 +18,11 @@ class TalonId(enum.IntEnum):
     STEER_FR = 8
 
     FLYWHEEL_LEFT = 9
-    FLYWHEEL_RIGHT = 67  # TODO Change this value to the correct one
-
+    FLYWHEEL_RIGHT = 10
     FEEDER = 11
+
+    LEFT_FUNNEL = 12
+    RIGHT_FUNNEL = 13
 
 
 @enum.unique
