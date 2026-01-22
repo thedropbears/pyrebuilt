@@ -110,7 +110,7 @@ requires = [
     "phoenix6~=26.1.0",
     "robotpy-ctre~=2026.1.0",
     "robotpy-rev==2026.0.1",
-    "robotpy-wpilib-utilities==2026.0.1",
+    "robotpy-wpilib-utilities~=2026.0.1",
     "photonlibpy==2026.1.1rc3",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
