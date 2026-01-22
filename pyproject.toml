@@ -98,10 +98,10 @@ dependencies = [
     "numpy~=2.3",
     "phoenix6~=26.1.0",
     "robotpy-ctre~=2026.1.0",
-    "robotpy[apriltag]==2026.1.1",
+    "robotpy[apriltag]==2026.2.1",
     "robotpy-rev==2026.0.1",
     "robotpy-wpilib-utilities~=2026.0.1",
-    "photonlibpy==2026.1.1rc3",
+    "photonlibpy==2026.1.1",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
 
@@ -111,8 +111,8 @@ requires = [
     "robotpy-ctre~=2026.1.0",
     "robotpy-rev==2026.0.1",
     "robotpy-wpilib-utilities~=2026.0.1",
-    "photonlibpy==2026.1.1rc3",
+    "photonlibpy==2026.1.1",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
-robotpy_version = "2026.1.1"
+robotpy_version = "2026.2.1"
 components = ["apriltag"]
