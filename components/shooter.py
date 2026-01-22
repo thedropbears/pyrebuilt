@@ -23,7 +23,7 @@ class ShooterComponent:
             device_id=TalonId.FLYWHEEL_RIGHT
         )  # Defined from behind shooter
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
-        self.feeder_motor.setInverted(True)
+        self.feeder_motor.setInverted(False)
 
         gains_cfg = (
             configs.Slot0Configs()
