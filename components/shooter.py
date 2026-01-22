@@ -39,7 +39,6 @@ class ShooterComponent:
             configs.TalonFXConfiguration().with_slot0(gains_cfg)
         )
 
-
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
         self.target_feeder_percentage = self.desired_feeder_percentage
