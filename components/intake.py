@@ -22,7 +22,7 @@ class IntakeComponent:
         motor_config = SparkMaxConfig()
         motor_config.inverted(False)
         motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
-        self.left_funnel_motor.setInverted(True)
+        self.left_funnel_motor.setInverted(False)
         self.right_funnel_motor.setInverted(False)
 
         configure_spark_ephemeral(self.motor, motor_config)
