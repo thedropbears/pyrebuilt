@@ -39,11 +39,6 @@ class ShooterComponent:
             configs.TalonFXConfiguration().with_slot0(gains_cfg)
         )
 
-        self.flywheel_motor_right.set_control(
-            Follower(
-                TalonId.FLYWHEEL_LEFT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)
-            )
-        )
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
@@ -53,4 +48,10 @@ class ShooterComponent:
         self.flywheel_motor_left.set_control(
             controls.VelocityVoltage(self.target_shooter_rps)
         )
+        self.flywheel_motor_right.set_control(
+            Follower(
+                TalonId.FLYWHEEL_LEFT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)
+            )
+        )
+
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
