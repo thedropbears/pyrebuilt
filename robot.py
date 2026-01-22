@@ -10,7 +10,6 @@ from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
-from components.transporter import TransporterComponent
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
@@ -19,7 +18,6 @@ class MyRobot(magicbot.MagicRobot):
     # Components
     chassis: ChassisComponent
     shooter: ShooterComponent
-    transporter: TransporterComponent
     climber: ClimberComponent
     intake: IntakeComponent
     max_speed = tunable(3.5)  # m/s
@@ -149,7 +147,7 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.shooter.shoot()
-            self.transporter.intake()
+            self.intake.intake()
 
         if self.gamepad.getAButton():
             self.climber.deploy()
@@ -157,11 +155,7 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
-        if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.intake.intake()
-
         self.shooter.execute()
-        self.transporter.execute()
         self.climber.execute()
         self.intake.execute()
 
