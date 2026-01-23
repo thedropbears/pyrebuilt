@@ -20,6 +20,8 @@ class IntakeComponent:
         self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
         self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
 
+        self.right_funnel_motor.setInverted(True)
+        
         motor_config = SparkMaxConfig()
         motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         configure_spark_ephemeral(self.motor, motor_config)
