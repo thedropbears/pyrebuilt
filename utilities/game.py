@@ -1,7 +1,6 @@
 """Descriptions of the field and match state."""
 
 import dataclasses
-import math
 import typing
 
 import robotpy_apriltag
@@ -14,7 +13,7 @@ from wpimath.geometry import (
 )
 
 apriltag_layout = robotpy_apriltag.AprilTagFieldLayout.loadField(
-    robotpy_apriltag.AprilTagField.k2025ReefscapeWelded
+    robotpy_apriltag.AprilTagField.k2026RebuiltWelded
 )
 
 TagId = typing.Literal[

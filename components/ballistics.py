@@ -1,10 +1,5 @@
 from math import atan2
 
-from wpimath.geometry import (
-    Rotation2d,
-    Translation2d,
-)
-
 from components.chassis import ChassisComponent
 from utilities.game import get_hub_pos, is_red
 
