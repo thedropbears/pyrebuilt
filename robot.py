@@ -13,7 +13,6 @@ from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
-from components.transporter import TransporterComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
