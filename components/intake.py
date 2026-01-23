@@ -19,13 +19,13 @@ class IntakeComponent:
         self.motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
         self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
         self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
-        motor_config = SparkMaxConfig()
-        motor_config.inverted(False)
-        motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
-        self.left_funnel_motor.setInverted(True)
-        self.right_funnel_motor.setInverted(True)
 
+        motor_config = SparkMaxConfig()
+        motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         configure_spark_ephemeral(self.motor, motor_config)
+
+        self.left_funnel_motor.setInverted(True)
+
 
     def intake(self) -> None:
         self.desired_output = self.intake_output
@@ -34,4 +34,4 @@ class IntakeComponent:
     def execute(self) -> None:
         self.motor.set(self.desired_output)
         self.left_funnel_motor.set(ControlMode.PercentOutput, self.desired_funnel)
-        self.right_funnel_motor.set(ControlMode.PercentOutput, self.desired_funnel)
+        self.right_funnel_motor.set(ControlMode.Follower)
