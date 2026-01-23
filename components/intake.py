@@ -1,5 +1,5 @@
 from magicbot import tunable, will_reset_to
-from phoenix5 import ControlMode, TalonSRX
+from phoenix5 import ControlMode, FollowerType, TalonSRX
 from rev import SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
@@ -24,9 +24,6 @@ class IntakeComponent:
         motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
         configure_spark_ephemeral(self.motor, motor_config)
 
-        self.left_funnel_motor.setInverted(True)
-
-
     def intake(self) -> None:
         self.desired_output = self.intake_output
         self.desired_funnel = self.funnel_output
@@ -34,4 +31,6 @@ class IntakeComponent:
     def execute(self) -> None:
         self.motor.set(self.desired_output)
         self.left_funnel_motor.set(ControlMode.PercentOutput, self.desired_funnel)
-        self.right_funnel_motor.set(ControlMode.Follower)
+        self.right_funnel_motor.follow(
+            self.left_funnel_motor, FollowerType(ControlMode.PercentOutput)
+        )
