@@ -17,12 +17,12 @@ class TalonId(enum.IntEnum):
     DRIVE_FR = 4
     STEER_FR = 8
 
-    FLYWHEEL_LEFT = 9
-    FLYWHEEL_RIGHT = 10
+    FLYWHEEL_RIGHT = 9
+    FLYWHEEL_LEFT = 10
     FEEDER = 11
 
-    LEFT_FUNNEL = 12
-    RIGHT_FUNNEL = 13
+    RIGHT_FUNNEL = 12
+    LEFT_FUNNEL = 13
 
 
 @enum.unique
