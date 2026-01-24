@@ -21,9 +21,8 @@ class TalonId(enum.IntEnum):
     FLYWHEEL_LEFT = 10
     FEEDER = 11
 
-    RIGHT_FUNNEL = 12
     LEFT_FUNNEL = 13
-
+    RIGHT_FUNNEL = 12
 
 @enum.unique
 class CancoderId(enum.IntEnum):
