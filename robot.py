@@ -84,7 +84,10 @@ class MyRobot(magicbot.MagicRobot):
                 .with_k_p(21.235)
                 .with_k_i(0)
                 .with_k_d(0.23781)
-                .with_k_s(0.092891),
+                .with_k_s(0.092891)
+                .with_k_s(0.086374)
+                .with_k_v(2.3881)
+                .with_k_a(0.026109),
                 reverse_drive=False,
             )
             # metres between centre of left and right wheels
