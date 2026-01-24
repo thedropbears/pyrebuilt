@@ -73,18 +73,14 @@ FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
 
 RED_HUB_POS = (
-    get_fiducial_pose(3).translation().toTranslation2d()
-    + get_fiducial_pose(4).translation().toTranslation2d()
-    + get_fiducial_pose(9).translation().toTranslation2d()
+    get_fiducial_pose(4).translation().toTranslation2d()
     + get_fiducial_pose(10).translation().toTranslation2d()
-) / 4
+) / 2
 
 BLUE_HUB_POS = (
-    get_fiducial_pose(19).translation().toTranslation2d()
-    + get_fiducial_pose(20).translation().toTranslation2d()
-    + get_fiducial_pose(25).translation().toTranslation2d()
+    get_fiducial_pose(20).translation().toTranslation2d()
     + get_fiducial_pose(26).translation().toTranslation2d()
-) / 4
+) / 2
 
 RED_SHOOT_LINE_X = (
     (
