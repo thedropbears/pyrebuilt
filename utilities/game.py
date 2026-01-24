@@ -1,7 +1,6 @@
 """Descriptions of the field and match state."""
 
 import dataclasses
-import math
 import typing
 
 import robotpy_apriltag
@@ -14,11 +13,42 @@ from wpimath.geometry import (
 )
 
 apriltag_layout = robotpy_apriltag.AprilTagFieldLayout.loadField(
-    robotpy_apriltag.AprilTagField.k2025ReefscapeWelded
+    robotpy_apriltag.AprilTagField.k2026RebuiltWelded
 )
 
 TagId = typing.Literal[
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
 ]
 
 get_fiducial_pose = typing.cast(
@@ -39,40 +69,41 @@ APRILTAGS_2D = [
     Tag2d(typing.cast(TagId, tag.ID), tag.pose.toPose2d()) for tag in APRILTAGS
 ]
 
-
-L3_TAGS = [7, 9, 11, 18, 20, 22]
-L2_TAGS = [6, 8, 10, 17, 19, 21]
-
 FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
 
-RED_REEF_POS = (
-    get_fiducial_pose(7).translation().toTranslation2d()
+RED_HUB_POS = (
+    get_fiducial_pose(4).translation().toTranslation2d()
     + get_fiducial_pose(10).translation().toTranslation2d()
 ) / 2
-BLUE_REEF_POS = (
-    get_fiducial_pose(18).translation().toTranslation2d()
-    + get_fiducial_pose(21).translation().toTranslation2d()
+
+BLUE_HUB_POS = (
+    get_fiducial_pose(20).translation().toTranslation2d()
+    + get_fiducial_pose(26).translation().toTranslation2d()
 ) / 2
 
-ALGAE_MIN_DIAMETER = 16.0  # inches
-ALGAE_MAX_DIAMETER = 16.5  # inches
+RED_SHOOT_LINE_X = (
+    (
+        get_fiducial_pose(12).translation().toTranslation2d()
+        + get_fiducial_pose(13).translation().toTranslation2d()
+    )
+    / 2
+).X  # TODO This is a temporary value, may require tuning or deletion
+
+BLUE_SHOOT_LINE_X = (
+    (
+        get_fiducial_pose(28).translation().toTranslation2d()
+        + get_fiducial_pose(29).translation().toTranslation2d()
+    )
+    / 2
+).X  # TODO This is a temporary value, may require tuning or deletion
 
 
-def cage_pos(is_red: bool) -> list[Translation2d]:
+def get_hub_pos(is_red: bool):
     if is_red:
-        return [
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 - 1.054),
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 - 2.144),
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 - 3.234),
-        ]
-
+        return RED_HUB_POS
     else:
-        return [
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 + 1.054),
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 + 2.144),
-            Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2 + 3.234),
-        ]
+        return BLUE_HUB_POS
 
 
 # TODO: write functions for rotational symmetry
@@ -96,27 +127,3 @@ def field_flip_translation2d(t: Translation2d):
 # This will default to the blue alliance if a proper link to the driver station has not yet been established
 def is_red() -> bool:
     return wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed
-
-
-def nearest_reef_tag(pose: Pose2d) -> tuple[int, Pose2d]:
-    position = pose.translation()
-    distance = math.inf
-    closest_tag_id = 0
-    tag_pose_2d = Pose2d()
-
-    for tag_id in L2_TAGS + L3_TAGS:
-        tag_pose = apriltag_layout.getTagPose(tag_id)
-
-        assert tag_pose
-
-        tag_distance = tag_pose.toPose2d().translation().distance(position)
-        if tag_distance < distance:
-            distance = tag_distance
-            closest_tag_id = tag_id
-            tag_pose_2d = tag_pose.toPose2d()
-
-    return (closest_tag_id, tag_pose_2d)
-
-
-def is_L3(tag_id: int) -> bool:
-    return tag_id in L3_TAGS
