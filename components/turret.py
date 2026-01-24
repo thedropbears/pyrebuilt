@@ -1,5 +1,5 @@
 from magicbot import feedback
-from rev import ClosedLoopConfig, ClosedLoopSlot, SparkMax, SparkMaxConfig
+from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig
 
 from ids import SparkId
 from utilities.rev import configure_spark_reset_and_persist
@@ -11,24 +11,20 @@ class TurretComponent:
 
     def __init__(self) -> None:
         self.motor = SparkMax(SparkId.TURRET, SparkMax.MotorType.kBrushless)
-        self.motor.ControlType(SparkMax.ControlType.kPosition)
-
         self.closed_loop_controller = self.motor.getClosedLoopController()
 
         motor_config = SparkMaxConfig()
+
         motor_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+        motor_config.closedLoop.pid(
+            0.01, 0, 0, ClosedLoopSlot.kSlot0
+        )  # TODO Tune these values
+
+        motor_config.closedLoop.positionWrappingEnabled(
+            True
+        ).positionWrappingInputRange(-1, 1)  # TODO Tune these valuse
 
         configure_spark_reset_and_persist(self.motor, motor_config)
-
-        pid_config = ClosedLoopConfig()
-        pid_config.P(0.1, ClosedLoopSlot.kSlot0)  # TODO Tune this value
-        pid_config.I(0, ClosedLoopSlot.kSlot0)  # TODO Tune this value
-        pid_config.D(0, ClosedLoopSlot.kSlot0)  # TODO Tune this value
-        pid_config.allowedClosedLoopError(
-            10, ClosedLoopSlot.kSlot0
-        )  # TODO Tune this value
-        pid_config.positionWrappingEnabled(True)
-        pid_config.positionWrappingInputRange(-1, 1)  # TODO Tune this value
 
     @feedback
     def raw_encoder_val(self):
@@ -39,10 +35,12 @@ class TurretComponent:
         pass
 
     def rotate_to(self, angle):
-        pass
+        self.setpoint = angle
 
     def rotate_by(self, angle):
-        pass
+        self.setpoint += angle
 
     def execute(self):
-        pass
+        self.closed_loop_controller.setSetpoint(
+            self.setpoint, SparkMax.ControlType.kPosition
+        )
