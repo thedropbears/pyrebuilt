@@ -6,7 +6,6 @@ import typing
 from collections.abc import Callable
 
 import phoenix6
-import phoenix6.unmanaged
 import rev
 import wpilib
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
@@ -174,11 +173,6 @@ class PhysicsEngine:
         )
 
     def update_sim(self, now: float, tm_diff: float) -> None:
-        # Enable the Phoenix6 simulated devices
-        # TODO: delete when phoenix6 integrates with wpilib
-        if wpilib.DriverStation.isEnabled():
-            phoenix6.unmanaged.feed_enable(0.1)
-
         for wheel in self.wheels:
             wheel.update(tm_diff)
         for steer in self.steer:
