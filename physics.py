@@ -1,0 +1,217 @@
+from __future__ import annotations
+
+import math
+import statistics
+import typing
+from collections.abc import Callable
+
+import phoenix6
+import rev
+import wpilib
+from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
+from pyfrc.physics.core import PhysicsInterface
+from wpilib.simulation import (
+    DCMotorSim,
+    DutyCycleEncoderSim,
+    PWMSim,
+    SingleJointedArmSim,
+)
+from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.units import kilogram_square_meters
+
+from components.chassis import SwerveModule
+from utilities import game
+from utilities.functions import constrain_angle
+
+if typing.TYPE_CHECKING:
+    from robot import MyRobot
+
+
+class RollingBuffer:
+    def __init__(self, max_length: int):
+        self.max_length = max_length
+
+        self.buffer_: list[float] = []
+
+    def average(self) -> float:
+        return statistics.fmean(self.buffer_) if self.buffer_ else 0.0
+
+    def add_sample(self, sample: float):
+        self.buffer_.append(sample)
+
+        if len(self.buffer_) > self.max_length:
+            self.buffer_.pop(0)
+
+
+class SimpleTalonFXMotorSim:
+    def __init__(
+        self, motor: phoenix6.hardware.TalonFX, units_per_rev: float, kV: float
+    ) -> None:
+        self.sim_state = motor.sim_state
+        self.sim_state.set_supply_voltage(12.0)
+        self.kV = kV  # volt seconds per unit
+        self.units_per_rev = units_per_rev
+        self.voltage_buffer = RollingBuffer(10)
+
+    def update(self, dt: float) -> None:
+        voltage = self.sim_state.motor_voltage
+
+        self.voltage_buffer.add_sample(voltage)
+
+        if math.isclose(self.voltage_buffer.average(), 0.0, abs_tol=0.1):
+            voltage = 0.0
+
+        velocity = voltage / self.kV  # units per second
+        velocity_rps = velocity * self.units_per_rev
+        self.sim_state.set_rotor_velocity(velocity_rps)
+        self.sim_state.add_rotor_position(velocity_rps * dt)
+
+
+class TalonFXMotorSim:
+    def __init__(
+        self,
+        # DCMotor gearbox factory, e.g. DCMotor.falcon500
+        gearbox_motor: Callable[[int], DCMotor],
+        *motors: phoenix6.hardware.TalonFX,
+        # Reduction between motor and encoder readings, as output over input.
+        # If the mechanism spins slower than the motor, this number should be greater than one.
+        gearing: float,
+        moi: kilogram_square_meters,
+    ):
+        gearbox = gearbox_motor(len(motors))
+        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.gearing = gearing
+        self.sim_states = [motor.sim_state for motor in motors]
+        for sim_state in self.sim_states:
+            sim_state.set_supply_voltage(12.0)
+        self.motor_sim = DCMotorSim(self.plant, gearbox)
+
+    def update(self, dt: float) -> None:
+        voltage = self.sim_states[0].motor_voltage
+        self.motor_sim.setInputVoltage(voltage)
+        self.motor_sim.update(dt)
+        motor_rev_per_mechanism_rad = self.gearing / math.tau
+        for sim_state in self.sim_states:
+            sim_state.set_raw_rotor_position(
+                self.motor_sim.getAngularPosition() * motor_rev_per_mechanism_rad
+            )
+            sim_state.set_rotor_velocity(
+                self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
+            )
+
+
+class SparkArmSim:
+    def __init__(self, mech_sim: SingleJointedArmSim, motor_sim: rev.SparkSim) -> None:
+        self.mech_sim = mech_sim
+        self.motor_sim = motor_sim
+        self.motor_encoder_sim = self.motor_sim.getRelativeEncoderSim()
+
+    def update(self, dt: float) -> None:
+        vbus = self.motor_sim.getBusVoltage()
+        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
+        self.mech_sim.update(dt)
+        self.motor_sim.iterate(self.mech_sim.getVelocity(), vbus, dt)
+        self.motor_encoder_sim.iterate(self.mech_sim.getVelocity(), dt)
+
+
+# class ServoEncoderSim:
+#     def __init__(self, pwm, encoder):
+#         self.pwm_sim = PWMSim(pwm)
+#         self.encoder_sim = DutyCycleEncoderSim(encoder)
+
+#     def update(self):
+#         command = self.pwm_sim.getPosition()
+
+
+class PhysicsEngine:
+    def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
+        self.physics_controller = physics_controller
+
+        self.kinematics: SwerveDrive4Kinematics = robot.chassis.kinematics
+        self.swerve_modules: tuple[
+            SwerveModule, SwerveModule, SwerveModule, SwerveModule
+        ] = robot.chassis.modules
+
+        # Motors
+        self.wheels = [
+            SimpleTalonFXMotorSim(
+                module.drive,
+                units_per_rev=1 / robot.chassis.drive_motor_rev_to_meters,
+                kV=2.7,
+            )
+            for module in robot.chassis.modules
+        ]
+        self.steer = [
+            TalonFXMotorSim(
+                DCMotor.krakenX60,
+                module.steer,
+                gearing=1 / robot.chassis.swerve_config.steer_ratio,
+                # measured from MKCad CAD
+                moi=0.0009972,
+            )
+            for module in robot.chassis.modules
+        ]
+
+        self.imu = robot.chassis.imu.sim_state
+
+        self.vision_sim = VisionSystemSim("main")
+        self.vision_sim.addAprilTags(game.apriltag_layout)
+        properties = SimCameraProperties.OV9281_1280_720()
+        self.port_camera = PhotonCameraSim(robot.port_vision.camera, properties)
+        self.port_camera.setMaxSightRange(5.0)
+        self.port_visual_localiser = robot.port_vision
+        self.vision_sim.addCamera(
+            self.port_camera,
+            self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
+        )
+        self.vision_sim_counter = 0
+
+        self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
+        self.port_vision_encoder_sim = DutyCycleEncoderSim(
+            self.port_visual_localiser.encoder
+        )
+
+    def update_sim(self, now: float, tm_diff: float) -> None:
+        for wheel in self.wheels:
+            wheel.update(tm_diff)
+        for steer in self.steer:
+            steer.update(tm_diff)
+
+        speeds = self.kinematics.toChassisSpeeds(
+            (
+                self.swerve_modules[0].get(),
+                self.swerve_modules[1].get(),
+                self.swerve_modules[2].get(),
+                self.swerve_modules[3].get(),
+            )
+        )
+
+        self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
+
+        self.physics_controller.drive(speeds, tm_diff)
+
+        self.port_vision_encoder_sim.set(
+            constrain_angle(
+                (
+                    (
+                        self.port_visual_localiser.servo_offsets.full_range
+                        - self.port_visual_localiser.servo_offsets.neutral
+                    )
+                    * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
+                    + self.port_visual_localiser.servo_offsets.neutral
+                ).radians()
+            )
+        )
+
+        # Simulate slow vision updates.
+        self.vision_sim_counter += 1
+        if self.vision_sim_counter == 10:
+            self.vision_sim.adjustCamera(
+                self.port_camera,
+                self.port_visual_localiser.robot_to_camera(
+                    wpilib.Timer.getFPGATimestamp()
+                ),
+            )
+            self.vision_sim.update(self.physics_controller.get_pose())
+            self.vision_sim_counter = 0

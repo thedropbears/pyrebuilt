@@ -1,15 +1,19 @@
+import math
+
 import magicbot
 import ntcore
 import wpilib
 import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
+from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
+from components.vision import ServoOffsets, VisualLocalizer
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
@@ -20,6 +24,7 @@ class MyRobot(magicbot.MagicRobot):
     shooter: ShooterComponent
     climber: ClimberComponent
     intake: IntakeComponent
+    port_vision: VisualLocalizer
     max_speed = tunable(3.5)  # m/s
     lower_max_speed = tunable(0.25)  # m/s
     max_spin_rate = tunable(2.8)  # m/s
@@ -65,10 +70,9 @@ class MyRobot(magicbot.MagicRobot):
 
         self.status_lights_strip_length = 112 * 4
 
-        self.starboard_vision_encoder_id = DioChannel.STARBOARD_VISION_ENCODER
-        self.starboard_vision_servo_id = PwmChannel.STARBOARD_VISION_SERVO
         self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
         self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
+
         if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT:
             self.chassis_swerve_config = SwerveConfig(
                 drive_ratio=(14.0 / 50.0) * (25.0 / 19.0) * (15.0 / 45.0),
@@ -92,6 +96,21 @@ class MyRobot(magicbot.MagicRobot):
             # metres between centre of front and back wheels
             self.chassis_wheel_base = 0.467
 
+            self.port_vision_name = "port_turret"
+            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
+            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
+            self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
+            self.port_vision_camera_pitch = math.radians(-10.0)
+            self.port_vision_encoder_offset = Rotation2d(6.103)
+            self.port_vision_servo_offsets = ServoOffsets(
+                neutral=Rotation2d(1.052),
+                full_range=Rotation2d(3.121),
+            )
+            self.port_vision_rotation_range = (
+                Rotation2d(4.59),
+                Rotation2d(1.25),
+            )
+
         else:
             self.chassis_swerve_config = SwerveConfig(
                 drive_ratio=(14.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
@@ -114,6 +133,21 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis_track_width = 0.517
             # metres between centre of front and back wheels
             self.chassis_wheel_base = 0.517
+
+            self.port_vision_name = "port_turret"
+            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
+            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
+            self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
+            self.port_vision_camera_pitch = math.radians(-10.0)
+            self.port_vision_encoder_offset = Rotation2d(6.103)
+            self.port_vision_servo_offsets = ServoOffsets(
+                neutral=Rotation2d(1.052),
+                full_range=Rotation2d(3.121),
+            )
+            self.port_vision_rotation_range = (
+                Rotation2d(1.733),
+                Rotation2d(5.034),
+            )
 
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
@@ -159,6 +193,11 @@ class MyRobot(magicbot.MagicRobot):
         self.climber.execute()
         self.intake.execute()
 
+        if self.gamepad.getLeftStickButton():
+            self.port_vision.zero_servo_()
+
+        self.port_vision.execute()
+
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
 
@@ -171,5 +210,8 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.update_alliance()
         self.chassis.update_odometry()
 
+        self.port_vision.execute()
+
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
+        self.port_vision._per_loop_cache.clear()

@@ -50,19 +50,14 @@ class SparkId(enum.IntEnum):
 class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
 
-    STARBOARD_VISION_ENCODER = 1
-
-    SWERVE_COAST_SWITCH = 2
-
-    PORT_VISION_ENCODER = 9
+    PORT_VISION_ENCODER = 0
 
 
 @enum.unique
 class PwmChannel(enum.IntEnum):
     """roboRIO PWM output channel number."""
 
-    STARBOARD_VISION_SERVO = 0
-    PORT_VISION_SERVO = 8
+    PORT_VISION_SERVO = 0
 
 
 @enum.unique
