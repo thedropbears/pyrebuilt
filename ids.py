@@ -45,6 +45,8 @@ class SparkId(enum.IntEnum):
 
     INTAKE = 11
 
+    TURRET = 67  # TODO Change to correct ID
+
 
 @enum.unique
 class DioChannel(enum.IntEnum):
