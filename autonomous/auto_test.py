@@ -16,6 +16,15 @@ class Spin3m(AutoBase):
             ]
         )
 
+class Climb(AutoBase):
+    MODE_NAME = "Climb test"
+
+    def __init__(self):
+        super().__init__(
+            [
+                "climb",
+            ]
+        )
 
 class Spin3mandreturn(AutoBase):
     MODE_NAME = "spin forward 3m then come back"
