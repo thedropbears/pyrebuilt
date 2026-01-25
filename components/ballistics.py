@@ -1,9 +1,6 @@
-from dataclasses import dataclass
 from math import atan2
-from typing import ClassVar
 
 import numpy as np
-import wpiutil.wpistruct
 from magicbot import feedback
 from wpimath.geometry import Pose2d, Translation3d, Twist2d
 
@@ -11,19 +8,9 @@ from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 
 
-@wpiutil.wpistruct.make_wpistruct
-@dataclass
-class BallisticsSolution:
-    WPIStruct: ClassVar
-
-    speed: float
-    angle: float
-
-
 class BallisticsComponent:
     shooter: ShooterComponent
     turret: TurretComponent
-    current_solution: BallisticsSolution
 
     # TODO setup sensible reset and tunable vars
 
@@ -112,7 +99,5 @@ class BallisticsComponent:
             )
         )
 
-        self.current_solution.speed = self.desired_flywheel_speed
-        self.current_solution.angle = self.desired_hood_angle
         # dispatch shooter commands
         pass
