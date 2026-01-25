@@ -9,21 +9,29 @@ from phoenix6.configs import Slot0Configs
 from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
+from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
+from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
+from controllers.shooter import Shooter
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.scalers import rescale_js
 
 
 class MyRobot(magicbot.MagicRobot):
+    # Controllers
+    shooter_state_machine: Shooter
+
     # Components
     chassis: ChassisComponent
     shooter: ShooterComponent
     climber: ClimberComponent
     intake: IntakeComponent
+    turret: TurretComponent
+    ballistics: BallisticsComponent
     port_vision: VisualLocalizer
     max_speed = tunable(3.5)  # m/s
     lower_max_speed = tunable(0.25)  # m/s
