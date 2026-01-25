@@ -6,6 +6,11 @@ from phoenix6.hardware import TalonFX
 from phoenix6.signals import MotorAlignmentValue
 
 from ids import TalonId
+from rev import SparkMax, SparkMaxConfig
+
+from ids import SparkId
+from utilities.rev import configure_spark_reset_and_persist
+import math
 
 
 class ShooterComponent:
@@ -14,6 +19,12 @@ class ShooterComponent:
 
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
+
+    def sah_slew_absolute(self):
+        pass
+        self.slew_absolute = math.radians(90)
+
+
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -24,6 +35,7 @@ class ShooterComponent:
         )  # Defined from behind shooter
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
+        self.hood_motor = SparkMax(SparkId.HOOD_ADJUSTER, SparkMax.MotorType.kBrushless)
 
         gains_cfg = (
             configs.Slot0Configs()

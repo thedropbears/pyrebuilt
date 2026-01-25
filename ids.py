@@ -45,6 +45,8 @@ class SparkId(enum.IntEnum):
 
     INTAKE = 11
 
+    HOOD_ADJUSTER = 888
+
 
 @enum.unique
 class DioChannel(enum.IntEnum):
