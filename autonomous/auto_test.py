@@ -16,6 +16,7 @@ class Spin3m(AutoBase):
             ]
         )
 
+
 class Climb(AutoBase):
     MODE_NAME = "Climb test"
 
@@ -25,6 +26,7 @@ class Climb(AutoBase):
                 "climb",
             ]
         )
+
 
 class Spin3mandreturn(AutoBase):
     MODE_NAME = "spin forward 3m then come back"
