@@ -1,15 +1,19 @@
-import math
-
 from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
 from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import MotorAlignmentValue
-from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig
-from wpilib import DutyCycleEncoder
+from rev import (
+    AbsoluteEncoder,
+    AbsoluteEncoderConfig,
+    ClosedLoopSlot,
+    FeedbackSensor,
+    SparkMax,
+    SparkMaxConfig,
+)
 
-from ids import DioChannel, SparkId, TalonId
+from ids import SparkId, TalonId
 from utilities.rev import (
     configure_spark_reset_and_persist,
     configure_through_bore_encoder,
@@ -17,6 +21,8 @@ from utilities.rev import (
 
 
 class ShooterComponent:
+    hood_move_speed = tunable(0.01)
+
     target_shooter_rps = will_reset_to(0.0)
     desired_shooter_rps = tunable(30)
 
@@ -27,7 +33,9 @@ class ShooterComponent:
     MAX_HOOD_ANGLE = 70  # TODO Tune this value
     MIN_HOOD_ANGLE = 10  # TODO Tune this value
 
+    MOTOR_GEAR_RATIO = 10
     ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
+    MOTOR_ROTS_PER_HOOD_DEGREE = MOTOR_GEAR_RATIO * ENCODER_ROTS_PER_HOOD_DEGREE
     ENCODER_ZERO_OFFSET = 0  # TODO Tune this value
 
     def __init__(self) -> None:
@@ -37,16 +45,6 @@ class ShooterComponent:
         self.flywheel_motor_right = TalonFX(
             device_id=TalonId.FLYWHEEL_RIGHT
         )  # Defined from behind shooter
-
-        self.feeder_motor = TalonSRX(TalonId.FEEDER)
-        self.feeder_motor.setInverted(False)
-
-        self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
-        self.hood_motor_controller = self.hood_motor.getClosedLoopController()
-
-        self.hood_encoder = DutyCycleEncoder(DioChannel.HOOD_ENCODER, math.tau, 0)
-        configure_through_bore_encoder(self.hood_encoder)
-        self.hood_encoder.setInverted(False)  # TODO Tune this value
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
@@ -62,24 +60,36 @@ class ShooterComponent:
             configs.TalonFXConfiguration().with_slot0(flywheel_gains_cfg)
         )
 
-        hood_motor_cfg = SparkMaxConfig()
+        self.feeder_motor = TalonSRX(TalonId.FEEDER)
+        self.feeder_motor.setInverted(False)
 
+        self.hood_encoder = AbsoluteEncoder()
+        self.hood_encoder_cfg = AbsoluteEncoderConfig()
+        self.hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
+        self.hood_encoder_cfg.positionConversionFactor(self.MOTOR_GEAR_RATIO)
+
+        # TODO apply encoder config
+
+        self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
+        self.hood_motor_controller = self.hood_motor.getClosedLoopController()
+
+        hood_motor_cfg = SparkMaxConfig()
         hood_motor_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(
             0.01, 0, 0, ClosedLoopSlot.kSlot1
         )  # TODO Tune these values
 
+        hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
     @feedback
     def raw_encoder_value(self):
-        return self.hood_encoder.get()
+        return self.hood_encoder.getPosition()
 
     @feedback
-    def raw_turret_angle(self):
-        return (
-            self.raw_encoder_value() - self.ENCODER_ZERO_OFFSET
-        ) * self.ENCODER_ROTS_PER_HOOD_DEGREE
+    def raw_hood_angle(self):
+        return self.raw_encoder_value() * self.ENCODER_ROTS_PER_HOOD_DEGREE
 
     def articluate_relative(self, angle):
         pass
@@ -102,3 +112,6 @@ class ShooterComponent:
         )
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
+
+        self.hood_motor.set(self.hood_move_speed)
+        # self.hood_motor_controller.setSetpoint

@@ -45,7 +45,7 @@ class SparkId(enum.IntEnum):
 
     INTAKE = 11
 
-    HOOD = 67  # TODO Tune this value
+    HOOD = 10
 
 
 @enum.unique
@@ -54,7 +54,7 @@ class DioChannel(enum.IntEnum):
 
     PORT_VISION_ENCODER = 0
 
-    HOOD_ENCODER = 76  # TODO Tune this value
+    HOOD_ENCODER = 1
 
 
 @enum.unique
