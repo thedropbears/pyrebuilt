@@ -45,7 +45,7 @@ class SparkId(enum.IntEnum):
 
     INTAKE = 11
 
-    HOOD_ADJUSTER = 888
+    HOOD = 67  # TODO Tune this value
 
 
 @enum.unique
@@ -53,6 +53,8 @@ class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
 
     PORT_VISION_ENCODER = 0
+
+    HOOD_ENCODER = 76  # TODO Tune this value
 
 
 @enum.unique
