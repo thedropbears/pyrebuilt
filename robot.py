@@ -131,10 +131,12 @@ class MyRobot(magicbot.MagicRobot):
                 .with_k_a(0.15931),
                 steer_ratio=(14 / 50) * (10 / 60),
                 steer_gains=Slot0Configs()
-                .with_k_p(92.079)
+                .with_k_p(17.401)
                 .with_k_i(0)
-                .with_k_d(1.6683)
-                .with_k_s(0.086374),
+                .with_k_d(0.012061)
+                .with_k_s(0.1157)
+                .with_k_v(2.5019)
+                .with_k_a(0.058235),
                 reverse_drive=True,
             )
             # metres between centre of left and right wheels
