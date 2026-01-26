@@ -27,7 +27,7 @@ class ShooterComponent:
     MAX_HOOD_ANGLE = 70  # TODO Tune this value
     MIN_HOOD_ANGLE = 10  # TODO Tune this value
 
-    ENCODER_ROTS_PER_DEGREE = 54 / 26 / 360
+    ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
     ENCODER_ZERO_OFFSET = 0  # TODO Tune this value
 
     def __init__(self) -> None:
@@ -75,10 +75,16 @@ class ShooterComponent:
     def raw_encoder_value(self):
         return self.hood_encoder.get()
 
-    def articluate_by_angle(self, angle):
+    @feedback
+    def raw_turret_angle(self):
+        return (
+            self.raw_encoder_value() - self.ENCODER_ZERO_OFFSET
+        ) * self.ENCODER_ROTS_PER_HOOD_DEGREE
+
+    def articluate_relative(self, angle):
         pass
 
-    def articluate_to_angle(self, angle):
+    def articluate_absolute(self, angle):
         pass
 
     def shoot(self) -> None:
