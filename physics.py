@@ -10,6 +10,7 @@ import rev
 import wpilib
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
+from wpilib import DutyCycleEncoder
 from wpilib.simulation import (
     DCMotorSim,
     DutyCycleEncoderSim,
@@ -101,6 +102,46 @@ class TalonFXMotorSim:
             )
 
 
+class TalonFXSTurretSim:
+    def __init__(
+        self,
+        gearbox_motor: Callable[[int], DCMotor],
+        motor: phoenix6.hardware.TalonFXS,
+        # Reduction between motor and mechanism rotations, as output over input.
+        # If the mechanism spins slower than the motor, this number should be greater than one.
+        motor_gearing: float,
+        moi: kilogram_square_meters,
+        encoder: DutyCycleEncoder,
+        # Reduction between encoder and mechanism readings, as output over input.
+        # If the mechanism spins slower than the motor, this number should be greater than one.
+        encoder_gearing: float,
+    ):
+        gearbox = gearbox_motor(1)
+        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, motor_gearing)
+        self.motor_sim = DCMotorSim(self.plant, gearbox)
+        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.motor_state = motor.sim_state
+        self.motor_gearing = motor_gearing
+        self.encoder_gearing = encoder_gearing
+
+    def update(self, dt: float):
+        # grab the motor voltage to propagate the velocity and position of the mechanism
+        voltage = self.motor_state.motor_voltage
+        self.motor_sim.setInputVoltage(voltage)
+        self.motor_sim.update(dt)
+
+        # back propagate to motor state
+        self.motor_state.set_raw_rotor_position(
+            self.motor_sim.getAngularPosition() * self.motor_gearing
+        )
+        self.motor_state.set_rotor_velocity(
+            self.motor_sim.getAngularVelocity() * self.motor_gearing
+        )
+
+        # forward propagate to external encoder
+        self.encoder_sim.set(self.motor_sim.getAngularPosition() * self.encoder_gearing)
+
+
 class SparkArmSim:
     def __init__(self, mech_sim: SingleJointedArmSim, motor_sim: rev.SparkSim) -> None:
         self.mech_sim = mech_sim
@@ -152,6 +193,15 @@ class PhysicsEngine:
             )
             for module in robot.chassis.modules
         ]
+
+        self.turret_sim = TalonFXSTurretSim(
+            DCMotor.minion,
+            robot.turret.motor,
+            robot.turret.MOTOR_TO_TURRET_GEARING,
+            0.01,
+            robot.turret.absolute_encoder,
+            robot.turret.TURRET_TO_ENCODER_GEARING,
+        )
 
         self.imu = robot.chassis.imu.sim_state
 
