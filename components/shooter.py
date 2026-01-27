@@ -4,20 +4,10 @@ from phoenix6 import configs, controls
 from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import MotorAlignmentValue
-from rev import (
-    AbsoluteEncoder,
-    AbsoluteEncoderConfig,
-    ClosedLoopSlot,
-    FeedbackSensor,
-    SparkMax,
-    SparkMaxConfig,
-)
+from rev import ClosedLoopSlot, FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
-from utilities.rev import (
-    configure_spark_reset_and_persist,
-    configure_through_bore_encoder,
-)
+from utilities.rev import configure_spark_reset_and_persist
 
 
 class ShooterComponent:
@@ -30,6 +20,7 @@ class ShooterComponent:
     desired_feeder_percentage = tunable(1)
 
     desired_hood_angle = tunable(60)
+    hood_error_tolerance = tunable(5)
     MAX_HOOD_ANGLE = 70  # TODO Tune this value
     MIN_HOOD_ANGLE = 10  # TODO Tune this value
 
@@ -63,13 +54,6 @@ class ShooterComponent:
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
 
-        self.hood_encoder = AbsoluteEncoder()
-        self.hood_encoder_cfg = AbsoluteEncoderConfig()
-        self.hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
-        self.hood_encoder_cfg.positionConversionFactor(self.MOTOR_GEAR_RATIO)
-
-        # TODO apply encoder config
-
         self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
@@ -78,24 +62,36 @@ class ShooterComponent:
         hood_motor_cfg.closedLoop.pid(
             0.01, 0, 0, ClosedLoopSlot.kSlot1
         )  # TODO Tune these values
-
+        hood_motor_cfg.closedLoop.allowedClosedLoopError(5)
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
+        self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
+        hood_encoder_cfg = hood_motor_cfg.absoluteEncoder  # TODO Re-check this line
+        hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
+        hood_encoder_cfg.positionConversionFactor(
+            self.MOTOR_GEAR_RATIO
+            * self.ENCODER_ROTS_PER_HOOD_DEGREE  # TODO Re-check this line
+        )
+
     @feedback
-    def raw_encoder_value(self):
+    def raw_encoder_angle(self):
         return self.hood_encoder.getPosition()
 
     @feedback
-    def raw_hood_angle(self):
-        return self.raw_encoder_value() * self.ENCODER_ROTS_PER_HOOD_DEGREE
+    def get_hood_angle(self):
+        return self.hood_encoder.getPosition() / self.MOTOR_GEAR_RATIO
 
-    def articluate_relative(self, angle):
-        pass
+    @feedback
+    def is_hood_at_setpoint(self):
+        return self.get_hood_angle()
 
-    def articluate_absolute(self, angle):
-        pass
+    def change_pitch_relative(self, angle):
+        self.desired_hood_angle = self.get_hood_angle() - angle
+
+    def change_pitch_absolute(self, angle):
+        self.desired_hood_angle = 90 - angle
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
@@ -114,4 +110,10 @@ class ShooterComponent:
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
         self.hood_motor.set(self.hood_move_speed)
-        # self.hood_motor_controller.setSetpoint
+
+        # TODO This code is commented until basic hood function has been tested
+        """
+        self.hood_motor_controller.setSetpoint(
+            self.desired_hood_angle, SparkMax.ControlType.kPosition
+        )
+        """
