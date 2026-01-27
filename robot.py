@@ -140,9 +140,7 @@ class MyRobot(magicbot.MagicRobot):
                 .with_k_a(0.058235),
                 reverse_drive=True,
             )
-            # metres between centre of left and right wheels
             self.chassis_track_width = 0.517
-            # metres between centre of front and back wheels
             self.chassis_wheel_base = 0.517
 
             self.port_vision_name = "port_turret"
@@ -165,12 +163,12 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
-        max_speed = self.max_speed
-        max_spin_rate = self.max_spin_rate
+        max_speed = self.lower_max_speed
+        max_spin_rate = self.lower_max_spin_rate
 
         if self.gamepad.getRightBumperButton():
-            max_speed = self.lower_max_speed
-            max_spin_rate = self.lower_max_spin_rate
+            max_speed = self.max_speed
+            max_spin_rate = self.max_spin_rate
 
         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * max_speed
         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * max_speed
