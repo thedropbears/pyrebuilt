@@ -18,6 +18,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.shooter import Shooter
 from ids import DioChannel, PwmChannel, RioSerialNumber
+from utilities.game import is_red
 from utilities.scalers import rescale_js
 
 
@@ -139,9 +140,7 @@ class MyRobot(magicbot.MagicRobot):
                 .with_k_a(0.058235),
                 reverse_drive=True,
             )
-            # metres between centre of left and right wheels
             self.chassis_track_width = 0.517
-            # metres between centre of front and back wheels
             self.chassis_wheel_base = 0.517
 
             self.port_vision_name = "port_turret"
@@ -164,7 +163,31 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
-        pass
+        max_speed = self.lower_max_speed
+        max_spin_rate = self.lower_max_spin_rate
+
+        if self.gamepad.getRightBumperButton():
+            max_speed = self.max_speed
+            max_spin_rate = self.max_spin_rate
+
+        drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * max_speed
+        drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * max_speed
+        drive_z = (
+            -rescale_js(self.gamepad.getRightX(), 0.1, exponential=2.0) * max_spin_rate
+        )
+
+        local_driving = self.gamepad.getRightBumperButton()
+
+        if local_driving:
+            self.chassis.drive_local(drive_x, drive_y, drive_z)
+        else:
+            if is_red():
+                drive_x = -drive_x
+                drive_y = -drive_y
+            self.chassis.drive_field(drive_x, drive_y, drive_z)
+
+        if drive_z != 0:
+            self.chassis.stop_snapping()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
