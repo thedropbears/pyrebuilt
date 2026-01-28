@@ -1,3 +1,5 @@
+import math
+
 from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
@@ -20,7 +22,7 @@ class ShooterComponent:
     desired_feeder_percentage = tunable(1)
 
     desired_hood_angle = tunable(60)
-    hood_error_tolerance = tunable(5)
+    hood_error_tolerance = tunable(5.0)
     MAX_HOOD_ANGLE = 70  # TODO Tune this value
     MIN_HOOD_ANGLE = 10  # TODO Tune this value
 
@@ -62,7 +64,7 @@ class ShooterComponent:
         hood_motor_cfg.closedLoop.pid(
             0.01, 0, 0, ClosedLoopSlot.kSlot1
         )  # TODO Tune these values
-        hood_motor_cfg.closedLoop.allowedClosedLoopError(5)
+        hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
@@ -70,10 +72,7 @@ class ShooterComponent:
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_encoder_cfg = hood_motor_cfg.absoluteEncoder  # TODO Re-check this line
         hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
-        hood_encoder_cfg.positionConversionFactor(
-            self.MOTOR_GEAR_RATIO
-            * self.ENCODER_ROTS_PER_HOOD_DEGREE  # TODO Re-check this line
-        )
+        hood_encoder_cfg.positionConversionFactor(self.ENCODER_ROTS_PER_HOOD_DEGREE)
 
     @feedback
     def raw_encoder_angle(self):
@@ -81,11 +80,15 @@ class ShooterComponent:
 
     @feedback
     def get_hood_angle(self):
-        return self.hood_encoder.getPosition() / self.MOTOR_GEAR_RATIO
+        return self.hood_encoder.getPosition()
 
     @feedback
-    def is_hood_at_setpoint(self):
-        return self.get_hood_angle()
+    def hood_is_at_setpoint(self):
+        return math.isclose(
+            self.get_hood_angle(),
+            self.desired_hood_angle,
+            rel_tol=self.hood_error_tolerance,
+        )
 
     def change_pitch_relative(self, angle):
         self.desired_hood_angle = self.get_hood_angle() - angle
@@ -114,6 +117,7 @@ class ShooterComponent:
         # TODO This code is commented until basic hood function has been tested
         """
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle, SparkMax.ControlType.kPosition
+            self.desired_hood_angle * self.MOTOR_GEAR_RATIO,
+            SparkMax.ControlType.kPosition,
         )
         """
