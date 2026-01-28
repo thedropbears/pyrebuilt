@@ -22,7 +22,7 @@ class ShooterComponent:
     desired_feeder_percentage = tunable(1)
 
     desired_hood_angle = tunable(60)
-    hood_error_tolerance = tunable(5.0)
+    hood_error_tolerance = 5.0
     MAX_HOOD_ANGLE = 70  # TODO Tune this value
     MIN_HOOD_ANGLE = 10  # TODO Tune this value
 
