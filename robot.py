@@ -199,6 +199,7 @@ class MyRobot(magicbot.MagicRobot):
     def testPeriodic(self) -> None:
         self.leds.set_test_lights()
         allowed_to_drive = self.gamepad.getRightBumperButton()
+
         if allowed_to_drive:
             # Set max speed
             max_speed = self.lower_max_speed
@@ -226,11 +227,11 @@ class MyRobot(magicbot.MagicRobot):
             self.shooter.shoot()
             self.intake.intake()
 
-        if self.gamepad.getAButton():
+        if self.gamepad.getAButtonPressed():
             self.climber.deploy()
 
-        if self.gamepad.getYButton():
-            self.climber.climb()
+        if self.gamepad.getBButtonPressed():
+            self.climber.retract()
 
         if self.gamepad.getXButton():
             self.turret.slew_to(math.radians(self.turret_setpoint))
