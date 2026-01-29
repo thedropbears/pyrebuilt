@@ -8,7 +8,7 @@ from utilities.rev import configure_spark_reset_and_persist
 class ClimberComponent:
     MAX_FORWARD_EXTENSION, MAX_REVERSE_EXTENSION = 120, -120
 
-    current_climber_speed = will_reset_to(0)
+    current_climber_speed = will_reset_to(0.0)
     forward_climber_speed, reverse_climber_speed = tunable(0.8), tunable(0.8)
 
     def __init__(self):
