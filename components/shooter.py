@@ -9,6 +9,7 @@ from phoenix6.signals import MotorAlignmentValue
 from rev import ClosedLoopSlot, FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
+from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
 
 
@@ -28,7 +29,6 @@ class ShooterComponent:
 
     MOTOR_GEAR_RATIO = 24 / 22
     ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
-    MOTOR_ROTS_PER_HOOD_DEGREE = MOTOR_GEAR_RATIO * ENCODER_ROTS_PER_HOOD_DEGREE
     ENCODER_ZERO_OFFSET = 0  # TODO Tune this value
 
     def __init__(self) -> None:
@@ -67,12 +67,12 @@ class ShooterComponent:
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
-        configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
-
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_encoder_cfg = hood_motor_cfg.absoluteEncoder  # TODO Re-check this line
         hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
         hood_encoder_cfg.positionConversionFactor(self.ENCODER_ROTS_PER_HOOD_DEGREE)
+
+        configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
     @feedback
     def raw_encoder_angle(self):
@@ -92,9 +92,11 @@ class ShooterComponent:
 
     def change_pitch_relative(self, angle):
         self.desired_hood_angle = self.get_hood_angle() - angle
+        clamp(self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE)
 
     def change_pitch_absolute(self, angle):
         self.desired_hood_angle = 90 - angle
+        clamp(self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE)
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
@@ -117,7 +119,6 @@ class ShooterComponent:
         # TODO This code is commented until basic hood function has been tested
         """
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle * self.MOTOR_GEAR_RATIO,
-            SparkMax.ControlType.kPosition,
+            self.desired_hood_angle, SparkMax.ControlType.kPosition
         )
         """

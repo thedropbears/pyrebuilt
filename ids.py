@@ -54,8 +54,6 @@ class DioChannel(enum.IntEnum):
 
     PORT_VISION_ENCODER = 0
 
-    HOOD_ENCODER = 1
-
 
 @enum.unique
 class PwmChannel(enum.IntEnum):
