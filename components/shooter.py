@@ -91,12 +91,14 @@ class ShooterComponent:
         )
 
     def change_pitch_relative(self, angle):
-        self.desired_hood_angle = self.get_hood_angle() - angle
-        clamp(self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE)
+        self.desired_hood_angle = clamp(
+            self.get_hood_angle() - angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        )
 
     def change_pitch_absolute(self, angle):
-        self.desired_hood_angle = 90 - angle
-        clamp(self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE)
+        self.desired_hood_angle = clamp(
+            90 - angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        )
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
