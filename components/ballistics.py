@@ -13,10 +13,10 @@ class BallisticsComponent:
     turret: TurretComponent
 
     # TODO setup sensible reset and tunable vars
+    chassis_future_pos = Pose2d().translation()
+    chassis_future_rot = Pose2d().rotation()
 
-    chassis_pos = Pose2d().translation()
     target_pos = Translation3d().toTranslation2d()
-    chassis_rot = Pose2d().rotation()
 
     chassis_angle_to_target: float
     shooter_angle_to_target: float
@@ -62,23 +62,22 @@ class BallisticsComponent:
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
 
-        self.chassis_pos = current_pose.translation()
-        self.chassis_rot = current_pose.rotation()
+        self.chassis_future_pos = current_pose.exp(current_twist).translation()
+        self.chassis_future_rot = current_pose.exp(current_twist).rotation()
         self.target_pos = target_position.toTranslation2d()
-        self.chassis_dist_to_target = self.chassis_pos.distance(self.target_pos)
+
+        self.chassis_dist_to_target = self.chassis_future_pos.distance(self.target_pos)
 
     def execute(self) -> None:
         # perform turret calculations
         self.chassis_angle_to_target = atan2(
-            self.target_pos.y - self.chassis_pos.y,
-            self.target_pos.x - self.chassis_pos.x,
+            self.target_pos.y - self.chassis_future_pos.y,
+            self.target_pos.x - self.chassis_future_pos.x,
         )
 
         self.shooter_angle_to_target = (
-            self.chassis_angle_to_target - self.chassis_rot.radians()
+            self.chassis_angle_to_target - self.chassis_future_rot.radians()
         )
-
-        # TODO account for chassis speeds when calculating the turret angle
 
         # dispatch turret command
 
