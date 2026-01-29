@@ -24,6 +24,7 @@ class TalonId(enum.IntEnum):
     LEFT_FUNNEL = 13
     RIGHT_FUNNEL = 12
 
+
 @enum.unique
 class CancoderId(enum.IntEnum):
     """CAN ID for CTRE CANcoder."""
