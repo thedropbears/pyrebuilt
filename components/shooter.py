@@ -14,22 +14,19 @@ from utilities.rev import configure_spark_reset_and_persist
 
 
 class ShooterComponent:
-    hood_move_speed = tunable(0.01)
-
     target_shooter_rps = will_reset_to(0.0)
     desired_shooter_rps = tunable(30)
 
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
 
-    desired_hood_angle = tunable(60)
-    hood_error_tolerance = 5.0
-    MAX_HOOD_ANGLE = 70  # TODO Tune this value
-    MIN_HOOD_ANGLE = 10  # TODO Tune this value
+    desired_hood_angle = tunable(36.0)
+    hood_error_tolerance = 3.0
+    MAX_HOOD_ANGLE = 59
+    MIN_HOOD_ANGLE = 18
 
-    MOTOR_GEAR_RATIO = 24 / 22
-    ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
-    ENCODER_ZERO_OFFSET = 0  # TODO Tune this value
+    ENCODER_ROTS_PER_HOOD_DEGREE = 1 / (54 / 26 / 360)
+    ENCODER_ZERO_OFFSET = 0.7775692
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -57,20 +54,21 @@ class ShooterComponent:
         self.feeder_motor.setInverted(False)
 
         self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
+        self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
         hood_motor_cfg = SparkMaxConfig()
         hood_motor_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(
-            0.01, 0, 0, ClosedLoopSlot.kSlot1
+            0.5, 0, 0, ClosedLoopSlot.kSlot1
         )  # TODO Tune these values
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_encoder_cfg = hood_motor_cfg.absoluteEncoder  # TODO Re-check this line
-        hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
         hood_encoder_cfg.positionConversionFactor(self.ENCODER_ROTS_PER_HOOD_DEGREE)
+        hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
@@ -80,7 +78,7 @@ class ShooterComponent:
 
     @feedback
     def get_hood_angle(self):
-        return self.hood_encoder.getPosition()
+        return self.hood_encoder.getPosition() - 90
 
     @feedback
     def hood_is_at_setpoint(self):
@@ -116,11 +114,6 @@ class ShooterComponent:
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
-        self.hood_motor.set(self.hood_move_speed)
-
-        # TODO This code is commented until basic hood function has been tested
-        """
         self.hood_motor_controller.setSetpoint(
             self.desired_hood_angle, SparkMax.ControlType.kPosition
         )
-        """
