@@ -34,13 +34,16 @@ class MyRobot(magicbot.MagicRobot):
     turret: TurretComponent
     ballistics: BallisticsComponent
     port_vision: VisualLocalizer
-
+    
     # Driving constraints
     upper_max_speed = tunable(2.0)  # m/s
     upper_max_spin_rate = tunable(2.0)  # rad/s
     lower_max_speed = tunable(1.0)  # m/s
     lower_max_spin_rate = tunable(1.0)  # rad/s
 
+    # Temp turret:
+    turret_setpoint = tunable(90)
+    
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
@@ -224,9 +227,12 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
+        self.turret.slew_to(math.radians(self.turret_setpoint))
+
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
+        self.turret.execute()
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
@@ -250,3 +256,4 @@ class MyRobot(magicbot.MagicRobot):
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
+        self.turret.perioidic()
