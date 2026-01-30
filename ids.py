@@ -55,6 +55,7 @@ class DioChannel(enum.IntEnum):
     TURRET_ENCODER = 1
 
 
+
 @enum.unique
 class PwmChannel(enum.IntEnum):
     """roboRIO PWM output channel number."""

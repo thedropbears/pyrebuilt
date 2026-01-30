@@ -240,15 +240,12 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
-
         # Intake arm simulation
         intake_arm_gearbox = DCMotor.NEO(1)
         self.intake_arm_motor = rev.SparkMaxSim(
             robot.intake.arm_motor, intake_arm_gearbox
         )
-        self.intake_arm_encoder_sim = DutyCycleEncoderSim(
-            robot.intake.encoder
-        )
+        self.intake_arm_encoder_sim = DutyCycleEncoderSim(robot.intake.encoder)
         self.intake_arm = SparkArmSim(
             SingleJointedArmSim(
                 intake_arm_gearbox,
@@ -308,7 +305,7 @@ class PhysicsEngine:
             )
             self.vision_sim.update(self.physics_controller.get_pose())
             self.vision_sim_counter = 0
-        
+
         # Update intake arm simulation
         self.intake_arm.update(tm_diff)
         self.intake_arm_encoder_sim.set(

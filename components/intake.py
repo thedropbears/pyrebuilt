@@ -6,7 +6,8 @@ from phoenix6 import configs
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 
-from ids import TalonId
+from ids import DioChannel, SparkId, TalonId
+from utilities.rev import configure_spark_ephemeral, configure_through_bore_encoder
 
 
 class IntakeComponent:
@@ -55,7 +56,7 @@ class IntakeComponent:
         self.encoder = wpilib.DutyCycleEncoder(DioChannel.INTAKE_ENCODER, math.tau, 0.0)
         configure_through_bore_encoder(self.encoder)
 
-    #varibles for arm simulation
+    # varibles for arm simulation
     # TODO: verify these values for this years robot IMPORTANT!!
     VERTICAL_ENCODER_VALUE = 4.610450
     ARM_ENCODER_OFFSET = VERTICAL_ENCODER_VALUE - math.pi / 2.0
@@ -63,7 +64,7 @@ class IntakeComponent:
     DEPLOYED_ANGLE_UPPER = 3.892366 - ARM_ENCODER_OFFSET
     RETRACTED_ANGLE = 4.610450 - ARM_ENCODER_OFFSET
     ARM_LENGTH = 0.22  # meters
-    ARM_MOI = 0.181717788 
+    ARM_MOI = 0.181717788
 
     gear_ratio = 4.0 * 5.0 * (48.0 / 40.0)
 
