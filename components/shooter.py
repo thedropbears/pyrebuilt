@@ -86,7 +86,7 @@ class ShooterComponent:
         self.desired_hood_angle += angle
 
     def pitch_hood_absolute(self, angle):
-        self.desired_feeder_percentage = angle
+        self.desired_hood_angle = angle
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
