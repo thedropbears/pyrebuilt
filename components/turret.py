@@ -53,7 +53,7 @@ class TurretComponent:
         # TODO update setpoint
         pass
 
-    def slew_to_local(self, angle: units.radians) -> None:
+    def slew_to(self, angle: units.radians) -> None:
         # TODO Implement this
         # update setpoint
         pass
