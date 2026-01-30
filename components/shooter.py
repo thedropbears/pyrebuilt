@@ -25,8 +25,6 @@ class ShooterComponent:
     MIN_HOOD_ANGLE = 28.9
     MAX_HOOD_ANGLE = 73.4
 
-    hood_step_size = tunable(5)
-
     ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
     ENCODER_ZERO_OFFSET = 0.472
 
@@ -84,11 +82,11 @@ class ShooterComponent:
             abs_tol=self.hood_error_tolerance,
         )
 
-    def increase_hood_angle(self):
-        self.desired_hood_angle += self.hood_step_size
+    def pitch_hood_relative(self, angle):
+        self.desired_hood_angle += angle
 
-    def decrease_hood_angle(self):
-        self.desired_hood_angle -= self.hood_step_size
+    def pitch_hood_absolute(self, angle):
+        self.desired_feeder_percentage = angle
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
