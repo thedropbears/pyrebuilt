@@ -73,11 +73,6 @@ class MyRobot(magicbot.MagicRobot):
         self.mech = wpilib.Mechanism2d(2, 2)
         wpilib.SmartDashboard.putData("Mech2d", self.mech)
         self.intake_mech_root = self.mech.getRoot("Intake", 1.5, 0.1)
-        self.frame_mech_root = self.mech.getRoot("A-Frame", 1, 0)
-        self.frame_member = self.frame_mech_root.appendLigament(
-            "upright", length=1, angle=90, lineWidth=3
-        )
-        self.wrist_mech_root = self.mech.getRoot("Wrist", 1, 1)
 
         self.status_lights_strip_length = 112 * 4
 

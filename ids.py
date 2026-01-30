@@ -42,6 +42,8 @@ class SparkId(enum.IntEnum):
 
     HOOD = 10
     TURRET = 2
+    
+    INTAKE_ARM = 12
 
 
 @enum.unique

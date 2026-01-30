@@ -22,6 +22,7 @@ from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
+from components.intake import IntakeComponent
 from utilities import game
 from utilities.functions import constrain_angle
 
@@ -239,6 +240,31 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
+
+        # Intake arm simulation
+        intake_arm_gearbox = DCMotor.NEO(1)
+        self.intake_arm_motor = rev.SparkMaxSim(
+            robot.intake.arm_motor, intake_arm_gearbox
+        )
+        self.intake_arm_encoder_sim = DutyCycleEncoderSim(
+            robot.intake.encoder
+        )
+        self.intake_arm = SparkArmSim(
+            SingleJointedArmSim(
+                intake_arm_gearbox,
+                IntakeComponent.gear_ratio,
+                moi=IntakeComponent.ARM_MOI,
+                armLength=IntakeComponent.ARM_LENGTH,
+                minAngle=IntakeComponent.DEPLOYED_ANGLE_LOWER,
+                maxAngle=IntakeComponent.RETRACTED_ANGLE,
+                simulateGravity=True,
+                startingAngle=IntakeComponent.RETRACTED_ANGLE,
+            ),
+            self.intake_arm_motor,
+        )
+
+        self.intake = robot.intake
+
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
             wheel.update(tm_diff)
@@ -282,3 +308,9 @@ class PhysicsEngine:
             )
             self.vision_sim.update(self.physics_controller.get_pose())
             self.vision_sim_counter = 0
+        
+        # Update intake arm simulation
+        self.intake_arm.update(tm_diff)
+        self.intake_arm_encoder_sim.set(
+            self.intake_arm.mech_sim.getAngle() + IntakeComponent.ARM_ENCODER_OFFSET
+        )
