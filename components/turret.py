@@ -18,7 +18,6 @@ from utilities.rev import configure_through_bore_encoder
 class TurretComponent:
     MOTOR_TO_TURRET_GEARING = 1 / (40 / 200)
     TURRET_TO_ENCODER_GEARING = 1 / ((200 / 50) * (20 / 80))
-    MOTOR_TO_ENCODER_GEARING = MOTOR_TO_TURRET_GEARING * TURRET_TO_ENCODER_GEARING
 
     desired_turret_angle = tunable(0.0)
 
