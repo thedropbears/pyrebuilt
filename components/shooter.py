@@ -25,7 +25,7 @@ class ShooterComponent:
     MAX_HOOD_ANGLE = 59
     MIN_HOOD_ANGLE = 18
 
-    ENCODER_ROTS_PER_HOOD_DEGREE = 1 / (54 / 26 / 360)
+    ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
     ENCODER_ZERO_OFFSET = 0.7775692
 
     def __init__(self) -> None:
@@ -60,14 +60,16 @@ class ShooterComponent:
         hood_motor_cfg = SparkMaxConfig()
         hood_motor_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(
-            0.5, 0, 0, ClosedLoopSlot.kSlot1
+            0.05, 0, 0, ClosedLoopSlot.kSlot1
         )  # TODO Tune these values
-        hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
+        hood_motor_cfg.closedLoop.allowedClosedLoopError(
+            self.hood_error_tolerance, ClosedLoopSlot.kSlot1
+        )
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_encoder_cfg = hood_motor_cfg.absoluteEncoder  # TODO Re-check this line
-        hood_encoder_cfg.positionConversionFactor(self.ENCODER_ROTS_PER_HOOD_DEGREE)
+        hood_encoder_cfg.positionConversionFactor(1 / self.ENCODER_ROTS_PER_HOOD_DEGREE)
         hood_encoder_cfg.zeroOffset(self.ENCODER_ZERO_OFFSET)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
@@ -85,7 +87,7 @@ class ShooterComponent:
         return math.isclose(
             self.get_hood_angle(),
             self.desired_hood_angle,
-            rel_tol=self.hood_error_tolerance,
+            abs_tol=self.hood_error_tolerance,
         )
 
     def change_pitch_relative(self, angle):
@@ -115,5 +117,7 @@ class ShooterComponent:
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle, SparkMax.ControlType.kPosition
+            self.desired_hood_angle,
+            SparkMax.ControlType.kPosition,
+            ClosedLoopSlot.kSlot1,
         )
