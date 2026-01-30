@@ -35,11 +35,10 @@ class MyRobot(magicbot.MagicRobot):
     ballistics: BallisticsComponent
     port_vision: VisualLocalizer
     max_speed = tunable(3.5)  # m/s
-    lower_max_speed = tunable(0.25)  # m/s
+    test_max_speed = tunable(0.25)  # m/s
     max_spin_rate = tunable(2.8)  # m/s
-    lower_max_spin_rate = tunable(0.25)  # m/s
+    test_max_spin_rate = tunable(0.25)  # m/s
     inclination_angle = tunable(0.0)
-    dpad_max_speed = tunable(0.4)
     is_robot_oriented = tunable(False)
 
     START_POS_TOLERANCE = 0.2
@@ -163,8 +162,8 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
-        max_speed = self.lower_max_speed
-        max_spin_rate = self.lower_max_spin_rate
+        max_speed = self.max_speed
+        max_spin_rate = self.max_spin_rate
 
         if self.gamepad.getRightBumperButton():
             max_speed = self.max_speed
@@ -196,8 +195,8 @@ class MyRobot(magicbot.MagicRobot):
         allowed_to_drive = self.gamepad.getRightBumperButton()
         if allowed_to_drive:
             # Set max speed
-            max_speed = self.lower_max_speed
-            max_spin_rate = self.lower_max_spin_rate
+            max_speed = self.test_max_speed
+            max_spin_rate = self.test_max_spin_rate
 
             if self.gamepad.getXButton():
                 drive_x = 0.75 * max_speed
