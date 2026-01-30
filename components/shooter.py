@@ -9,6 +9,7 @@ from phoenix6.signals import MotorAlignmentValue
 from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
+from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
 
 
@@ -21,8 +22,10 @@ class ShooterComponent:
 
     desired_hood_angle = tunable(36.0)
     hood_error_tolerance = 3.0
-    MAX_HOOD_ANGLE = 28
-    MIN_HOOD_ANGLE = 72
+    MIN_HOOD_ANGLE = 28.9
+    MAX_HOOD_ANGLE = 73.4
+
+    hood_step_size = tunable(5)
 
     ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
     ENCODER_ZERO_OFFSET = 0.472
@@ -55,10 +58,10 @@ class ShooterComponent:
         self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
         self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
-        
+
         hood_motor_cfg = SparkMaxConfig()
         hood_motor_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        hood_motor_cfg.closedLoop.pid(0.05, 0, 0)  # TODO Tune these values
+        hood_motor_cfg.closedLoop.pid(0.005, 0, 0)  # TODO Tune these values
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
         hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
@@ -81,6 +84,12 @@ class ShooterComponent:
             abs_tol=self.hood_error_tolerance,
         )
 
+    def increase_hood_angle(self):
+        self.desired_hood_angle += self.hood_step_size
+
+    def decrease_hood_angle(self):
+        self.desired_hood_angle -= self.hood_step_size
+
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
         self.target_feeder_percentage = self.desired_feeder_percentage
@@ -97,7 +106,9 @@ class ShooterComponent:
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
+        self.desired_hood_angle = clamp(
+            self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        )
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle,
-            SparkMax.ControlType.kPosition
+            self.desired_hood_angle, SparkMax.ControlType.kPosition
         )
