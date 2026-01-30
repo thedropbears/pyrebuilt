@@ -9,7 +9,6 @@ from phoenix6.signals import MotorAlignmentValue
 from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
-from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
 
 
@@ -22,11 +21,11 @@ class ShooterComponent:
 
     desired_hood_angle = tunable(36.0)
     hood_error_tolerance = 3.0
-    MAX_HOOD_ANGLE = 59
-    MIN_HOOD_ANGLE = 18
+    MAX_HOOD_ANGLE = 28
+    MIN_HOOD_ANGLE = 72
 
     ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
-    ENCODER_ZERO_OFFSET = 0.7775692
+    ENCODER_ZERO_OFFSET = 0.472
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -54,7 +53,7 @@ class ShooterComponent:
         self.feeder_motor.setInverted(False)
 
         self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
-        #self.hood_motor.setInverted(True)
+        self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
         
         hood_motor_cfg = SparkMaxConfig()
@@ -66,17 +65,13 @@ class ShooterComponent:
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
             1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
-        ).zeroOffset(self.ENCODER_ZERO_OFFSET)
+        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(True)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
     @feedback
-    def get_encoder_angle(self):
-        return self.hood_encoder.getPosition()
-
-    @feedback
     def get_hood_angle(self):
-        return self.hood_encoder.getPosition() - 90
+        return self.hood_encoder.getPosition()
 
     @feedback
     def hood_is_at_setpoint(self):
@@ -84,16 +79,6 @@ class ShooterComponent:
             self.get_hood_angle(),
             self.desired_hood_angle,
             abs_tol=self.hood_error_tolerance,
-        )
-
-    def change_pitch_relative(self, angle):
-        self.desired_hood_angle = clamp(
-            self.get_hood_angle() - angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
-        )
-
-    def change_pitch_absolute(self, angle):
-        self.desired_hood_angle = clamp(
-            90 - angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
     def shoot(self) -> None:
