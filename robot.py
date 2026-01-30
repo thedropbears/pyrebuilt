@@ -217,12 +217,10 @@ class MyRobot(magicbot.MagicRobot):
             self.intake.intake()
 
         if self.gamepad.getAButton():
-            # self.climber.deploy()
-            self.shooter.increase_hood_angle()
+            self.climber.deploy()
 
         if self.gamepad.getYButton():
-            # self.climber.climb()
-            self.shooter.decrease_hood_angle()
+            self.climber.climb()
 
         self.shooter.execute()
         self.climber.execute()
