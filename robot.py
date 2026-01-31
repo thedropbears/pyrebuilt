@@ -6,7 +6,7 @@ import wpilib
 import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
-from wpimath.geometry import Rotation2d, Translation3d, Twist2d
+from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
