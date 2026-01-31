@@ -29,7 +29,9 @@ class ClimberComponent:
             LimitSwitchConfig.Behavior.kStopMovingMotor
         ).reverseLimitSwitchType(
             LimitSwitchConfig.Type.kNormallyOpen
-        ).reverseLimitSwitchTriggerBehavior(LimitSwitchConfig.Behavior.kStopMovingMotor)
+        ).reverseLimitSwitchTriggerBehavior(
+            LimitSwitchConfig.Behavior.kStopMovingMotorAndSetPosition
+        ).reverseLimitSwitchPosition(0)
 
         config.softLimit.forwardSoftLimit(
             self.MAX_FORWARD_EXTENSION
