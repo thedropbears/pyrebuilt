@@ -23,7 +23,6 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
 from components.intake import IntakeComponent
-import robot
 from utilities import game
 from utilities.functions import constrain_angle
 
