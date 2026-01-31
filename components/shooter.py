@@ -64,6 +64,7 @@ class ShooterComponent:
         hood_motor_cfg.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
 
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
+        hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
             1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
         ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(True)
