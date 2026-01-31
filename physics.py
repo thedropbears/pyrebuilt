@@ -107,20 +107,14 @@ class TalonFXSTurretSim:
         self,
         motor_sim: TalonFXMotorSim,
         encoder: DutyCycleEncoder,
-        # Reduction between encoder and mechanism readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        encoder_gearing: float,
     ):
         self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
-        self.encoder_gearing = encoder_gearing
 
     def update(self, dt: float):
         self.motor_sim.update(dt)
         # forward propagate to external encoder
-        self.encoder_sim.set(
-            self.motor_sim.motor_sim.getAngularPosition() * self.encoder_gearing
-        )
+        self.encoder_sim.set(self.motor_sim.motor_sim.getAngularPosition())
 
 
 class SparkMotorSim:
@@ -150,21 +144,13 @@ class SparkTurretSim:
         self,
         motor_sim: SparkMotorSim,
         encoder: DutyCycleEncoder,
-        # Reduction between encoder and mechanism readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        encoder_to_mechanism_gearing: float,
     ):
         self.motor_sim = motor_sim
         self.absolute_encoder_sim = DutyCycleEncoderSim(encoder)
-        self.encoder_to_mechanism_gearing = encoder_to_mechanism_gearing
 
     def update(self, dt: float):
         self.motor_sim.update(dt)
-        self.absolute_encoder_sim.set(
-            (1 / math.tau)
-            * self.motor_sim.mech_sim.getAngularPosition()
-            / self.encoder_to_mechanism_gearing
-        )
+        self.absolute_encoder_sim.set(self.motor_sim.mech_sim.getAngularPosition())
 
 
 class SparkArmSim:
