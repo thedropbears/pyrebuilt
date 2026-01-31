@@ -9,7 +9,8 @@ class ClimberComponent:
     MAX_FORWARD_EXTENSION, MAX_REVERSE_EXTENSION = 120, -120
 
     current_climber_speed = will_reset_to(0.0)
-    forward_climber_speed, reverse_climber_speed = tunable(0.8), tunable(0.8)
+    forward_climber_speed = tunable(0.8)
+    reverse_climber_speed = tunable(0.8)
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
@@ -45,7 +46,7 @@ class ClimberComponent:
         self.current_climber_speed = self.forward_climber_speed
 
     def retract(self):
-        self.current_climber_speed = self.reverse_climber_speed
+        self.current_climber_speed = self.reverse_climber_speed * -1
 
     def execute(self):
         self.motor.set(self.current_climber_speed)
