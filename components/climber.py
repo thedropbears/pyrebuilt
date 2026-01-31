@@ -1,4 +1,4 @@
-from magicbot import tunable, will_reset_to
+from magicbot import feedback, tunable, will_reset_to
 from rev import LimitSwitchConfig, SparkMax, SparkMaxConfig
 
 from ids import SparkId
@@ -17,10 +17,8 @@ class ClimberComponent:
         self.motor = SparkMax(SparkId.CLIMBER, SparkMax.MotorType.kBrushless)
         self.forward_limit_switch = self.motor.getForwardLimitSwitch()
         self.reverse_limit_switch = self.motor.getReverseLimitSwitch()
-        self.encoder = self.motor.getEncoder()
 
         config = SparkMaxConfig()
-
         config.inverted(True)
         config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
@@ -50,3 +48,11 @@ class ClimberComponent:
 
     def execute(self):
         self.motor.set(self.current_climber_speed)
+
+    @feedback
+    def forward_limit_switch_triggered(self):
+        return self.forward_limit_switch.get()
+
+    @feedback
+    def reverse_limit_switch_triggered(self):
+        return self.reverse_limit_switch.get()
