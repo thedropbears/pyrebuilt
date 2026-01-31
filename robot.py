@@ -227,10 +227,10 @@ class MyRobot(magicbot.MagicRobot):
             self.shooter.shoot()
             self.intake.intake()
 
-        if self.gamepad.getAButtonPressed():
+        if self.gamepad.getAButton():
             self.climber.deploy()
 
-        if self.gamepad.getBButtonPressed():
+        if self.gamepad.getBButton():
             self.climber.retract()
 
         if self.gamepad.getXButton():
