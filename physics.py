@@ -123,47 +123,46 @@ class TalonFXSTurretSim:
         )
 
 
-class SparkTurretSim:
+class SparkMotorSim:
     def __init__(
         self,
         gearbox_motor: Callable[[int], DCMotor],
         motor: rev.SparkMax,
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
-        motor_to_mechanism_gearing: float,
+        gearing: float,
         moi: kilogram_square_meters,
+    ):
+        gearbox = gearbox_motor(1)
+        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.mech_sim = DCMotorSim(self.plant, gearbox)
+        self.motor_sim = rev.SparkSim(motor, gearbox)
+
+    def update(self, dt: float):
+        vbus = self.motor_sim.getBusVoltage()
+        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
+        self.mech_sim.update(dt)
+        self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
+
+
+class SparkTurretSim:
+    def __init__(
+        self,
+        motor_sim: SparkMotorSim,
         encoder: DutyCycleEncoder,
         # Reduction between encoder and mechanism readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         encoder_to_mechanism_gearing: float,
     ):
-        gearbox = gearbox_motor(1)
-        self.plant = LinearSystemId.DCMotorSystem(
-            gearbox, moi, motor_to_mechanism_gearing
-        )
-        self.mech_sim = DCMotorSim(self.plant, gearbox)
+        self.motor_sim = motor_sim
         self.absolute_encoder_sim = DutyCycleEncoderSim(encoder)
-
-        self.motor_sim = rev.SparkSim(motor, gearbox)
         self.encoder_to_mechanism_gearing = encoder_to_mechanism_gearing
 
     def update(self, dt: float):
-        # grab the motor voltage to propagate the velocity and position of the mechanism
-        vbus = self.motor_sim.getBusVoltage()
-        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
-        self.mech_sim.update(dt)
-
-        # back propagate to motor state
-        self.motor_sim.iterate(
-            self.mech_sim.getAngularVelocity(),
-            vbus,
-            dt,
-        )
-
-        # Forward propagate to encoder
+        self.motor_sim.update(dt)
         self.absolute_encoder_sim.set(
             (1 / math.tau)
-            * self.mech_sim.getAngularPosition()
+            * self.motor_sim.mech_sim.getAngularPosition()
             / self.encoder_to_mechanism_gearing
         )
 
@@ -221,10 +220,12 @@ class PhysicsEngine:
         ]
 
         self.turret_sim = SparkTurretSim(
-            DCMotor.NEO,
-            robot.turret.motor,
-            robot.turret.MOTOR_TO_TURRET_GEARING,
-            0.02890532995,
+            SparkMotorSim(
+                DCMotor.NEO,
+                robot.turret.motor,
+                robot.turret.MOTOR_TO_TURRET_GEARING,
+                moi=0.02890532995,
+            ),
             robot.turret.absolute_encoder,
             1 / robot.turret.TURRET_TO_ENCODER_GEARING,
         )
