@@ -16,7 +16,8 @@ class TurretComponent:
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (25 / 145)
     TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
 
-    ENCODER_OFFSET = 0.359977
+    _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
+    ENCODER_OFFSET = _ENCODER_OFFSET_DUTY_CYCLE * math.tau / TURRET_TO_ENCODER_GEARING
 
     MAX_VELOCITY = 1.0
     MAX_ACCELERATION = 1.0
@@ -77,11 +78,7 @@ class TurretComponent:
 
     @feedback
     def _get_absolute_encoder_position(self) -> units.radians:
-        return self.absolute_encoder.get() - (
-            TurretComponent.ENCODER_OFFSET
-            / TurretComponent.TURRET_TO_ENCODER_GEARING
-            * math.tau
-        )
+        return self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET
 
     def _sync_encoder(self) -> None:
         self.relative_encoder.setPosition(self._get_absolute_encoder_position())
