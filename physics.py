@@ -11,7 +11,6 @@ import rev
 import wpilib
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
-from wpilib import DutyCycleEncoder
 from wpilib.simulation import (
     DCMotorSim,
     DutyCycleEncoderSim,
@@ -114,7 +113,7 @@ class TalonFXMotorSim(MotorSim):
 
 
 class TurretSim:
-    def __init__(self, motor_sim: MotorSim, encoder: DutyCycleEncoder):
+    def __init__(self, motor_sim: MotorSim, encoder: wpilib.DutyCycleEncoder):
         self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
 
