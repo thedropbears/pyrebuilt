@@ -13,14 +13,14 @@ class BallisticsComponent:
     turret: TurretComponent
 
     # TODO setup sensible reset and tunable vars
-    chassis_future_pos = Pose2d().translation()
-    chassis_future_rot = Pose2d().rotation()
+    future_start_pos = Pose2d().translation()
+    future_start_rot = Pose2d().rotation()
 
     target_pos = Translation3d().toTranslation2d()
 
-    chassis_angle_to_target: float
+    start_pos_angle_to_target: float
     shooter_angle_to_target: float
-    chassis_dist_to_target: float
+    start_pos_dist_to_target: float
 
     desired_flywheel_speed: float
     desired_hood_angle: float
@@ -37,16 +37,16 @@ class BallisticsComponent:
         pass
 
     @feedback
-    def get_chassis_angle_to_target(self):
-        return self.chassis_angle_to_target
+    def get_chassis_angle_to_target(self) -> float:
+        return self.start_pos_angle_to_target
 
     @feedback
-    def get_shooter_angle_to_target(self):
+    def get_shooter_angle_to_target(self) -> float:
         return self.shooter_angle_to_target
 
     @feedback
-    def get_chassis_dist_to_target(self):
-        return self.chassis_dist_to_target
+    def get_chassis_dist_to_target(self) -> float:
+        return self.start_pos_dist_to_target
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
@@ -62,21 +62,21 @@ class BallisticsComponent:
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
 
-        self.chassis_future_pos = current_pose.exp(current_twist).translation()
-        self.chassis_future_rot = current_pose.exp(current_twist).rotation()
+        self.future_start_pos = current_pose.exp(current_twist).translation()
+        self.future_start_rot = current_pose.exp(current_twist).rotation()
         self.target_pos = target_position.toTranslation2d()
 
-        self.chassis_dist_to_target = self.chassis_future_pos.distance(self.target_pos)
+        self.start_pos_dist_to_target = self.future_start_pos.distance(self.target_pos)
 
     def execute(self) -> None:
         # perform turret calculations
-        self.chassis_angle_to_target = atan2(
-            self.target_pos.y - self.chassis_future_pos.y,
-            self.target_pos.x - self.chassis_future_pos.x,
+        self.start_pos_angle_to_target = atan2(
+            self.target_pos.y - self.future_start_pos.y,
+            self.target_pos.x - self.future_start_pos.x,
         )
 
         self.shooter_angle_to_target = (
-            self.chassis_angle_to_target - self.chassis_future_rot.radians()
+            self.start_pos_angle_to_target - self.future_start_rot.radians()
         )
 
         # dispatch turret command
@@ -84,7 +84,7 @@ class BallisticsComponent:
         # perform shooter calculations
         self.desired_hood_angle = float(
             np.interp(
-                self.chassis_dist_to_target,
+                self.start_pos_dist_to_target,
                 self.DISTANCE_LOOKUP,
                 self.ANGLE_LOOKUP,
             )
@@ -92,7 +92,7 @@ class BallisticsComponent:
 
         self.desired_flywheel_speed = float(
             np.interp(
-                self.chassis_dist_to_target,
+                self.start_pos_dist_to_target,
                 self.DISTANCE_LOOKUP,
                 self.SPEED_LOOKUP,
             )
