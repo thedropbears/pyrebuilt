@@ -122,22 +122,22 @@ class MyRobot(magicbot.MagicRobot):
 
         else:
             self.chassis_swerve_config = SwerveConfig(
-                drive_ratio=(14.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
+                drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
                 drive_gains=Slot0Configs()
-                .with_k_p(3.2014)
+                .with_k_p(2.891)
                 .with_k_i(0)
                 .with_k_d(0)
-                .with_k_s(0.13567)
-                .with_k_v(2.9205)
-                .with_k_a(0.070011),
-                steer_ratio=(14 / 50) * (10 / 60),
+                .with_k_s(0.12159)
+                .with_k_v(2.5673)
+                .with_k_a(26.249),
+                steer_ratio=(16 / 50) * (10 / 60),
                 steer_gains=Slot0Configs()
-                .with_k_p(103.06)
+                .with_k_p(174.6)
                 .with_k_i(0)
-                .with_k_d(1.0525)
-                .with_k_s(0.17771)
-                .with_k_v(2.5106)
-                .with_k_a(0.028466),
+                .with_k_d(3.5359)
+                .with_k_s(0.1264)
+                .with_k_v(2.199)
+                .with_k_a(0.044934),
                 reverse_drive=True,
             )
             self.chassis_track_width = 0.517
@@ -199,13 +199,18 @@ class MyRobot(magicbot.MagicRobot):
             max_speed = self.lower_max_speed
             max_spin_rate = self.lower_max_spin_rate
 
-            # Driving
-            drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
-            drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
-            drive_z = (
-                -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
-                * max_spin_rate
-            )
+            if self.gamepad.getXButton():
+                drive_x = 0.75 * max_speed
+                drive_y = 0.0
+                drive_z = 0.0
+            else:
+                # Driving
+                drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
+                drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
+                drive_z = (
+                    -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
+                    * max_spin_rate
+                )
 
             self.chassis.drive_local(drive_x, drive_y, drive_z)
             self.chassis.execute()
