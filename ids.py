@@ -46,6 +46,7 @@ class SparkId(enum.IntEnum):
     INTAKE = 11
 
     HOOD = 10
+
     TURRET = 2
 
 
