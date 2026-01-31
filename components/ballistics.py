@@ -18,12 +18,12 @@ class BallisticsComponent:
 
     target_pos = Translation3d().toTranslation2d()
 
-    start_pos_angle_to_target: float
-    shooter_angle_to_target: float
-    start_pos_dist_to_target: float
+    start_pos_angle_to_target: float = 0.0
+    shooter_angle_to_target: float = 0.0
+    start_pos_dist_to_target: float = 0.0
 
-    desired_flywheel_speed: float
-    desired_hood_angle: float
+    desired_flywheel_speed: float = 0.0
+    desired_hood_angle: float = 0.0
 
     # TODO Define lookup table for use
 
