@@ -18,9 +18,9 @@ from wpilib.simulation import (
     PWMSim,
     SingleJointedArmSim,
 )
+from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system.plant import DCMotor, LinearSystemId
-from wpimath.units import kilogram_square_meters
 
 from components.chassis import SwerveModule
 from utilities import game
@@ -31,8 +31,8 @@ if typing.TYPE_CHECKING:
 
 
 class MotorSim(typing.Protocol):
-    def update(self, dt: float) -> None: ...
-    def get_angular_position(self) -> float: ...
+    def update(self, dt: units.seconds) -> None: ...
+    def get_angular_position(self) -> units.radians: ...
 
 
 class RollingBuffer:
@@ -61,7 +61,7 @@ class SimpleTalonFXMotorSim:
         self.units_per_rev = units_per_rev
         self.voltage_buffer = RollingBuffer(10)
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: units.seconds) -> None:
         voltage = self.sim_state.motor_voltage
 
         self.voltage_buffer.add_sample(voltage)
@@ -84,7 +84,7 @@ class TalonFXMotorSim(MotorSim):
         # Reduction between motor and encoder readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
-        moi: kilogram_square_meters,
+        moi: units.kilogram_square_meters,
     ):
         gearbox = gearbox_motor(len(motors))
         self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
@@ -95,7 +95,7 @@ class TalonFXMotorSim(MotorSim):
         self.motor_sim = DCMotorSim(self.plant, gearbox)
 
     @override
-    def update(self, dt: float) -> None:
+    def update(self, dt: units.seconds) -> None:
         voltage = self.sim_states[0].motor_voltage
         self.motor_sim.setInputVoltage(voltage)
         self.motor_sim.update(dt)
@@ -109,7 +109,7 @@ class TalonFXMotorSim(MotorSim):
             )
 
     @override
-    def get_angular_position(self) -> float:
+    def get_angular_position(self) -> units.radians:
         return self.motor_sim.getAngularPosition()
 
 
@@ -118,7 +118,7 @@ class TurretSim:
         self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
 
-    def update(self, dt: float):
+    def update(self, dt: units.seconds):
         self.motor_sim.update(dt)
         self.encoder_sim.set(self.motor_sim.get_angular_position())
 
@@ -131,7 +131,7 @@ class SparkMotorSim(MotorSim):
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
-        moi: kilogram_square_meters,
+        moi: units.kilogram_square_meters,
     ):
         gearbox = gearbox_motor(1)
         self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
@@ -139,14 +139,14 @@ class SparkMotorSim(MotorSim):
         self.motor_sim = rev.SparkSim(motor, gearbox)
 
     @override
-    def update(self, dt: float):
+    def update(self, dt: units.seconds):
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
         self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
 
     @override
-    def get_angular_position(self) -> float:
+    def get_angular_position(self) -> units.radians:
         return self.mech_sim.getAngularPosition()
 
 
@@ -156,7 +156,7 @@ class SparkArmSim:
         self.motor_sim = motor_sim
         self.motor_encoder_sim = self.motor_sim.getRelativeEncoderSim()
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: units.seconds) -> None:
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
@@ -231,7 +231,7 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
-    def update_sim(self, now: float, tm_diff: float) -> None:
+    def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
             wheel.update(tm_diff)
         for steer in self.steer:
