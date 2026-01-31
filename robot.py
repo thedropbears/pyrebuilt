@@ -34,15 +34,12 @@ class MyRobot(magicbot.MagicRobot):
     turret: TurretComponent
     ballistics: BallisticsComponent
     port_vision: VisualLocalizer
-    max_speed = tunable(3.5)  # m/s
-    lower_max_speed = tunable(0.25)  # m/s
-    max_spin_rate = tunable(2.8)  # m/s
-    lower_max_spin_rate = tunable(0.25)  # m/s
-    inclination_angle = tunable(0.0)
-    dpad_max_speed = tunable(0.4)
-    is_robot_oriented = tunable(False)
 
-    START_POS_TOLERANCE = 0.2
+    # Driving constraints
+    upper_max_speed = tunable(2.0)  # m/s
+    upper_max_spin_rate = tunable(2.0)  # rad/s
+    lower_max_speed = tunable(1.0)  # m/s
+    lower_max_spin_rate = tunable(1.0)  # rad/s
 
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
@@ -167,8 +164,8 @@ class MyRobot(magicbot.MagicRobot):
         max_spin_rate = self.lower_max_spin_rate
 
         if self.gamepad.getRightBumperButton():
-            max_speed = self.max_speed
-            max_spin_rate = self.max_spin_rate
+            max_speed = self.upper_max_speed
+            max_spin_rate = self.upper_max_spin_rate
 
         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * max_speed
         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * max_speed
