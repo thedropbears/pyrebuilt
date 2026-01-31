@@ -74,7 +74,7 @@ class TalonFXMotorSim:
         self,
         # DCMotor gearbox factory, e.g. DCMotor.falcon500
         gearbox_motor: Callable[[int], DCMotor],
-        *motors: phoenix6.hardware.TalonFX,
+        *motors: phoenix6.hardware.TalonFX | phoenix6.hardware.TalonFXS,
         # Reduction between motor and encoder readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
@@ -116,30 +116,18 @@ class TalonFXSTurretSim:
         # If the mechanism spins slower than the motor, this number should be greater than one.
         encoder_gearing: float,
     ):
-        gearbox = gearbox_motor(1)
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, motor_gearing)
-        self.motor_sim = DCMotorSim(self.plant, gearbox)
+        self.motor_sim = TalonFXMotorSim(
+            gearbox_motor, motor, gearing=motor_gearing, moi=moi
+        )
         self.encoder_sim = DutyCycleEncoderSim(encoder)
-        self.motor_state = motor.sim_state
-        self.motor_gearing = motor_gearing
         self.encoder_gearing = encoder_gearing
 
     def update(self, dt: float):
-        # grab the motor voltage to propagate the velocity and position of the mechanism
-        voltage = self.motor_state.motor_voltage
-        self.motor_sim.setInputVoltage(voltage)
         self.motor_sim.update(dt)
-
-        # back propagate to motor state
-        self.motor_state.set_raw_rotor_position(
-            self.motor_sim.getAngularPosition() * self.motor_gearing
-        )
-        self.motor_state.set_rotor_velocity(
-            self.motor_sim.getAngularVelocity() * self.motor_gearing
-        )
-
         # forward propagate to external encoder
-        self.encoder_sim.set(self.motor_sim.getAngularPosition() * self.encoder_gearing)
+        self.encoder_sim.set(
+            self.motor_sim.motor_sim.getAngularPosition() * self.encoder_gearing
+        )
 
 
 class SparkTurretSim:
