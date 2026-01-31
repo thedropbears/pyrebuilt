@@ -23,6 +23,7 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
 from components.intake import IntakeComponent
+import robot
 from utilities import game
 from utilities.functions import constrain_angle
 
@@ -243,9 +244,10 @@ class PhysicsEngine:
         # Intake arm simulation
         intake_arm_gearbox = DCMotor.NEO(1)
         self.intake_arm_motor = rev.SparkMaxSim(
-            robot.intake.arm_motor, intake_arm_gearbox
+            robot.intake.arm_motor,
+            intake_arm_gearbox,
         )
-        self.intake_arm_encoder_sim = DutyCycleEncoderSim(robot.intake.encoder)
+
         self.intake_arm = SparkArmSim(
             SingleJointedArmSim(
                 intake_arm_gearbox,
@@ -308,6 +310,12 @@ class PhysicsEngine:
 
         # Update intake arm simulation
         self.intake_arm.update(tm_diff)
-        self.intake_arm_encoder_sim.set(
-            self.intake_arm.mech_sim.getAngle() + IntakeComponent.ARM_ENCODER_OFFSET
-        )
+
+        # Get arm angle from sim (radians)
+        arm_angle_rad = self.intake_arm.mech_sim.getAngle()
+
+        # Convert radians -> motor rotations for Spark MAX sim
+        arm_angle_rot = arm_angle_rad / (2 * math.pi)
+
+        # Push position into Spark MAX absolute encoder
+        self.intake_arm_motor.setPosition(arm_angle_rot)

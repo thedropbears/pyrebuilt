@@ -5,9 +5,13 @@ from magicbot import tunable, will_reset_to
 from phoenix6 import configs
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
+from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 
-from ids import DioChannel, SparkId, TalonId
-from utilities.rev import configure_spark_ephemeral, configure_through_bore_encoder
+from ids import SparkId, TalonId
+from utilities.rev import (
+    configure_spark_ephemeral,
+    configure_spark_reset_and_persist,
+)
 
 
 class IntakeComponent:
@@ -22,6 +26,9 @@ class IntakeComponent:
     indexer_output = tunable(0.5)
 
     desired_indexer = will_reset_to(0.0)
+    ARM_ERROR_TOLERANCE = 3.0
+    ENCODER_ROTS_PER_ARM_DEGREE = 1 / 360  # TODO: replace with real gearing
+    ARM_ENCODER_ZERO_OFFSET = 0.0  # TODO: tune this
 
     def __init__(self, intake_mech_root: wpilib.MechanismRoot2d) -> None:
         self.intake_ligament = intake_mech_root.appendLigament(
@@ -46,15 +53,24 @@ class IntakeComponent:
 
         self.motor.configurator.apply(motor_config)
 
-        # Arm motor and encoder for simulation
         self.arm_motor = SparkMax(SparkId.INTAKE_ARM, SparkMax.MotorType.kBrushless)
-        arm_config = SparkMaxConfig()
-        arm_config.inverted(False)
-        arm_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        configure_spark_ephemeral(self.arm_motor, arm_config)
+        self.arm_motor.setInverted(False)
+        self.arm_motor_controller = self.arm_motor.getClosedLoopController()
 
-        self.encoder = wpilib.DutyCycleEncoder(DioChannel.INTAKE_ENCODER, math.tau, 0.0)
-        configure_through_bore_encoder(self.encoder)
+        arm_cfg = SparkMaxConfig()
+        arm_cfg.inverted(False)
+        arm_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+
+        arm_cfg.closedLoop.pid(0.005, 0.0, 0.0) #TODO: Tune these values
+        arm_cfg.closedLoop.allowedClosedLoopError(self.ARM_ERROR_TOLERANCE)
+        arm_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+
+        self.arm_encoder = self.arm_motor.getAbsoluteEncoder()
+        arm_cfg.absoluteEncoder.positionConversionFactor(
+            1 / self.ENCODER_ROTS_PER_ARM_DEGREE
+        ).zeroOffset(self.ARM_ENCODER_ZERO_OFFSET).zeroCentered(True)
+
+        configure_spark_reset_and_persist(self.arm_motor, arm_cfg)
 
     # varibles for arm simulation
     # TODO: verify these values for this years robot IMPORTANT!!
