@@ -18,7 +18,7 @@ class BallisticsComponent:
 
     target_pos = Translation3d().toTranslation2d()
 
-    start_pos_angle_to_target_relative_to_robot: float = 0.0
+    start_pos_angle_to_target_relative_to_field: float = 0.0
     start_pos_angle_to_target_relative_to_robot: float = 0.0
     start_pos_dist_to_target: float = 0.0
 
@@ -38,7 +38,7 @@ class BallisticsComponent:
 
     @feedback
     def get_chassis_angle_to_target(self) -> float:
-        return self.start_pos_angle_to_target_relative_to_robot
+        return self.start_pos_angle_to_target_relative_to_field
 
     @feedback
     def get_shooter_angle_to_target(self) -> float:
@@ -70,13 +70,13 @@ class BallisticsComponent:
 
     def execute(self) -> None:
         # perform turret calculations
-        self.start_pos_angle_to_target_relative_to_robot = atan2(
+        self.start_pos_angle_to_target_relative_to_field = atan2(
             self.target_pos.y - self.future_start_pos.y,
             self.target_pos.x - self.future_start_pos.x,
         )
 
         self.start_pos_angle_to_target_relative_to_robot = (
-            self.start_pos_angle_to_target_relative_to_robot
+            self.start_pos_angle_to_target_relative_to_field
             - self.future_start_rot.radians()
         )
 
