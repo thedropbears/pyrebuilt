@@ -261,7 +261,6 @@ class PhysicsEngine:
             self.intake_arm_motor,
         )
 
-        self.intake = robot.intake
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
