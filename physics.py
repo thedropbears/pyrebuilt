@@ -4,6 +4,7 @@ import math
 import statistics
 import typing
 from collections.abc import Callable
+from typing import override
 
 import phoenix6
 import rev
@@ -27,6 +28,11 @@ from utilities.functions import constrain_angle
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
+
+
+class MotorSim(typing.Protocol):
+    def update(self, dt: float) -> None: ...
+    def get_angular_position(self) -> float: ...
 
 
 class RollingBuffer:
@@ -69,7 +75,7 @@ class SimpleTalonFXMotorSim:
         self.sim_state.add_rotor_position(velocity_rps * dt)
 
 
-class TalonFXMotorSim:
+class TalonFXMotorSim(MotorSim):
     def __init__(
         self,
         # DCMotor gearbox factory, e.g. DCMotor.falcon500
@@ -88,6 +94,7 @@ class TalonFXMotorSim:
             sim_state.set_supply_voltage(12.0)
         self.motor_sim = DCMotorSim(self.plant, gearbox)
 
+    @override
     def update(self, dt: float) -> None:
         voltage = self.sim_states[0].motor_voltage
         self.motor_sim.setInputVoltage(voltage)
@@ -101,23 +108,22 @@ class TalonFXMotorSim:
                 self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
             )
 
+    @override
+    def get_angular_position(self) -> float:
+        return self.motor_sim.getAngularPosition()
 
-class TalonFXSTurretSim:
-    def __init__(
-        self,
-        motor_sim: TalonFXMotorSim,
-        encoder: DutyCycleEncoder,
-    ):
+
+class TurretSim:
+    def __init__(self, motor_sim: MotorSim, encoder: DutyCycleEncoder):
         self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
 
     def update(self, dt: float):
         self.motor_sim.update(dt)
-        # forward propagate to external encoder
-        self.encoder_sim.set(self.motor_sim.motor_sim.getAngularPosition())
+        self.encoder_sim.set(self.motor_sim.get_angular_position())
 
 
-class SparkMotorSim:
+class SparkMotorSim(MotorSim):
     def __init__(
         self,
         gearbox_motor: Callable[[int], DCMotor],
@@ -132,25 +138,16 @@ class SparkMotorSim:
         self.mech_sim = DCMotorSim(self.plant, gearbox)
         self.motor_sim = rev.SparkSim(motor, gearbox)
 
+    @override
     def update(self, dt: float):
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
         self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
 
-
-class SparkTurretSim:
-    def __init__(
-        self,
-        motor_sim: SparkMotorSim,
-        encoder: DutyCycleEncoder,
-    ):
-        self.motor_sim = motor_sim
-        self.absolute_encoder_sim = DutyCycleEncoderSim(encoder)
-
-    def update(self, dt: float):
-        self.motor_sim.update(dt)
-        self.absolute_encoder_sim.set(self.motor_sim.mech_sim.getAngularPosition())
+    @override
+    def get_angular_position(self) -> float:
+        return self.mech_sim.getAngularPosition()
 
 
 class SparkArmSim:
@@ -205,7 +202,7 @@ class PhysicsEngine:
             for module in robot.chassis.modules
         ]
 
-        self.turret_sim = SparkTurretSim(
+        self.turret_sim = TurretSim(
             SparkMotorSim(
                 DCMotor.NEO,
                 robot.turret.motor,
@@ -213,7 +210,6 @@ class PhysicsEngine:
                 moi=0.02890532995,
             ),
             robot.turret.absolute_encoder,
-            1 / robot.turret.TURRET_TO_ENCODER_GEARING,
         )
 
         self.imu = robot.chassis.imu.sim_state
