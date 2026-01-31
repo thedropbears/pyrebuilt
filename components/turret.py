@@ -23,7 +23,7 @@ class TurretComponent:
         # Initialise Motor
         self.motor = SparkMax(SparkId.TURRET, SparkMax.MotorType.kBrushless)
         config = SparkMaxConfig()
-        config.inverted(False)
+        config.inverted(True)
         config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         config.closedLoop.pid(1.0, 0.0, 0.0)
         config.closedLoop.maxMotion.maxAcceleration(TurretComponent.MAX_ACCELERATION)
@@ -43,7 +43,7 @@ class TurretComponent:
         # Initialise Encoder
         self.absolute_encoder = DutyCycleEncoder(DioChannel.TURRET_ENCODER)
         configure_through_bore_encoder(self.absolute_encoder)
-        self.absolute_encoder.setInverted(False)
+        self.absolute_encoder.setInverted(True)
 
         self.desired_angle = 0.0
 
