@@ -34,7 +34,7 @@ class MyRobot(magicbot.MagicRobot):
     turret: TurretComponent
     ballistics: BallisticsComponent
     port_vision: VisualLocalizer
-    
+
     # Driving constraints
     upper_max_speed = tunable(2.0)  # m/s
     upper_max_spin_rate = tunable(2.0)  # rad/s
@@ -42,8 +42,8 @@ class MyRobot(magicbot.MagicRobot):
     lower_max_spin_rate = tunable(1.0)  # rad/s
 
     # Temp turret:
-    turret_setpoint = tunable(90)
-    
+    turret_setpoint = tunable(0.0)
+
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()

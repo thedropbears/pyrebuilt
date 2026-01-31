@@ -27,7 +27,7 @@ class TurretComponent:
         config = SparkMaxConfig()
         config.inverted(True)
         config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        config.closedLoop.pid(1.0, 0.0, 0.0)
+        config.closedLoop.pid(0.05, 0.0, 0.0)
         config.closedLoop.maxMotion.maxAcceleration(TurretComponent.MAX_ACCELERATION)
         config.closedLoop.maxMotion.cruiseVelocity(TurretComponent.MAX_VELOCITY)
         config.closedLoop.maxMotion.allowedClosedLoopError(math.radians(5))
