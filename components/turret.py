@@ -16,6 +16,8 @@ class TurretComponent:
     MOTOR_TO_TURRET_GEARING = 25 / 145
     TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
 
+    ENCODER_OFFSET = 0.359977
+
     MAX_VELOCITY = 1.0
     MAX_ACCELERATION = 1.0
 
@@ -63,9 +65,13 @@ class TurretComponent:
         self.slew_to(self.current_angle())
 
     @feedback
+    def raw_absolute_encoder(self) -> float:
+        return self.absolute_encoder.get()
+
+    @feedback
     def _get_absolute_encoder_position(self) -> units.radians:
         return (
-            self.absolute_encoder.get()
+            (self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET)
             / TurretComponent.TURRET_TO_ENCODER_GEARING
             * math.tau
         )
