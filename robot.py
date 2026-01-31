@@ -227,7 +227,8 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
-        self.turret.slew_to(math.radians(self.turret_setpoint))
+        if self.gamepad.getXButton():
+            self.turret.slew_to(math.radians(self.turret_setpoint))
 
         self.shooter.execute()
         self.climber.execute()
