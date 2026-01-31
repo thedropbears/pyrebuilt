@@ -44,6 +44,9 @@ class MyRobot(magicbot.MagicRobot):
     # Temp turret:
     turret_setpoint = tunable(0.0)
 
+    # Temp ballistics
+    time_sample_length = 0.2
+
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
@@ -236,14 +239,10 @@ class MyRobot(magicbot.MagicRobot):
             self.turret.slew_to(math.radians(self.turret_setpoint))
 
         if self.gamepad.getBButton():
-            self.chassis_twist = Twist2d(
-                self.chassis.get_velocity().vx,  # TODO Recheck this conversion
-                self.chassis.get_velocity().vy,  # TODO Recheck this conversion
-                self.chassis.get_velocity().omega,  # TODO Recheck this conversion
-            )
-
             self.ballistics.calculate_for(
-                self.aim_pos, self.chassis.get_pose(), self.chassis_twist
+                self.aim_pos,
+                self.chassis.get_pose(),
+                self.chassis.get_velocity().toTwist2d(self.time_sample_length),
             )
 
         self.shooter.execute()
