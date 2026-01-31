@@ -18,8 +18,8 @@ class BallisticsComponent:
 
     target_pos = Translation3d().toTranslation2d()
 
-    start_pos_angle_to_target: float = 0.0
-    shooter_angle_to_target: float = 0.0
+    start_pos_angle_to_target_relative_to_robot: float = 0.0
+    start_pos_angle_to_target_relative_to_robot: float = 0.0
     start_pos_dist_to_target: float = 0.0
 
     desired_flywheel_speed: float = 0.0
@@ -38,11 +38,11 @@ class BallisticsComponent:
 
     @feedback
     def get_chassis_angle_to_target(self) -> float:
-        return self.start_pos_angle_to_target
+        return self.start_pos_angle_to_target_relative_to_robot
 
     @feedback
     def get_shooter_angle_to_target(self) -> float:
-        return self.shooter_angle_to_target
+        return self.start_pos_angle_to_target_relative_to_robot
 
     @feedback
     def get_chassis_dist_to_target(self) -> float:
@@ -70,16 +70,18 @@ class BallisticsComponent:
 
     def execute(self) -> None:
         # perform turret calculations
-        self.start_pos_angle_to_target = atan2(
+        self.start_pos_angle_to_target_relative_to_robot = atan2(
             self.target_pos.y - self.future_start_pos.y,
             self.target_pos.x - self.future_start_pos.x,
         )
 
-        self.shooter_angle_to_target = (
-            self.start_pos_angle_to_target - self.future_start_rot.radians()
+        self.start_pos_angle_to_target_relative_to_robot = (
+            self.start_pos_angle_to_target_relative_to_robot
+            - self.future_start_rot.radians()
         )
 
         # dispatch turret command
+        self.turret.slew_to(self.start_pos_angle_to_target_relative_to_robot)
 
         # perform shooter calculations
         self.desired_hood_angle = float(
