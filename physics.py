@@ -105,20 +105,13 @@ class TalonFXMotorSim:
 class TalonFXSTurretSim:
     def __init__(
         self,
-        gearbox_motor: Callable[[int], DCMotor],
-        motor: phoenix6.hardware.TalonFXS,
-        # Reduction between motor and mechanism rotations, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        motor_gearing: float,
-        moi: kilogram_square_meters,
+        motor_sim: TalonFXMotorSim,
         encoder: DutyCycleEncoder,
         # Reduction between encoder and mechanism readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         encoder_gearing: float,
     ):
-        self.motor_sim = TalonFXMotorSim(
-            gearbox_motor, motor, gearing=motor_gearing, moi=moi
-        )
+        self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
         self.encoder_gearing = encoder_gearing
 
