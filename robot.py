@@ -34,15 +34,15 @@ class MyRobot(magicbot.MagicRobot):
     turret: TurretComponent
     ballistics: BallisticsComponent
     port_vision: VisualLocalizer
-    max_speed = tunable(3.5)  # m/s
-    lower_max_speed = tunable(0.25)  # m/s
-    max_spin_rate = tunable(2.8)  # m/s
-    lower_max_spin_rate = tunable(0.25)  # m/s
-    inclination_angle = tunable(0.0)
-    dpad_max_speed = tunable(0.4)
-    is_robot_oriented = tunable(False)
 
-    START_POS_TOLERANCE = 0.2
+    # Driving constraints
+    upper_max_speed = tunable(2.0)  # m/s
+    upper_max_spin_rate = tunable(2.0)  # rad/s
+    lower_max_speed = tunable(1.0)  # m/s
+    lower_max_spin_rate = tunable(1.0)  # rad/s
+
+    # Temp turret:
+    turret_setpoint = tunable(0.0)
 
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
@@ -122,22 +122,22 @@ class MyRobot(magicbot.MagicRobot):
 
         else:
             self.chassis_swerve_config = SwerveConfig(
-                drive_ratio=(14.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
+                drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
                 drive_gains=Slot0Configs()
-                .with_k_p(4.7066)
+                .with_k_p(2.891)
                 .with_k_i(0)
                 .with_k_d(0)
-                .with_k_s(0.11481)
-                .with_k_v(2.401)
-                .with_k_a(0.15931),
-                steer_ratio=(14 / 50) * (10 / 60),
+                .with_k_s(0.12159)
+                .with_k_v(2.5673)
+                .with_k_a(26.249),
+                steer_ratio=(16 / 50) * (10 / 60),
                 steer_gains=Slot0Configs()
-                .with_k_p(17.401)
+                .with_k_p(174.6)
                 .with_k_i(0)
-                .with_k_d(0.012061)
-                .with_k_s(0.1157)
-                .with_k_v(2.5019)
-                .with_k_a(0.058235),
+                .with_k_d(3.5359)
+                .with_k_s(0.1264)
+                .with_k_v(2.199)
+                .with_k_a(0.044934),
                 reverse_drive=True,
             )
             self.chassis_track_width = 0.517
@@ -167,8 +167,8 @@ class MyRobot(magicbot.MagicRobot):
         max_spin_rate = self.lower_max_spin_rate
 
         if self.gamepad.getRightBumperButton():
-            max_speed = self.max_speed
-            max_spin_rate = self.max_spin_rate
+            max_speed = self.upper_max_speed
+            max_spin_rate = self.upper_max_spin_rate
 
         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * max_speed
         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * max_speed
@@ -199,13 +199,18 @@ class MyRobot(magicbot.MagicRobot):
             max_speed = self.lower_max_speed
             max_spin_rate = self.lower_max_spin_rate
 
-            # Driving
-            drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
-            drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
-            drive_z = (
-                -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
-                * max_spin_rate
-            )
+            if self.gamepad.getXButton():
+                drive_x = 0.75 * max_speed
+                drive_y = 0.0
+                drive_z = 0.0
+            else:
+                # Driving
+                drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
+                drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
+                drive_z = (
+                    -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
+                    * max_spin_rate
+                )
 
             self.chassis.drive_local(drive_x, drive_y, drive_z)
             self.chassis.execute()
@@ -222,9 +227,13 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
+        if self.gamepad.getXButton():
+            self.turret.slew_to(math.radians(self.turret_setpoint))
+
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
+        self.turret.execute()
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
@@ -248,3 +257,4 @@ class MyRobot(magicbot.MagicRobot):
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
+        self.turret.perioidic()
