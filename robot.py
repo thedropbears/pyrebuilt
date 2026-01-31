@@ -6,7 +6,7 @@ import wpilib
 import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
-from wpimath.geometry import Rotation2d, Translation3d
+from wpimath.geometry import Rotation2d, Translation3d, Twist2d
 
 from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
@@ -191,6 +191,11 @@ class MyRobot(magicbot.MagicRobot):
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
+        self.aim_pos = Translation3d(
+            self.chassis.get_pose().translation().x,
+            self.chassis.get_pose().translation().y + 3,
+            0,
+        )
 
     def testPeriodic(self) -> None:
         allowed_to_drive = self.gamepad.getRightBumperButton()
@@ -230,10 +235,22 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getXButton():
             self.turret.slew_to(math.radians(self.turret_setpoint))
 
+        if self.gamepad.getBButton():
+            self.chassis_twist = Twist2d(
+                self.chassis.get_velocity().vx,  # TODO Recheck this conversion
+                self.chassis.get_velocity().vy,  # TODO Recheck this conversion
+                self.chassis.get_velocity().omega,  # TODO Recheck this conversion
+            )
+
+            self.ballistics.calculate_for(
+                self.aim_pos, self.chassis.get_pose(), self.chassis_twist
+            )
+
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
         self.turret.execute()
+        self.ballistics.execute()
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
