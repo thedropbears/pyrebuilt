@@ -13,7 +13,7 @@ from utilities.rev import (
 
 
 class TurretComponent:
-    MOTOR_TO_TURRET_GEARING = 25 / 145
+    MOTOR_TO_TURRET_GEARING = (1 / 5) * (25 / 145)
     TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
 
     ENCODER_OFFSET = 0.359977
