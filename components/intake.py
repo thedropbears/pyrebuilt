@@ -61,7 +61,7 @@ class IntakeComponent:
         arm_cfg.inverted(False)
         arm_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
-        arm_cfg.closedLoop.pid(0.005, 0.0, 0.0) #TODO: Tune these values
+        arm_cfg.closedLoop.pid(0.005, 0.0, 0.0)  # TODO: Tune these values
         arm_cfg.closedLoop.allowedClosedLoopError(self.ARM_ERROR_TOLERANCE)
         arm_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
 
