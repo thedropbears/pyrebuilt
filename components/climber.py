@@ -17,6 +17,7 @@ class ClimberComponent:
         self.motor = SparkMax(SparkId.CLIMBER, SparkMax.MotorType.kBrushless)
         self.forward_limit_switch = self.motor.getForwardLimitSwitch()
         self.reverse_limit_switch = self.motor.getReverseLimitSwitch()
+        self.encoder = self.motor.getEncoder()
 
         config = SparkMaxConfig()
         config.inverted(True)
@@ -50,9 +51,13 @@ class ClimberComponent:
         self.motor.set(self.current_climber_speed)
 
     @feedback
-    def forward_limit_switch_triggered(self):
+    def is_forward_limit_switch_triggered(self):
         return self.forward_limit_switch.get()
 
     @feedback
-    def reverse_limit_switch_triggered(self):
+    def is_reverse_limit_switch_triggered(self):
         return self.reverse_limit_switch.get()
+
+    @feedback
+    def get_climber_position(self):
+        return self.encoder.getPosition()
