@@ -46,6 +46,7 @@ class SparkId(enum.IntEnum):
     INTAKE = 11
 
     HOOD = 10
+    TURRET = 2
 
 
 @enum.unique
@@ -53,6 +54,8 @@ class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
 
     PORT_VISION_ENCODER = 0
+
+    TURRET_ENCODER = 1
 
 
 @enum.unique
