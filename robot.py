@@ -37,9 +37,9 @@ class MyRobot(magicbot.MagicRobot):
 
     # Driving constraints
     upper_max_speed = tunable(2.0)  # m/s
-    upper_max_spin_rate = tunable(2.0)  # m/s
+    upper_max_spin_rate = tunable(2.0)  # rad/s
     lower_max_speed = tunable(1.0)  # m/s
-    lower_max_spin_rate = tunable(1.0)  # m/s
+    lower_max_spin_rate = tunable(1.0)  # rad/s
 
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
