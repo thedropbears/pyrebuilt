@@ -46,7 +46,11 @@ class TurretComponent:
         self.controller = self.motor.getClosedLoopController()
 
         # Initialise Encoder
-        self.absolute_encoder = DutyCycleEncoder(DioChannel.TURRET_ENCODER)
+        self.absolute_encoder = DutyCycleEncoder(
+            DioChannel.TURRET_ENCODER,
+            math.tau / TurretComponent.TURRET_TO_ENCODER_GEARING,
+            0.0,
+        )
         configure_through_bore_encoder(self.absolute_encoder)
         self.absolute_encoder.setInverted(True)
 
@@ -73,8 +77,8 @@ class TurretComponent:
 
     @feedback
     def _get_absolute_encoder_position(self) -> units.radians:
-        return (
-            (self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET)
+        return self.absolute_encoder.get() - (
+            TurretComponent.ENCODER_OFFSET
             / TurretComponent.TURRET_TO_ENCODER_GEARING
             * math.tau
         )
