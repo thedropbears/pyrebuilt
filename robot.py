@@ -13,6 +13,7 @@ from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
 from components.intake import IntakeComponent
+from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
@@ -33,6 +34,7 @@ class MyRobot(magicbot.MagicRobot):
     intake: IntakeComponent
     turret: TurretComponent
     ballistics: BallisticsComponent
+    leds: LEDComponent
     port_vision: VisualLocalizer
 
     # Driving constraints
@@ -233,6 +235,7 @@ class MyRobot(magicbot.MagicRobot):
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
+        self.leds.execute()
         self.turret.execute()
 
         if self.gamepad.getLeftStickButton():

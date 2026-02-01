@@ -74,3 +74,10 @@ class RioSerialNumber(enum.StrEnum):
 @enum.unique
 class AnalogChannel(enum.IntEnum):
     """roboRIO Analog input channel number"""
+
+
+@enum.unique
+class CandleId(enum.IntEnum):
+    """CAN ID for CTRE CANdle devices"""
+
+    LED = 0
