@@ -50,3 +50,14 @@ class Move3mandreturn(AutoBase):
                 "move3m_andreturn",
             ]
         )
+
+
+class Spin1time(AutoBase):
+    MODE_NAME = "spin 1 time on the spot"
+
+    def __init__(self):
+        super().__init__(
+            [
+                "spin1time",
+            ]
+        )

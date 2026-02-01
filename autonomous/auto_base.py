@@ -10,8 +10,8 @@ from wpimath.kinematics import ChassisSpeeds
 from components.chassis import ChassisComponent
 from utilities import game
 
-x_controller = PIDController(2.5, 0.0, 0.0)
-y_controller = PIDController(2.5, 0.0, 0.0)
+x_controller = PIDController(2.3, 0.0, 0.0)
+y_controller = PIDController(2.3, 0.0, 0.0)
 
 wpilib.SmartDashboard.putData("Auto X PID", x_controller)
 wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
@@ -78,7 +78,7 @@ class AutoBase(AutonomousStateMachine):
     def initialising(self) -> None:
         # Add any tasks that need doing first
         self.chassis.do_smooth = False
-        self.chassis.heading_controller.setPID(Kp=1.0, Ki=0.0, Kd=0.0)
+        self.chassis.heading_controller.setPID(Kp=0.0, Ki=0.0, Kd=0.0)
         self.next_state("tracking_trajectory")
 
     @state

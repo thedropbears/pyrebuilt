@@ -252,9 +252,7 @@ class ChassisComponent:
     ) -> None:
         self.imu = Pigeon2(0)
         self.heading_controller = PIDController(3.0, 0.0, 0.00)
-        wpilib.SmartDashboard.putData(
-            "Chassis heading_controller", self.heading_controller
-        )
+        wpilib.SmartDashboard.putData("Heading PID", self.heading_controller)
         self.heading_controller.enableContinuousInput(-math.pi, math.pi)
         self.snapping_to_heading = False
         self.heading_controller.setTolerance(self.HEADING_TOLERANCE)
@@ -330,8 +328,6 @@ class ChassisComponent:
         self.measurements_publisher = module_states_table.getStructArrayTopic(
             "measured", SwerveModuleState
         ).publish()
-
-        wpilib.SmartDashboard.putData("Heading PID", self.heading_controller)
 
     def get_velocity(self) -> ChassisSpeeds:
         return self.kinematics.toChassisSpeeds(self.get_module_states())
