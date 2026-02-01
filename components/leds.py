@@ -1,5 +1,5 @@
-from phoenix6.controls.rainbow_animation import RainbowAnimation
-from phoenix6.hardware.candle import CANdle
+from phoenix6.controls import RainbowAnimation
+from phoenix6.hardware import CANdle
 
 from ids import CandleId
 
