@@ -121,13 +121,6 @@ class SwerveModule:
             1 / (config.wheel_circumference * config.drive_ratio)
         )
 
-        # configuration for motor feedforward
-        self.drive_ff = SimpleMotorFeedforwardMeters(
-            kS=config.drive_gains.k_s,
-            kV=config.drive_gains.k_v,
-            kA=config.drive_gains.k_a,
-        )
-
         drive_config.apply(
             TalonFXConfiguration()
             .with_motor_output(self.drive_motor_out_config)
@@ -185,12 +178,9 @@ class SwerveModule:
 
         # rescale the speed target based on how close we are to being correctly aligned
         target_speed = self.state.speed * target_displacement.cos()
-        speed_volt = self.drive_ff.calculate(target_speed)
 
         # original position change/100ms, new m/s -> rot/s
-        self.drive.set_control(
-            self.drive_request.with_velocity(target_speed).with_feed_forward(speed_volt)
-        )
+        self.drive.set_control(self.drive_request.with_velocity(target_speed))
 
     def stop(self):
         self.drive.set_control(self.drive_request.with_velocity(0).with_feed_forward(0))
@@ -341,6 +331,15 @@ class ChassisComponent:
     @feedback
     def imu_rotation(self) -> Rotation2d:
         return self.imu.getRotation2d()
+
+    @feedback
+    def get_error(self):
+        return [
+            self.module_fl.drive.get_closed_loop_error().value,
+            self.module_fr.drive.get_closed_loop_error().value,
+            self.module_rl.drive.get_closed_loop_error().value,
+            self.module_rr.drive.get_closed_loop_error().value,
+        ]
 
     def get_module_states(
         self,
