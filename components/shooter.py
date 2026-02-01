@@ -1,12 +1,12 @@
 import math
 
+import rev
 from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
 from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import MotorAlignmentValue
-from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
 from utilities.functions import clamp
@@ -53,17 +53,18 @@ class ShooterComponent:
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
 
-        self.hood_motor = SparkMax(SparkId.HOOD, SparkMax.MotorType.kBrushless)
+        self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)
         self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
-        hood_motor_cfg = SparkMaxConfig()
-        hood_motor_cfg.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+        hood_motor_cfg = rev.SparkMaxConfig()
+        hood_motor_cfg.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(0.005, 0, 0)  # TODO Tune these values
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
-        hood_motor_cfg.closedLoop.setFeedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+        hood_motor_cfg.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
 
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
+        hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
             1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
         ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(True)
@@ -108,5 +109,5 @@ class ShooterComponent:
             self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle, SparkMax.ControlType.kPosition
+            self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
         )
