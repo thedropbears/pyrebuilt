@@ -27,7 +27,10 @@ class TurretComponent:
         config = SparkMaxConfig()
         config.inverted(True)
         config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        config.closedLoop.pid(0.05, 0.0, 0.0)
+        config.closedLoop.pid(2.8421, 0.0, 1.3842)
+        config.closedLoop.feedForward.kS(0.091518)
+        config.closedLoop.feedForward.kV(0.57874)
+        config.closedLoop.feedForward.kA(0.067156)
         config.closedLoop.maxMotion.maxAcceleration(TurretComponent.MAX_ACCELERATION)
         config.closedLoop.maxMotion.cruiseVelocity(TurretComponent.MAX_VELOCITY)
         config.closedLoop.maxMotion.allowedClosedLoopError(math.radians(5))
@@ -100,9 +103,7 @@ class TurretComponent:
         self.desired_angle = angle
 
     def execute(self) -> None:
-        self.controller.setReference(
-            self.desired_angle, SparkMax.ControlType.kMAXMotionPositionControl
-        )
+        self.controller.setReference(self.desired_angle, SparkMax.ControlType.kPosition)
 
     def perioidic(self) -> None:
         self.sim_pointer.setAngle(math.degrees(self.current_angle()))
