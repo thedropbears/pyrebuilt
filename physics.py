@@ -113,13 +113,21 @@ class TalonFXMotorSim(MotorSim):
 
 
 class TurretSim:
-    def __init__(self, motor_sim: MotorSim, encoder: wpilib.DutyCycleEncoder):
+    def __init__(
+        self,
+        motor_sim: MotorSim,
+        encoder: wpilib.DutyCycleEncoder,
+        encoder_offset: float,
+    ):
         self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_offset = encoder_offset
 
     def update(self, dt: units.seconds):
         self.motor_sim.update(dt)
-        self.encoder_sim.set(self.motor_sim.get_angular_position())
+        self.encoder_sim.set(
+            self.motor_sim.get_angular_position() + self.encoder_offset
+        )
 
 
 class SparkMotorSim(MotorSim):
@@ -209,6 +217,7 @@ class PhysicsEngine:
                 moi=0.02890532995,
             ),
             robot.turret.absolute_encoder,
+            robot.turret.ENCODER_OFFSET,
         )
 
         self.imu = robot.chassis.imu.sim_state
