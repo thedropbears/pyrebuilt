@@ -3,6 +3,7 @@ from autonomous.auto_base import AutoBase
 
 class Spin3m(AutoBase):
     MODE_NAME = "Spin while forward for 3m"
+    DISABLED = True
 
     def __init__(self):
         super().__init__(
@@ -14,6 +15,7 @@ class Spin3m(AutoBase):
 
 class Spin3mandreturn(AutoBase):
     MODE_NAME = "spin forward 3m then come back"
+    DISABLED = True
 
     def __init__(self):
         super().__init__(
