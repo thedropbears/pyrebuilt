@@ -9,6 +9,7 @@ from phoenix6.configs import Slot0Configs
 from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
+from components.leds import LEDComponent
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
@@ -34,7 +35,7 @@ class MyRobot(magicbot.MagicRobot):
     intake: IntakeComponent
     turret: TurretComponent
     ballistics: BallisticsComponent
-    leds: LEDComponent
+    LED: LEDComponent
     port_vision: VisualLocalizer
 
     # Driving constraints
@@ -235,8 +236,12 @@ class MyRobot(magicbot.MagicRobot):
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
+<<<<<<< HEAD
         self.leds.execute()
         self.turret.execute()
+=======
+        self.LED.execute()
+>>>>>>> 319513d (Made led component, put it in robotpy)
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
