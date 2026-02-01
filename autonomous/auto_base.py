@@ -10,8 +10,8 @@ from wpimath.kinematics import ChassisSpeeds
 from components.chassis import ChassisComponent
 from utilities import game
 
-x_controller = PIDController(2.0, 0.0, 0.0)
-y_controller = PIDController(2.0, 0.0, 0.0)
+x_controller = PIDController(2.5, 0.0, 0.0)
+y_controller = PIDController(2.5, 0.0, 0.0)
 
 wpilib.SmartDashboard.putData("Auto X PID", x_controller)
 wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
