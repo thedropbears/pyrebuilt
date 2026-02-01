@@ -16,10 +16,7 @@ from phoenix6.configs import (
 from phoenix6.controls import PositionVoltage, VelocityVoltage, VoltageOut
 from phoenix6.hardware import CANcoder, Pigeon2, TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
-from wpimath.controller import (
-    PIDController,
-    SimpleMotorFeedforwardMeters,
-)
+from wpimath.controller import PIDController
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import (
@@ -121,13 +118,6 @@ class SwerveModule:
             1 / (config.wheel_circumference * config.drive_ratio)
         )
 
-        # configuration for motor feedforward
-        self.drive_ff = SimpleMotorFeedforwardMeters(
-            kS=config.drive_gains.k_s,
-            kV=config.drive_gains.k_v,
-            kA=config.drive_gains.k_a,
-        )
-
         drive_config.apply(
             TalonFXConfiguration()
             .with_motor_output(self.drive_motor_out_config)
@@ -142,6 +132,9 @@ class SwerveModule:
         self.central_angle = position.angle()
         self.drive_request = VelocityVoltage(0)
         self.stop_request = VoltageOut(0)
+
+    def get_drive_closed_loop_error(self):
+        return self.drive.get_closed_loop_error().value
 
     def get_angle_absolute(self) -> float:
         """Gets steer angle (rot) from absolute encoder"""
@@ -185,12 +178,9 @@ class SwerveModule:
 
         # rescale the speed target based on how close we are to being correctly aligned
         target_speed = self.state.speed * target_displacement.cos()
-        speed_volt = self.drive_ff.calculate(target_speed)
 
         # original position change/100ms, new m/s -> rot/s
-        self.drive.set_control(
-            self.drive_request.with_velocity(target_speed).with_feed_forward(speed_volt)
-        )
+        self.drive.set_control(self.drive_request.with_velocity(target_speed))
 
     def stop(self):
         self.drive.set_control(self.drive_request.with_velocity(0).with_feed_forward(0))
@@ -341,6 +331,15 @@ class ChassisComponent:
     @feedback
     def imu_rotation(self) -> Rotation2d:
         return self.imu.getRotation2d()
+
+    @feedback
+    def get_drive_velocity_closed_loop_error(self):
+        return [
+            self.module_fl.get_drive_closed_loop_error(),
+            self.module_fr.get_drive_closed_loop_error(),
+            self.module_rl.get_drive_closed_loop_error(),
+            self.module_rr.get_drive_closed_loop_error(),
+        ]
 
     def get_module_states(
         self,
