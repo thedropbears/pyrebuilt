@@ -28,6 +28,8 @@ class ShooterComponent:
     ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
     ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
+    FLYWHEEL_GEAR_RATIO = 30 / 10
+
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
             device_id=TalonId.FLYWHEEL_LEFT
@@ -45,9 +47,13 @@ class ShooterComponent:
             .with_k_v(0.11159)
             .with_k_a(0.0038097)
         )
-
+        feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            self.FLYWHEEL_GEAR_RATIO
+        )
         self.flywheel_motor_left.configurator.apply(
-            configs.TalonFXConfiguration().with_slot0(flywheel_gains_cfg)
+            configs.TalonFXConfiguration()
+            .with_slot0(flywheel_gains_cfg)
+            .with_feedback(feedback_config)
         )
 
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
