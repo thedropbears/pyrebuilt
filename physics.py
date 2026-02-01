@@ -4,22 +4,22 @@ import math
 import statistics
 import typing
 from collections.abc import Callable
+from typing import override
 
 import phoenix6
 import rev
 import wpilib
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
-from wpilib import DutyCycleEncoder
 from wpilib.simulation import (
     DCMotorSim,
     DutyCycleEncoderSim,
     PWMSim,
     SingleJointedArmSim,
 )
+from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system.plant import DCMotor, LinearSystemId
-from wpimath.units import kilogram_square_meters
 
 from components.chassis import SwerveModule
 from utilities import game
@@ -27,6 +27,11 @@ from utilities.functions import constrain_angle
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
+
+
+class MotorSim(typing.Protocol):
+    def update(self, dt: units.seconds) -> None: ...
+    def get_angular_position(self) -> units.radians: ...
 
 
 class RollingBuffer:
@@ -55,7 +60,7 @@ class SimpleTalonFXMotorSim:
         self.units_per_rev = units_per_rev
         self.voltage_buffer = RollingBuffer(10)
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: units.seconds) -> None:
         voltage = self.sim_state.motor_voltage
 
         self.voltage_buffer.add_sample(voltage)
@@ -69,16 +74,16 @@ class SimpleTalonFXMotorSim:
         self.sim_state.add_rotor_position(velocity_rps * dt)
 
 
-class TalonFXMotorSim:
+class TalonFXMotorSim(MotorSim):
     def __init__(
         self,
         # DCMotor gearbox factory, e.g. DCMotor.falcon500
         gearbox_motor: Callable[[int], DCMotor],
-        *motors: phoenix6.hardware.TalonFX,
+        *motors: phoenix6.hardware.TalonFX | phoenix6.hardware.TalonFXS,
         # Reduction between motor and encoder readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
-        moi: kilogram_square_meters,
+        moi: units.kilogram_square_meters,
     ):
         gearbox = gearbox_motor(len(motors))
         self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
@@ -88,7 +93,8 @@ class TalonFXMotorSim:
             sim_state.set_supply_voltage(12.0)
         self.motor_sim = DCMotorSim(self.plant, gearbox)
 
-    def update(self, dt: float) -> None:
+    @override
+    def update(self, dt: units.seconds) -> None:
         voltage = self.sim_states[0].motor_voltage
         self.motor_sim.setInputVoltage(voltage)
         self.motor_sim.update(dt)
@@ -101,90 +107,46 @@ class TalonFXMotorSim:
                 self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
             )
 
+    @override
+    def get_angular_position(self) -> units.radians:
+        return self.motor_sim.getAngularPosition()
 
-class TalonFXSTurretSim:
-    def __init__(
-        self,
-        gearbox_motor: Callable[[int], DCMotor],
-        motor: phoenix6.hardware.TalonFXS,
-        # Reduction between motor and mechanism rotations, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        motor_gearing: float,
-        moi: kilogram_square_meters,
-        encoder: DutyCycleEncoder,
-        # Reduction between encoder and mechanism readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        encoder_gearing: float,
-    ):
-        gearbox = gearbox_motor(1)
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, motor_gearing)
-        self.motor_sim = DCMotorSim(self.plant, gearbox)
+
+class TurretSim:
+    def __init__(self, motor_sim: MotorSim, encoder: wpilib.DutyCycleEncoder):
+        self.motor_sim = motor_sim
         self.encoder_sim = DutyCycleEncoderSim(encoder)
-        self.motor_state = motor.sim_state
-        self.motor_gearing = motor_gearing
-        self.encoder_gearing = encoder_gearing
 
-    def update(self, dt: float):
-        # grab the motor voltage to propagate the velocity and position of the mechanism
-        voltage = self.motor_state.motor_voltage
-        self.motor_sim.setInputVoltage(voltage)
+    def update(self, dt: units.seconds):
         self.motor_sim.update(dt)
-
-        # back propagate to motor state
-        self.motor_state.set_raw_rotor_position(
-            self.motor_sim.getAngularPosition() * self.motor_gearing
-        )
-        self.motor_state.set_rotor_velocity(
-            self.motor_sim.getAngularVelocity() * self.motor_gearing
-        )
-
-        # forward propagate to external encoder
-        self.encoder_sim.set(self.motor_sim.getAngularPosition() * self.encoder_gearing)
+        self.encoder_sim.set(self.motor_sim.get_angular_position())
 
 
-class SparkTurretSim:
+class SparkMotorSim(MotorSim):
     def __init__(
         self,
         gearbox_motor: Callable[[int], DCMotor],
         motor: rev.SparkMax,
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
-        motor_to_mechanism_gearing: float,
-        moi: kilogram_square_meters,
-        encoder: DutyCycleEncoder,
-        # Reduction between encoder and mechanism readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        encoder_to_mechanism_gearing: float,
+        gearing: float,
+        moi: units.kilogram_square_meters,
     ):
         gearbox = gearbox_motor(1)
-        self.plant = LinearSystemId.DCMotorSystem(
-            gearbox, moi, motor_to_mechanism_gearing
-        )
+        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
         self.mech_sim = DCMotorSim(self.plant, gearbox)
-        self.absolute_encoder_sim = DutyCycleEncoderSim(encoder)
-
         self.motor_sim = rev.SparkSim(motor, gearbox)
-        self.encoder_to_mechanism_gearing = encoder_to_mechanism_gearing
 
-    def update(self, dt: float):
-        # grab the motor voltage to propagate the velocity and position of the mechanism
+    @override
+    def update(self, dt: units.seconds):
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
+        self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
 
-        # back propagate to motor state
-        self.motor_sim.iterate(
-            self.mech_sim.getAngularVelocity(),
-            vbus,
-            dt,
-        )
-
-        # Forward propagate to encoder
-        self.absolute_encoder_sim.set(
-            (1 / math.tau)
-            * self.mech_sim.getAngularPosition()
-            / self.encoder_to_mechanism_gearing
-        )
+    @override
+    def get_angular_position(self) -> units.radians:
+        return self.mech_sim.getAngularPosition()
 
 
 class SparkArmSim:
@@ -193,7 +155,7 @@ class SparkArmSim:
         self.motor_sim = motor_sim
         self.motor_encoder_sim = self.motor_sim.getRelativeEncoderSim()
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: units.seconds) -> None:
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
@@ -239,13 +201,14 @@ class PhysicsEngine:
             for module in robot.chassis.modules
         ]
 
-        self.turret_sim = SparkTurretSim(
-            DCMotor.NEO,
-            robot.turret.motor,
-            robot.turret.MOTOR_TO_TURRET_GEARING,
-            0.02890532995,
+        self.turret_sim = TurretSim(
+            SparkMotorSim(
+                DCMotor.NEO,
+                robot.turret.motor,
+                robot.turret.MOTOR_TO_TURRET_GEARING,
+                moi=0.02890532995,
+            ),
             robot.turret.absolute_encoder,
-            1 / robot.turret.TURRET_TO_ENCODER_GEARING,
         )
 
         self.imu = robot.chassis.imu.sim_state
@@ -267,7 +230,7 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
-    def update_sim(self, now: float, tm_diff: float) -> None:
+    def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
             wheel.update(tm_diff)
         for steer in self.steer:
