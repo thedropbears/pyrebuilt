@@ -133,7 +133,7 @@ class SwerveModule:
         self.drive_request = VelocityVoltage(0)
         self.stop_request = VoltageOut(0)
 
-    def get_closed_loop_error(self):
+    def get_drive_closed_loop_error(self):
         return self.drive.get_closed_loop_error().value
 
     def get_angle_absolute(self) -> float:
@@ -333,12 +333,12 @@ class ChassisComponent:
         return self.imu.getRotation2d()
 
     @feedback
-    def get_swerve_closed_loop_error(self):
+    def get_drive_velocity_closed_loop_error(self):
         return [
-            self.module_fl.get_closed_loop_error(),
-            self.module_fr.get_closed_loop_error(),
-            self.module_rl.get_closed_loop_error(),
-            self.module_rr.get_closed_loop_error(),
+            self.module_fl.get_drive_closed_loop_error(),
+            self.module_fr.get_drive_closed_loop_error(),
+            self.module_rl.get_drive_closed_loop_error(),
+            self.module_rr.get_drive_closed_loop_error(),
         ]
 
     def get_module_states(
