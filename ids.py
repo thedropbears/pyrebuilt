@@ -79,7 +79,7 @@ class AnalogChannel(enum.IntEnum):
 
 
 @enum.unique
-class CANdleID(enum.IntEnum):
+class CandleId(enum.IntEnum):
     """CAN ID for CTRE CANdle devices"""
 
     LED = 0
