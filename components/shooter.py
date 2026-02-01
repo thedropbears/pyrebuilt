@@ -108,6 +108,7 @@ class ShooterComponent:
         self.desired_hood_angle = clamp(
             self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
-        self.hood_motor_controller.setSetpoint(
+
+        """self.hood_motor_controller.setSetpoint(
             self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
-        )
+        )"""
