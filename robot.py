@@ -227,13 +227,13 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.climber.climb()
 
-        if self.gamepad.getXButton():
-            self.turret.slew_to(math.radians(self.turret_setpoint))
+        #if self.gamepad.getXButton():
+            #self.turret.slew_to(math.radians(self.turret_setpoint))
 
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()
-        self.turret.execute()
+        #self.turret.execute()
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
