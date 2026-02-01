@@ -133,6 +133,9 @@ class SwerveModule:
         self.drive_request = VelocityVoltage(0)
         self.stop_request = VoltageOut(0)
 
+    def get_closed_loop_error(self):
+        return self.drive.get_closed_loop_error().value
+
     def get_angle_absolute(self) -> float:
         """Gets steer angle (rot) from absolute encoder"""
         return self.encoder.get_absolute_position().value
@@ -330,12 +333,12 @@ class ChassisComponent:
         return self.imu.getRotation2d()
 
     @feedback
-    def get_error(self):
+    def get_swerve_closed_loop_error(self):
         return [
-            self.module_fl.drive.get_closed_loop_error().value,
-            self.module_fr.drive.get_closed_loop_error().value,
-            self.module_rl.drive.get_closed_loop_error().value,
-            self.module_rr.drive.get_closed_loop_error().value,
+            self.module_fl.get_closed_loop_error(),
+            self.module_fr.get_closed_loop_error(),
+            self.module_rl.get_closed_loop_error(),
+            self.module_rr.get_closed_loop_error(),
         ]
 
     def get_module_states(
