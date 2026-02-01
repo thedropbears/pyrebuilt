@@ -243,7 +243,7 @@ class PhysicsEngine:
             DCMotor.NEO,
             robot.turret.motor,
             robot.turret.MOTOR_TO_TURRET_GEARING,
-            0.01,
+            0.02890532995,
             robot.turret.absolute_encoder,
             1 / robot.turret.TURRET_TO_ENCODER_GEARING,
         )
