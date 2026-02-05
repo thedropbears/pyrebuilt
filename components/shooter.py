@@ -89,6 +89,10 @@ class ShooterComponent:
             abs_tol=self.hood_error_tolerance,
         )
 
+    @feedback
+    def get_left_flywheel_error(self) -> float:
+        return self.flywheel_motor_left.get_closed_loop_error().value
+
     def pitch_hood_relative(self, angle):
         self.desired_hood_angle += angle
 
