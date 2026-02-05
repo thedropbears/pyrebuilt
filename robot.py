@@ -232,6 +232,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getXButton():
             self.turret.slew_to(math.radians(self.turret_setpoint))
 
+        if self.gamepad.getLeftBumperButton():
+            self.intake.index()
+
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()

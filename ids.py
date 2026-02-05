@@ -24,6 +24,8 @@ class TalonId(enum.IntEnum):
     LEFT_FUNNEL = 12
     RIGHT_FUNNEL = 13
 
+    INDEXER = 14
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
