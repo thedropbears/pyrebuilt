@@ -8,20 +8,20 @@ from ids import TalonId
 
 
 class IntakeComponent:
-    desired_output = will_reset_to(0.0)
-
-    intake_output = tunable(0.5)
-
-    desired_funnel = will_reset_to(0.0)
+    desired_intake_output = tunable(0.5)
+    target_intake_output = will_reset_to(0.0)
 
     funnel_output = tunable(1.0)
 
     indexer_output = tunable(0.5)
 
     desired_indexer = will_reset_to(0.0)
+    desired_funnel_output = tunable(1.0)
+    target_funnel_output = will_reset_to(0.0)
 
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE)
+        self.intake_motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
         self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
         self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
@@ -46,14 +46,19 @@ class IntakeComponent:
         self.motor.configurator.apply(motor_config)
 
     def intake(self) -> None:
-        self.desired_output = self.intake_output
-        self.desired_funnel = self.funnel_output
+        self.target_intake_output = self.desired_intake_output
+        self.target_funnel_output = self.desired_funnel_output
+
+    def index(self) -> None:
+        self.desired_indexer = self.indexer_output
 
     def index(self) -> None:
         self.desired_indexer = self.indexer_output
 
     def execute(self) -> None:
-        self.motor.set(self.desired_output)
-        self.left_funnel_motor.set(ControlMode.PercentOutput, self.desired_funnel)
-        self.right_funnel_motor.set(ControlMode.PercentOutput, self.desired_funnel)
+        self.intake_motor.set(self.target_intake_output)
+        self.left_funnel_motor.set(ControlMode.PercentOutput, self.target_funnel_output)
+        self.right_funnel_motor.set(
+            ControlMode.PercentOutput, self.target_funnel_output
+        )
         self.indexer_motor.set(self.desired_indexer)
