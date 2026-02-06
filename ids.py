@@ -55,6 +55,8 @@ class DioChannel(enum.IntEnum):
 
     TURRET_ENCODER = 1
 
+    INTAKE_DEPLOYMENT_ENCODER = 2
+
 
 @enum.unique
 class PwmChannel(enum.IntEnum):
