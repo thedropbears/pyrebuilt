@@ -165,6 +165,7 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
+        self.leds.set_color(self.leds.rainbow)
         max_speed = self.lower_max_speed
         max_spin_rate = self.lower_max_spin_rate
 
@@ -247,6 +248,7 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision.execute()
 
     def disabledPeriodic(self) -> None:
+        self.leds.set_color(self.leds.red)
         self.event_loop.poll()
 
         selected_auto = self._automodes.chooser.getSelected()
@@ -257,8 +259,8 @@ class MyRobot(magicbot.MagicRobot):
 
         self.chassis.update_alliance()
         self.chassis.update_odometry()
-
         self.port_vision.execute()
+        self.leds.execute()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
