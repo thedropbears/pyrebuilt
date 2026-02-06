@@ -106,5 +106,5 @@ class TurretComponent:
     def execute(self) -> None:
         self.controller.setReference(self.desired_angle, SparkMax.ControlType.kPosition)
 
-    def perioidic(self) -> None:
+    def periodic(self) -> None:
         self.sim_pointer.setAngle(math.degrees(self.current_angle()))
