@@ -1,7 +1,7 @@
 import math
 
 from magicbot import feedback
-from rev import SparkMax, SparkMaxConfig
+from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
 from wpimath import units
 
@@ -19,8 +19,8 @@ class TurretComponent:
     _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
     ENCODER_OFFSET = _ENCODER_OFFSET_DUTY_CYCLE * math.tau / TURRET_TO_ENCODER_GEARING
 
-    MAX_VELOCITY = 1.0
-    MAX_ACCELERATION = 1.0
+    MAX_VELOCITY = 24.0
+    MAX_ACCELERATION = 50.0
 
     def __init__(self) -> None:
         # Initialise Motor
@@ -34,7 +34,8 @@ class TurretComponent:
         config.closedLoop.feedForward.kA(0.067156)
         config.closedLoop.maxMotion.maxAcceleration(TurretComponent.MAX_ACCELERATION)
         config.closedLoop.maxMotion.cruiseVelocity(TurretComponent.MAX_VELOCITY)
-        config.closedLoop.maxMotion.allowedClosedLoopError(math.radians(5))
+        config.closedLoop.maxMotion.allowedProfileError(math.radians(5))
+        config.closedLoop.setFeedbackSensor(FeedbackSensor.kPrimaryEncoder)
         config.encoder.positionConversionFactor(
             TurretComponent.MOTOR_TO_TURRET_GEARING * math.tau
         )
@@ -93,7 +94,7 @@ class TurretComponent:
 
     @feedback
     def error(self) -> units.radians:
-        return self.controller.getSetpoint() - self.current_angle()
+        return self.controller.getMAXMotionSetpointPosition() - self.current_angle()
 
     def slew_relative(self, angle: units.radians) -> None:
         self.slew_to(self.current_angle() + angle)
@@ -104,7 +105,7 @@ class TurretComponent:
         self.desired_angle = angle
 
     def execute(self) -> None:
-        self.controller.setReference(self.desired_angle, SparkMax.ControlType.kPosition)
+        self.controller.setSetpoint(self.desired_angle, SparkMax.ControlType.kPosition)
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(math.degrees(self.current_angle()))
