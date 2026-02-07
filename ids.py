@@ -26,6 +26,8 @@ class TalonId(enum.IntEnum):
     INDEXER = 14
     INTAKE = 15
 
+    INTAKE_DEPLOYER = 16
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
