@@ -7,14 +7,17 @@ from ids import CandleId
 
 
 class LEDComponent:
+    testcolor = RGBWColor(255, 255, 0, 0)
+    disabledcolor = RGBWColor(255, 0, 0, 0)
+    brightnessconstant = 1.0
     rainbow = RainbowAnimation(
-        led_start_index=0, led_end_index=7, slot=0, brightness=1.0
+        led_start_index=0, led_end_index=7, slot=0, brightness=brightnessconstant
     )
     red = ColorFlowAnimation(
-        led_start_index=0, led_end_index=7, slot=0, color=RGBWColor(255, 0, 0, 0)
+        led_start_index=0, led_end_index=7, slot=0, color=disabledcolor
     )
     yellow = ColorFlowAnimation(
-        led_start_index=0, led_end_index=7, slot=0, color=RGBWColor(255, 255, 0, 0)
+        led_start_index=0, led_end_index=7, slot=0, color=testcolor
     )
 
     desired_color = rainbow
