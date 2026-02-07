@@ -166,6 +166,7 @@ class MyRobot(magicbot.MagicRobot):
 
     def teleopPeriodic(self) -> None:
         self.leds.set_color(self.leds.rainbow)
+        self.leds.execute()
         max_speed = self.lower_max_speed
         max_spin_rate = self.lower_max_spin_rate
 
