@@ -27,10 +27,7 @@ class ShooterComponent:
 
     MOTOR_TO_HOOD = (1 / 10) * (40 / 40) * (18 / 18) * (40 / 160)
     ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
-    ENCODER_ZERO_OFFSET_DEGREES = 170
-    ENCODER_ZERO_OFFSET = (ENCODER_ZERO_OFFSET_DEGREES / 360) + (
-        ENCODER_ROTS_PER_HOOD_DEGREE * 30.0
-    )
+    ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
