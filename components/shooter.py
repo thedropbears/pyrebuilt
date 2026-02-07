@@ -58,7 +58,7 @@ class ShooterComponent:
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
         hood_motor_cfg = rev.SparkMaxConfig()
-        hood_motor_cfg.inverted(False)
+        hood_motor_cfg.inverted(True)
         hood_motor_cfg.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(0.005, 0, 0)  # TODO Tune these values
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
@@ -68,7 +68,7 @@ class ShooterComponent:
         hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
             1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
-        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(True)
+        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(False)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
