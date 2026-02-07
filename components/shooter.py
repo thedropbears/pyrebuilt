@@ -25,8 +25,9 @@ class ShooterComponent:
     MIN_HOOD_ANGLE = 30
     MAX_HOOD_ANGLE = 70
 
+    MOTOR_TO_HOOD = (1 / 10) * (40 / 40) * (18 / 18) * (40 / 160)
     ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
-    ENCODER_ZERO_OFFSET = 0.789
+    ENCODER_ZERO_OFFSET = (0.34972) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -54,7 +55,6 @@ class ShooterComponent:
         self.feeder_motor.setInverted(False)
 
         self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)
-        self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
         hood_motor_cfg = rev.SparkMaxConfig()
@@ -70,6 +70,8 @@ class ShooterComponent:
         ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(True)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
+
+        self.hood_motor.setInverted(False)
 
     @feedback
     def get_hood_angle(self):
@@ -109,6 +111,6 @@ class ShooterComponent:
             self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
-        """self.hood_motor_controller.setSetpoint(
+        self.hood_motor_controller.setSetpoint(
             self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
-        )"""
+        )

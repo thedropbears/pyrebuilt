@@ -328,11 +328,11 @@ class ChassisComponent:
     def get_velocity(self) -> ChassisSpeeds:
         return self.kinematics.toChassisSpeeds(self.get_module_states())
 
-    @feedback
+    # @feedback
     def imu_rotation(self) -> Rotation2d:
         return self.imu.getRotation2d()
 
-    @feedback
+    # @feedback
     def get_drive_velocity_closed_loop_error(self):
         return [
             self.module_fl.get_drive_closed_loop_error(),
@@ -416,7 +416,7 @@ class ChassisComponent:
         """stops the heading_controller"""
         self.snapping_to_heading = False
 
-    @feedback
+    # @feedback
     def is_stationary(self) -> bool:
         velocity = self.get_velocity()
         return (
@@ -570,7 +570,7 @@ class ChassisComponent:
         """Get the current heading of the robot."""
         return self.get_pose().rotation()
 
-    @feedback
+    # @feedback
     def at_desired_heading(self) -> bool:
         return abs(self.heading_controller.getError()) <= self.HEADING_TOLERANCE
 

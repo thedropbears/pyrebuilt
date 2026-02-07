@@ -36,15 +36,15 @@ class BallisticsComponent:
     def __init__(self) -> None:
         pass
 
-    @feedback
+    # @feedback
     def get_chassis_angle_to_target(self) -> float:
         return self.start_pos_angle_to_target
 
-    @feedback
+    # @feedback
     def get_shooter_angle_to_target(self) -> float:
         return self.shooter_angle_to_target
 
-    @feedback
+    # @feedback
     def get_chassis_dist_to_target(self) -> float:
         return self.start_pos_dist_to_target
 

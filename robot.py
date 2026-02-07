@@ -255,9 +255,9 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.update_alliance()
         self.chassis.update_odometry()
 
-        self.port_vision.execute()
+        # self.port_vision.execute()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        self.port_vision._per_loop_cache.clear()
+        # self.port_vision._per_loop_cache.clear()
         self.turret.perioidic()
