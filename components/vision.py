@@ -164,28 +164,28 @@ class VisualLocalizer(HasPerLoopCache):
         self.should_override = False
         self.override_setpoint = 0.5
 
-    # @feedback
+    @feedback
     def rotation_limits(self) -> list[float]:
         return [self.min_rotation, self.max_rotation]
 
-    # @feedback
+    @feedback
     def reproj(self) -> float:
         return self.current_reproj
 
-    # @feedback
+    @feedback
     def using_multitag(self) -> bool:
         return self.has_multitag
 
-    # @feedback
+    @feedback
     def raw_encoder_rotation(self) -> Rotation2d:
         # The encoder has been set up to return values in the interval [0, 2pi]
         return Rotation2d(self.encoder.get())
 
-    # @feedback
+    @feedback
     def has_pairs(self) -> bool:
         return self._has_pairs
 
-    # @feedback
+    @feedback
     @cache_per_loop
     def relative_bearing_to_best_cluster(self) -> float:
         tags = self.visible_tags()
@@ -204,7 +204,7 @@ class VisualLocalizer(HasPerLoopCache):
         tags.sort(key=lambda v: v.range)
         return tags[0].relative_bearing
 
-    # @feedback
+    @feedback
     @cache_per_loop
     def visible_tags(self) -> list[VisibleTag]:
         tags_in_view = []
@@ -247,12 +247,12 @@ class VisualLocalizer(HasPerLoopCache):
 
         return tags_in_view
 
-    # @feedback
+    @feedback
     def desired_turret_rotation(self) -> float:
         # Read encoder angle and account for offset
         return self.relative_bearing_to_best_cluster()
 
-    # @feedback
+    @feedback
     def desired_servo_rotation(self) -> float:
         return self.turret_to_servo(self.desired_turret_rotation())
 
@@ -397,11 +397,11 @@ class VisualLocalizer(HasPerLoopCache):
 
         self.should_override = False
 
-    # @feedback
+    @feedback
     def sees_target(self) -> bool:
         return wpilib.Timer.getFPGATimestamp() - self.last_timestamp < self.TIMEOUT
 
-    # @feedback
+    @feedback
     def sees_multi_tag_target(self) -> bool:
         return self.has_multitag and self.sees_target()
 
