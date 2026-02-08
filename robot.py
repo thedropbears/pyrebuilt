@@ -260,4 +260,4 @@ class MyRobot(magicbot.MagicRobot):
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
-        self.turret.perioidic()
+        self.turret.periodic()
