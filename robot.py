@@ -255,7 +255,7 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.update_alliance()
         self.chassis.update_odometry()
 
-        # self.port_vision.execute()
+        self.port_vision.execute()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()

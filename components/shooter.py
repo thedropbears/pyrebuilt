@@ -25,7 +25,6 @@ class ShooterComponent:
     MIN_HOOD_ANGLE = 30
     MAX_HOOD_ANGLE = 68
 
-    MOTOR_TO_HOOD = (1 / 10) * (40 / 40) * (18 / 18) * (40 / 160)
     ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
     ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
