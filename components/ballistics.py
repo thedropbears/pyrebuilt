@@ -1,108 +1,102 @@
 from math import atan2
 
 import numpy as np
-from magicbot import feedback, tunable
+from magicbot import will_reset_to
+from wpimath import units
 from wpimath.geometry import Pose2d, Translation3d, Twist2d
 
-from components.shooter import ShooterComponent
+from components.shooter import ShooterComponent, rotations_per_second
 from components.turret import TurretComponent
+from utilities.functions import constrain_angle
 
 
 class BallisticsComponent:
     shooter: ShooterComponent
     turret: TurretComponent
 
-    # TODO setup sensible reset and tunable vars
-    current_pos = Pose2d().translation()
-    current_rot = Pose2d().rotation()
-
-    target_pos = Translation3d().toTranslation2d()
-
-    angle_to_target: float = 0.0
-    oriented_angle_to_target: float = 0.0
-    dist_to_target: float = 0.0
-
-    desired_flywheel_speed = tunable(0.0)
-    desired_turret_angle = tunable(0.0)
-    desired_hood_angle = tunable(0.0)
-
     # TODO Define lookup table for use
     DISTANCE_LOOKUP = [1.0, 2.0, 3.0, 4.0, 5.0]  # TODO Tune these values
     SPEED_LOOKUP = [22.0, 33.0, 44.0, 55.0, 66.0]  # TODO Tune these values
     ANGLE_LOOKUP = [80.0, 75.0, 70.0, 65.0, 60.0]  # TODO Tune these values
 
-    override_calculations = tunable(False)
+    use_ballistics = will_reset_to(True)
+
+    should_energise_flywheels = will_reset_to(False)
 
     def __init__(self) -> None:
-        pass
+        self.current_pose = Pose2d()
+        self.current_twist = Twist2d()
+        self.target_position = Translation3d()
 
-    @feedback
-    def get_angle_to_target(self) -> float:
-        return self.angle_to_target
-
-    @feedback
-    def get_oriented_angle_to_target(self) -> float:
-        return self.oriented_angle_to_target
-
-    @feedback
-    def get_dist_to_target(self) -> float:
-        return self.dist_to_target
+    def setup(self) -> None:
+        self.target_flywheel_speed = 0.0
+        self.target_turret_angle = self.turret.current_angle()
+        self.target_hood_angle = self.shooter.hood_angle()
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
         # but the hood and turret should always run
-        pass
+        self.should_energise_flywheels = True
 
     def calculate_for(
         self,
-        target_pos: Translation3d,
+        target_position: Translation3d,
         current_pose: Pose2d,
         current_twist: Twist2d,
     ) -> None:
-        
-        if self.override_calculations: # cancel updating calculations if we manually set these values
-            return
-        
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
-
         self.current_pose = current_pose
         self.current_twist = current_twist
-        self.target_pos = target_pos
+        self.target_position = target_position
 
-        current_pos = self.current_pose.translation()
+    def force_solution(
+        self,
+        desired_flywheel_speed: rotations_per_second,
+        desired_turret_angle: units.radians,
+        desired_hood_angle: units.radians,
+    ) -> None:
+        self.target_flywheel_speed = desired_flywheel_speed
+        self.target_turret_angle = desired_turret_angle
+        self.target_hood_angle = desired_hood_angle
+        self.use_ballistics = False
 
-        self.distance_to_target = current_pos.distance(
-            self.target_pos.toTranslation2d()
-        )
-        self.angle_to_target = atan2(
-            self.target_pos.y - current_pos.y,
-            self.target_pos.x - current_pos.x,
-        )
-
-        self.oriented_angle_to_target = (
-            self.angle_to_target - self.current_pose.rotation().radians()
-        )
+    def shoot(self) -> None:
+        self.shooter.shoot()
 
     def execute(self) -> None:
-        if not self.override_calculations:
-            self.desired_turret_angle = self.oriented_angle_to_target
+        current_position = self.current_pose.translation()
 
-            self.desired_hood_angle = float(
+        distance_to_target = current_position.distance(
+            self.target_position.toTranslation2d()
+        )
+        angle_to_target = atan2(
+            self.target_position.y - current_position.y,
+            self.target_position.x - current_position.x,
+        )
+
+        if self.use_ballistics:
+            self.target_turret_angle = constrain_angle(
+                angle_to_target - self.current_pose.rotation().radians()
+            )
+            self.target_hood_angle = float(
                 np.interp(
-                    self.distance_to_target,
+                    distance_to_target,
                     self.DISTANCE_LOOKUP,
                     self.ANGLE_LOOKUP,
                 )
             )
 
-            self.desired_flywheel_speed = float(
+            self.target_flywheel_speed = float(
                 np.interp(
-                    self.distance_to_target,
+                    distance_to_target,
                     self.DISTANCE_LOOKUP,
                     self.SPEED_LOOKUP,
                 )
             )
 
-        # dispatch shooter commands
-        pass
+        if self.should_energise_flywheels:
+            self.shooter.set_flywheel(self.target_flywheel_speed)
+
+        self.shooter.pitch_to(self.target_hood_angle)
+        self.turret.slew_to(self.target_turret_angle)

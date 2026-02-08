@@ -16,7 +16,6 @@ rotations_per_second = float
 
 class ShooterComponent:
     target_shooter_rps = will_reset_to(0.0)
-    desired_shooter_rps = tunable(30)
 
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
@@ -71,16 +70,19 @@ class ShooterComponent:
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
-        self.target_hood_angle = self.hood_encoder.getPosition()
+        self.target_hood_angle = self.hood_angle()
 
     @feedback
     def hood_angle_degrees(self) -> units.degrees:
-        return math.degrees(self.hood_encoder.getPosition())
+        return math.degrees(self.hood_angle())
+
+    def hood_angle(self) -> units.radians:
+        return self.hood_encoder.getPosition()
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
-            self.hood_encoder.getPosition(),
+            self.hood_angle(),
             self.target_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )
@@ -95,8 +97,10 @@ class ShooterComponent:
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = angle
 
+    def set_flywheel(self, speed: rotations_per_second):
+        self.target_shooter_rps = speed
+
     def shoot(self) -> None:
-        self.target_shooter_rps = self.desired_shooter_rps
         self.target_feeder_percentage = self.desired_feeder_percentage
 
     def execute(self) -> None:
