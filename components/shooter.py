@@ -4,13 +4,14 @@ import rev
 from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
-from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
-from phoenix6.signals import MotorAlignmentValue
+from wpimath import units
 
 from ids import SparkId, TalonId
 from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
+
+rotations_per_second = float
 
 
 class ShooterComponent:
@@ -20,23 +21,19 @@ class ShooterComponent:
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
 
-    desired_hood_angle = tunable(36.0)
-    hood_error_tolerance = 1.0
-    MIN_HOOD_ANGLE = 30
-    MAX_HOOD_ANGLE = 68
+    hood_error_tolerance = math.radians(1.0)
+    MIN_HOOD_ANGLE = math.radians(30)
+    MAX_HOOD_ANGLE = math.radians(68)
 
-    ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
-    ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
+    ENCODER_ROTS_PER_HOOD_RADIAN = 4 / math.tau
+    ENCODER_ZERO_OFFSET = (0.47222) + (
+        ENCODER_ROTS_PER_HOOD_RADIAN * math.radians(30.0)
+    )
 
     FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
 
     def __init__(self) -> None:
-        self.flywheel_motor_left = TalonFX(
-            device_id=TalonId.FLYWHEEL_LEFT
-        )  # Defined from behind shooter
-        self.flywheel_motor_right = TalonFX(
-            device_id=TalonId.FLYWHEEL_RIGHT
-        )  # Defined from behind shooter
+        self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
@@ -47,7 +44,7 @@ class ShooterComponent:
         feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
             self.FLYWHEEL_GEAR_RATIO
         )
-        self.flywheel_motor_left.configurator.apply(
+        self.flywheel_motor.configurator.apply(
             configs.TalonFXConfiguration()
             .with_slot0(flywheel_gains_cfg)
             .with_feedback(feedback_config)
@@ -69,53 +66,50 @@ class ShooterComponent:
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
-            1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
+            1 / self.ENCODER_ROTS_PER_HOOD_RADIAN
         ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(False)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
-    @feedback
-    def get_hood_angle(self):
-        return self.hood_encoder.getPosition()
+        self.target_hood_angle = self.hood_encoder.getPosition()
 
     @feedback
-    def hood_is_at_setpoint(self):
+    def hood_angle_degrees(self) -> units.degrees:
+        return math.degrees(self.hood_encoder.getPosition())
+
+    @feedback
+    def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
-            self.get_hood_angle(),
-            self.desired_hood_angle,
+            self.hood_encoder.getPosition(),
+            self.target_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )
 
     @feedback
-    def get_left_flywheel_error(self) -> float:
-        return self.flywheel_motor_left.get_closed_loop_error().value
+    def get_flywheel_error(self) -> rotations_per_second:
+        return self.flywheel_motor.get_closed_loop_error().value
 
-    def pitch_hood_relative(self, angle):
-        self.desired_hood_angle += angle
+    def pitch_relative(self, angle: units.radians):
+        self.pitch_to(self.target_hood_angle + angle)
 
-    def pitch_hood_absolute(self, angle):
-        self.desired_hood_angle = angle
+    def pitch_to(self, angle: units.radians):
+        self.target_hood_angle = angle
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
         self.target_feeder_percentage = self.desired_feeder_percentage
 
     def execute(self) -> None:
-        self.flywheel_motor_left.set_control(
+        self.flywheel_motor.set_control(
             controls.VelocityVoltage(self.target_shooter_rps)
-        )
-        self.flywheel_motor_right.set_control(
-            Follower(
-                TalonId.FLYWHEEL_LEFT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)
-            )
         )
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
-        self.desired_hood_angle = clamp(
-            self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        self.target_hood_angle = clamp(
+            self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
+            self.target_hood_angle, rev.SparkMax.ControlType.kPosition
         )
