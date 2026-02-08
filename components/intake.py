@@ -3,10 +3,8 @@ from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
-from rev import SparkMax, SparkMaxConfig
 
-from ids import SparkId, TalonId
-from utilities.rev import configure_spark_ephemeral
+from ids import TalonId
 
 
 class IntakeComponent:
@@ -23,13 +21,11 @@ class IntakeComponent:
     desired_indexer = will_reset_to(0.0)
 
     def __init__(self) -> None:
-        self.motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
+        self.motor = TalonFX(TalonId.INTAKE)
         self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
         self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
-        motor_config = SparkMaxConfig()
-        motor_config.inverted(False)
-        motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
+
         indexer_output_config = (
             configs.MotorOutputConfigs()
             .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
@@ -38,10 +34,16 @@ class IntakeComponent:
         self.indexer_motor.configurator.apply(
             configs.TalonFXConfiguration().with_motor_output(indexer_output_config)
         )
+
+        motor_config = configs.TalonFXConfiguration()
+        motor_config.motor_output.with_inverted(
+            InvertedValue.CLOCKWISE_POSITIVE
+        ).with_neutral_mode(NeutralModeValue.COAST)
+
         self.left_funnel_motor.setInverted(True)
         self.right_funnel_motor.setInverted(True)
 
-        configure_spark_ephemeral(self.motor, motor_config)
+        self.motor.configurator.apply(motor_config)
 
     def intake(self) -> None:
         self.desired_output = self.intake_output
