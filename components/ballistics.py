@@ -13,8 +13,8 @@ class BallisticsComponent:
     turret: TurretComponent
 
     # TODO setup sensible reset and tunable vars
-    future_start_pos = Pose2d().translation()
-    future_start_rot = Pose2d().rotation()
+    current_start_pos = Pose2d().translation()
+    current_start_rot = Pose2d().rotation()
 
     target_pos = Translation3d().toTranslation2d()
 
@@ -62,21 +62,21 @@ class BallisticsComponent:
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
 
-        self.future_start_pos = current_pose.exp(current_twist).translation()
-        self.future_start_rot = current_pose.exp(current_twist).rotation()
+        self.current_start_pos = current_pose.translation()
+        self.current_start_rot = current_pose.rotation()
         self.target_pos = target_position.toTranslation2d()
 
-        self.start_pos_dist_to_target = self.future_start_pos.distance(self.target_pos)
+        self.start_pos_dist_to_target = self.current_start_pos.distance(self.target_pos)
 
     def execute(self) -> None:
         # perform turret calculations
         self.start_pos_angle_to_target = atan2(
-            self.target_pos.y - self.future_start_pos.y,
-            self.target_pos.x - self.future_start_pos.x,
+            self.target_pos.y - self.current_start_pos.y,
+            self.target_pos.x - self.current_start_pos.x,
         )
 
         self.shooter_angle_to_target = (
-            self.start_pos_angle_to_target - self.future_start_rot.radians()
+            self.start_pos_angle_to_target - self.current_start_rot.radians()
         )
 
         # dispatch turret command
