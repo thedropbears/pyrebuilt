@@ -33,9 +33,7 @@ class ShooterComponent:
     FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
 
     def __init__(self) -> None:
-        self.flywheel_motor = TalonFX(
-            device_id=TalonId.FLYWHEEL
-        )  # Defined from behind shooter
+        self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
