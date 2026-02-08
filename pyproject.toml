@@ -75,10 +75,10 @@ ignore = [
 
 [dependency-groups]
 dev = [
-    "coverage>=7.10.2",
+    "coverage>=7.13.4",
     "hypothesis>=6.112.1",
     "mypy>=1.19.1",
-    "pytest>=7.2.0",
+    "pytest>=9.0.1",
     "pytest-integration>=0.2.3",
 ]
 
