@@ -25,7 +25,7 @@ class IntakeComponent:
         self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
         self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
-        
+
         indexer_output_config = (
             configs.MotorOutputConfigs()
             .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
@@ -37,7 +37,7 @@ class IntakeComponent:
 
         motor_config = configs.TalonFXConfiguration()
         motor_config.motor_output.with_inverted(
-            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+            InvertedValue.CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
 
         self.left_funnel_motor.setInverted(True)
