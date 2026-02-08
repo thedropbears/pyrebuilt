@@ -33,12 +33,13 @@ exclude = [
     "**/.*",
 ]
 
-[tool.pytest.ini_options]
-addopts = "--strict-markers -v --maxfail=2"
-faulthandler_timeout = 60
-pythonpath = "."
+[tool.pytest]
+addopts = ["--maxfail=2"]
+faulthandler_timeout = "60"
+pythonpath = ["."]
+strict = true
 testpaths = ["tests"]
-xfail_strict = true
+verbosity_test_cases = "1"
 
 [tool.ruff]
 target-version = "py311"
