@@ -5,10 +5,13 @@ from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
 from phoenix6.hardware import TalonFX
+from wpimath import units
 
 from ids import SparkId, TalonId
 from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
+
+rotations_per_second = float
 
 
 class ShooterComponent:
@@ -73,11 +76,11 @@ class ShooterComponent:
         self.desired_hood_angle = self.get_hood_angle()
 
     @feedback
-    def get_hood_angle(self):
+    def get_hood_angle(self) -> units.radians:
         return self.hood_encoder.getPosition()
 
     @feedback
-    def hood_is_at_setpoint(self):
+    def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
             self.get_hood_angle(),
             self.desired_hood_angle,
@@ -85,13 +88,13 @@ class ShooterComponent:
         )
 
     @feedback
-    def get_flywheel_error(self) -> float:
+    def get_flywheel_error(self) -> rotations_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
 
-    def pitch_relative(self, angle):
+    def pitch_relative(self, angle: units.radians):
         self.pitch_to(self.desired_hood_angle + angle)
 
-    def pitch_to(self, angle):
+    def pitch_to(self, angle: units.radians):
         self.desired_hood_angle = angle
 
     def shoot(self) -> None:
