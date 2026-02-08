@@ -97,21 +97,21 @@ requires-python = ">=3.14,<3.15"
 
 dependencies = [
     "numpy~=2.3",
-    "phoenix6~=26.1.0",
+    "phoenix6~=26.1.1",
     "robotpy-ctre~=2026.1.0",
     "robotpy[apriltag]==2026.2.1",
     "robotpy-rev==2026.0.1",
-    "robotpy-wpilib-utilities~=2026.0.1",
+    "robotpy-wpilib-utilities~=2026.1.0",
     "photonlibpy==2026.1.1",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]
 
 [tool.robotpy]
 requires = [
-    "phoenix6~=26.1.0",
+    "phoenix6~=26.1.1",
     "robotpy-ctre~=2026.1.0",
     "robotpy-rev==2026.0.1",
-    "robotpy-wpilib-utilities~=2026.0.1",
+    "robotpy-wpilib-utilities~=2026.1.0",
     "photonlibpy==2026.1.1",
     "sleipnirgroup-choreolib~=2026.0.1",
 ]

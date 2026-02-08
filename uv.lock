@@ -368,16 +368,16 @@ wheels = [
 
 [[package]]
 name = "phoenix6"
-version = "26.1.0"
+version = "26.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "importlib-resources" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/32/be81ff0a5799083634c5aa357bf17a9ea68d80139e81160e87b162a6348d/phoenix6-26.1.0-cp310-abi3-macosx_13_0_universal2.whl", hash = "sha256:3072d89cfefb14db4c016f35efceb9183c5d39c46551bf7f5f7dd00122784cb9", size = 7344496, upload-time = "2026-01-08T01:58:36.154Z" },
-    { url = "https://files.pythonhosted.org/packages/1f/0b/0da9f7a78d0de46c2ca3d7ff6fa60634b43e3e20b22d5efeaab7260db7a2/phoenix6-26.1.0-cp310-abi3-manylinux_2_35_aarch64.whl", hash = "sha256:af12d9d5162901a0f41f453aa3dac1757a5d8a4306f6fdac4860b14cb269045f", size = 6547369, upload-time = "2026-01-08T01:58:39.659Z" },
-    { url = "https://files.pythonhosted.org/packages/6c/f0/983554546e8929d3593ca7806ad83f3042001aaa0d32734be1d2530a9a04/phoenix6-26.1.0-cp310-abi3-manylinux_2_35_x86_64.whl", hash = "sha256:7fd62cabe574a2ef7b447f3afd657ce125dbd424c9eaac6b5df305b626e5851e", size = 6904686, upload-time = "2026-01-08T01:58:43.558Z" },
-    { url = "https://files.pythonhosted.org/packages/26/23/a62ca054401c29e90102b6bc151e935f1481165b24941dfa1035ffac8273/phoenix6-26.1.0-cp310-abi3-win_amd64.whl", hash = "sha256:b5c340f9ca7ee55007ac8f37ffa8f0edfedada1a93e700a73464f599a4dd8c9f", size = 4790589, upload-time = "2026-01-08T01:58:47.063Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/dc/1f41c44ce686f8e338986ab812535afa024e04040adc338d2f855e4b9169/phoenix6-26.1.1-cp310-abi3-macosx_13_0_universal2.whl", hash = "sha256:d36f26a2c17b87df8bd56adf9c3a09b3f4d6db5769420b939f5373844f9fc0b0", size = 7347005, upload-time = "2026-01-28T18:49:31.212Z" },
+    { url = "https://files.pythonhosted.org/packages/86/f2/4b8a1940f5e4d6408120fb22f15c9385f0743abad68f72ad1723980df349/phoenix6-26.1.1-cp310-abi3-manylinux_2_35_aarch64.whl", hash = "sha256:7e09a9970e5ebaddcff093611c8a713a1504e4de916a49c1d4dc2e9a2261294f", size = 6551004, upload-time = "2026-01-28T18:49:34.795Z" },
+    { url = "https://files.pythonhosted.org/packages/09/df/2d2bf2f249d11831652fdff899d5f828cf39282844dcfc320e5c9f943e3b/phoenix6-26.1.1-cp310-abi3-manylinux_2_35_x86_64.whl", hash = "sha256:355a0d9aa4627f52a02d132cba89826f7ffb2de0ccd65f8181d6b646bd7937de", size = 6914938, upload-time = "2026-01-28T18:49:38.927Z" },
+    { url = "https://files.pythonhosted.org/packages/df/52/6b791335e41a5fd21f7785107272db1f67620a514953affb5f74e67dd2e6/phoenix6-26.1.1-cp310-abi3-win_amd64.whl", hash = "sha256:dddb52bb0e6404c56f755135ed6cf2393ccb83083db0f0ec56a538c28b8ee2bd", size = 4793225, upload-time = "2026-01-28T18:49:43.199Z" },
 ]
 
 [[package]]
@@ -548,12 +548,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = "~=2.3" },
-    { name = "phoenix6", specifier = "~=26.1.0" },
+    { name = "phoenix6", specifier = "~=26.1.1" },
     { name = "photonlibpy", specifier = "==2026.1.1" },
     { name = "robotpy", extras = ["apriltag"], specifier = "==2026.2.1" },
     { name = "robotpy-ctre", specifier = "~=2026.1.0" },
     { name = "robotpy-rev", specifier = "==2026.0.1" },
-    { name = "robotpy-wpilib-utilities", specifier = "~=2026.0.1" },
+    { name = "robotpy-wpilib-utilities", specifier = "~=2026.1.0" },
     { name = "sleipnirgroup-choreolib", specifier = "~=2026.0.1" },
 ]
 
@@ -863,14 +863,15 @@ wheels = [
 
 [[package]]
 name = "robotpy-wpilib-utilities"
-version = "2026.0.1"
+version = "2026.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "toposort" },
     { name = "wpilib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ca/ff/4ed37a89120db401cc2e9b4ff80a508276474856d0b29541610e8ea72bc2/robotpy_wpilib_utilities-2026.0.1.tar.gz", hash = "sha256:b9ac49f7fe8701e0a245021b290ebdd7425658a2c5fb66e6397526a856aab105", size = 37025, upload-time = "2026-01-10T06:35:51.657Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/ac/e94af167dcb40410b211a9e86728e3c7427bc818b3b2f808cbe76f3814d8/robotpy_wpilib_utilities-2026.1.0.tar.gz", hash = "sha256:2d90a43ad6754c03e4bbaf636e1894f488c4cb481f8eaaf84557cb1c9c23634b", size = 37568, upload-time = "2026-02-09T14:21:04.64Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/8f/006cfd2a9588ccb4ab3b5b318d7b2b2c54ea48a9b78b5a7b448ef2db3cd7/robotpy_wpilib_utilities-2026.0.1-py3-none-any.whl", hash = "sha256:b9e515f9d371c000e6f7474a6e43d5ccdd601d9499aaa4a01cd582fb175aeb74", size = 49085, upload-time = "2026-01-10T06:35:50.145Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/69/03e2a19bc240be5206eb2398bf9decbef27af1fe9c51d4168d583c262f2b/robotpy_wpilib_utilities-2026.1.0-py3-none-any.whl", hash = "sha256:5528543a4897a42a682a3a1f464e85de704df21730494c9722e601caeaca20cd", size = 49651, upload-time = "2026-02-09T14:21:03.565Z" },
 ]
 
 [[package]]
@@ -958,6 +959,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b1/09/a439bec5888f00a54b8b9f05fa94d7f901d6735ef4e55dcec9bc37b5d8fa/tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79", size = 192885, upload-time = "2024-08-14T08:19:41.488Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/b6/a447b5e4ec71e13871be01ba81f5dfc9d0af7e473da256ff46bc0e24026f/tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde", size = 37955, upload-time = "2024-08-14T08:19:40.05Z" },
+]
+
+[[package]]
+name = "toposort"
+version = "1.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/19/8e955d90985ecbd3b9adb2a759753a6840da2dff3c569d412b2c9217678b/toposort-1.10.tar.gz", hash = "sha256:bfbb479c53d0a696ea7402601f4e693c97b0367837c8898bc6471adfca37a6bd", size = 11132, upload-time = "2023-02-27T13:59:51.834Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/17/57b444fd314d5e1593350b9a31d000e7411ba8e17ce12dc7ad54ca76b810/toposort-1.10-py3-none-any.whl", hash = "sha256:cbdbc0d0bee4d2695ab2ceec97fe0679e9c10eab4b2a87a9372b929e70563a87", size = 8500, upload-time = "2023-02-25T20:07:06.538Z" },
 ]
 
 [[package]]
