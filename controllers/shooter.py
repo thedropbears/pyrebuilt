@@ -1,8 +1,9 @@
-from magicbot import StateMachine, state
+from magicbot import StateMachine, feedback, state
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.intake import IntakeComponent
+from utilities import game
 
 
 class Shooter(StateMachine):
@@ -13,6 +14,10 @@ class Shooter(StateMachine):
     def __init__(self):
         # TODO Implement this
         pass
+
+    @feedback
+    def is_hub_active(self) -> bool:
+        return game.is_hub_active()
 
     @state(first=True)
     def shooting(self) -> None:
