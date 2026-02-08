@@ -24,7 +24,11 @@ class TalonId(enum.IntEnum):
     LEFT_FUNNEL = 12
     RIGHT_FUNNEL = 13
 
-    INDEXER = 14
+    INTAKE = 14
+<<<<<<< HEAD
+    INDEXER = 15
+=======
+>>>>>>> 1dc41e2 (set intake id to 14)
 
 
 @enum.unique
@@ -42,8 +46,6 @@ class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
     CLIMBER = 4
-
-    INTAKE = 11
 
     HOOD = 10
     TURRET = 2
