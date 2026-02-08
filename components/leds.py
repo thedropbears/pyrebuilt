@@ -13,6 +13,12 @@ class LEDComponent:
 
     def __init__(self):
         self.candle = CANdle(device_id=CandleId.LED)
+        self.desired_command = ColorFlowAnimation(
+            led_start_index=0,
+            led_end_index=7,
+            color=LEDComponent.red,
+            slot=0,
+        )
 
     def _set_flow_colour(self, color: RGBWColor):
         self.desired_command = ColorFlowAnimation(
