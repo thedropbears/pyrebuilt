@@ -85,10 +85,10 @@ class ShooterComponent:
     def get_flywheel_error(self) -> float:
         return self.flywheel_motor.get_closed_loop_error().value
 
-    def pitch_hood_relative(self, angle):
-        self.desired_hood_angle += angle
+    def pitch_relative(self, angle):
+        self.pitch_to(self.desired_hood_angle + angle)
 
-    def pitch_hood_absolute(self, angle):
+    def pitch_to(self, angle):
         self.desired_hood_angle = angle
 
     def shoot(self) -> None:
