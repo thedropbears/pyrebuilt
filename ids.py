@@ -24,11 +24,8 @@ class TalonId(enum.IntEnum):
     LEFT_FUNNEL = 12
     RIGHT_FUNNEL = 13
 
-    INTAKE = 14
-<<<<<<< HEAD
-    INDEXER = 15
-=======
->>>>>>> 1dc41e2 (set intake id to 14)
+    INDEXER = 14
+    INTAKE = 15
 
 
 @enum.unique
