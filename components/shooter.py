@@ -4,9 +4,7 @@ import rev
 from magicbot import feedback, tunable, will_reset_to
 from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs, controls
-from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
-from phoenix6.signals import MotorAlignmentValue
 
 from ids import SparkId, TalonId
 from utilities.functions import clamp
@@ -31,11 +29,8 @@ class ShooterComponent:
     FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
 
     def __init__(self) -> None:
-        self.flywheel_motor_left = TalonFX(
-            device_id=TalonId.FLYWHEEL_LEFT
-        )  # Defined from behind shooter
-        self.flywheel_motor_right = TalonFX(
-            device_id=TalonId.FLYWHEEL_RIGHT
+        self.flywheel_motor = TalonFX(
+            device_id=TalonId.FLYWHEEL
         )  # Defined from behind shooter
 
         flywheel_gains_cfg = (
@@ -47,7 +42,7 @@ class ShooterComponent:
         feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
             self.FLYWHEEL_GEAR_RATIO
         )
-        self.flywheel_motor_left.configurator.apply(
+        self.flywheel_motor.configurator.apply(
             configs.TalonFXConfiguration()
             .with_slot0(flywheel_gains_cfg)
             .with_feedback(feedback_config)
@@ -87,8 +82,8 @@ class ShooterComponent:
         )
 
     @feedback
-    def get_left_flywheel_error(self) -> float:
-        return self.flywheel_motor_left.get_closed_loop_error().value
+    def get_flywheel_error(self) -> float:
+        return self.flywheel_motor.get_closed_loop_error().value
 
     def pitch_hood_relative(self, angle):
         self.desired_hood_angle += angle
@@ -101,13 +96,8 @@ class ShooterComponent:
         self.target_feeder_percentage = self.desired_feeder_percentage
 
     def execute(self) -> None:
-        self.flywheel_motor_left.set_control(
+        self.flywheel_motor.set_control(
             controls.VelocityVoltage(self.target_shooter_rps)
-        )
-        self.flywheel_motor_right.set_control(
-            Follower(
-                TalonId.FLYWHEEL_LEFT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)
-            )
         )
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
