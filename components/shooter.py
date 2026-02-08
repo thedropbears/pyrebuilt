@@ -18,13 +18,14 @@ class ShooterComponent:
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
 
-    desired_hood_angle = tunable(36.0)
-    hood_error_tolerance = 1.0
-    MIN_HOOD_ANGLE = 30
-    MAX_HOOD_ANGLE = 68
+    hood_error_tolerance = math.radians(1.0)
+    MIN_HOOD_ANGLE = math.radians(30)
+    MAX_HOOD_ANGLE = math.radians(68)
 
-    ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
-    ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
+    ENCODER_ROTS_PER_HOOD_RADIAN = 4 / math.tau
+    ENCODER_ZERO_OFFSET = (0.47222) + (
+        ENCODER_ROTS_PER_HOOD_RADIAN * math.radians(30.0)
+    )
 
     FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
 
@@ -64,10 +65,12 @@ class ShooterComponent:
         self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
         hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
-            1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
+            1 / self.ENCODER_ROTS_PER_HOOD_RADIAN
         ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(False)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
+
+        self.desired_hood_angle = self.get_hood_angle()
 
     @feedback
     def get_hood_angle(self):
