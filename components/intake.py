@@ -9,7 +9,6 @@ from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 
 from ids import SparkId, TalonId
 from utilities.rev import (
-    configure_spark_ephemeral,
     configure_spark_reset_and_persist,
 )
 

@@ -42,7 +42,7 @@ class SparkId(enum.IntEnum):
 
     HOOD = 10
     TURRET = 2
-    
+
     INTAKE_ARM = 12
 
 
@@ -53,7 +53,6 @@ class DioChannel(enum.IntEnum):
     PORT_VISION_ENCODER = 0
 
     TURRET_ENCODER = 1
-
 
 
 @enum.unique
