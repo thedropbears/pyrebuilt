@@ -73,7 +73,7 @@ class ShooterComponent:
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
-        self.desired_hood_angle = self.get_hood_angle()
+        self.target_hood_angle = self.get_hood_angle()
 
     @feedback
     def get_hood_angle(self) -> units.radians:
@@ -83,7 +83,7 @@ class ShooterComponent:
     def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
             self.get_hood_angle(),
-            self.desired_hood_angle,
+            self.target_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )
 
@@ -92,10 +92,10 @@ class ShooterComponent:
         return self.flywheel_motor.get_closed_loop_error().value
 
     def pitch_relative(self, angle: units.radians):
-        self.pitch_to(self.desired_hood_angle + angle)
+        self.pitch_to(self.target_hood_angle + angle)
 
     def pitch_to(self, angle: units.radians):
-        self.desired_hood_angle = angle
+        self.target_hood_angle = angle
 
     def shoot(self) -> None:
         self.target_shooter_rps = self.desired_shooter_rps
@@ -108,10 +108,10 @@ class ShooterComponent:
 
         self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
-        self.desired_hood_angle = clamp(
-            self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        self.target_hood_angle = clamp(
+            self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
         self.hood_motor_controller.setSetpoint(
-            self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
+            self.target_hood_angle, rev.SparkMax.ControlType.kPosition
         )
