@@ -51,11 +51,11 @@ class ClimberComponent:
         self.motor.set(self.current_climber_speed)
 
     @feedback
-    def is_forward_limit_switch_triggered(self):
+    def at_forward_limit(self):
         return self.forward_limit_switch.get()
 
     @feedback
-    def is_reverse_limit_switch_triggered(self):
+    def at_reverse_limit(self):
         return self.reverse_limit_switch.get()
 
     @feedback
