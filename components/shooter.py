@@ -28,6 +28,8 @@ class ShooterComponent:
     ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
     ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
+    FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
+
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
             device_id=TalonId.FLYWHEEL_LEFT
@@ -38,16 +40,17 @@ class ShooterComponent:
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
-            .with_k_p(0.036653)
-            .with_k_i(0)
-            .with_k_d(0)
-            .with_k_s(0.086321)
-            .with_k_v(0.11159)
-            .with_k_a(0.0038097)
+            .with_k_s(0.16635)
+            .with_k_v(0.070258)
+            .with_k_a(0.0045557)
         )
-
+        feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            self.FLYWHEEL_GEAR_RATIO
+        )
         self.flywheel_motor_left.configurator.apply(
-            configs.TalonFXConfiguration().with_slot0(flywheel_gains_cfg)
+            configs.TalonFXConfiguration()
+            .with_slot0(flywheel_gains_cfg)
+            .with_feedback(feedback_config)
         )
 
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
@@ -82,6 +85,10 @@ class ShooterComponent:
             self.desired_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )
+
+    @feedback
+    def get_left_flywheel_error(self) -> float:
+        return self.flywheel_motor_left.get_closed_loop_error().value
 
     def pitch_hood_relative(self, angle):
         self.desired_hood_angle += angle
