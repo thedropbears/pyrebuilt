@@ -200,10 +200,14 @@ class SwerveModule:
             return
 
         self.steer_motor_out_config.neutral_mode = neutral_mode
-        self.steer.configurator.apply(self.steer_motor_out_config)  # type: ignore
+        self.steer.configurator.apply(
+            self.steer_motor_out_config,  # type: ignore[arg-type]
+        )
 
         self.drive_motor_out_config.neutral_mode = neutral_mode
-        self.drive.configurator.apply(self.drive_motor_out_config)  # type: ignore
+        self.drive.configurator.apply(
+            self.drive_motor_out_config,  # type: ignore[arg-type]
+        )
 
     def toggle_neutral_mode(self) -> None:
         if self.steer_motor_out_config.neutral_mode == NeutralModeValue.BRAKE:
