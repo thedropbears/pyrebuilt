@@ -21,12 +21,12 @@ class ShooterComponent:
     desired_feeder_percentage = tunable(1)
 
     desired_hood_angle = tunable(36.0)
-    hood_error_tolerance = 3.0
-    MIN_HOOD_ANGLE = 28.9
-    MAX_HOOD_ANGLE = 73.4
+    hood_error_tolerance = 1.0
+    MIN_HOOD_ANGLE = 30
+    MAX_HOOD_ANGLE = 68
 
-    ENCODER_ROTS_PER_HOOD_DEGREE = 54 / 26 / 360
-    ENCODER_ZERO_OFFSET = 0.472
+    ENCODER_ROTS_PER_HOOD_DEGREE = 4 / 360
+    ENCODER_ZERO_OFFSET = (0.47222) + (ENCODER_ROTS_PER_HOOD_DEGREE * 30.0)
 
     def __init__(self) -> None:
         self.flywheel_motor_left = TalonFX(
@@ -54,10 +54,10 @@ class ShooterComponent:
         self.feeder_motor.setInverted(False)
 
         self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)
-        self.hood_motor.setInverted(True)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
 
         hood_motor_cfg = rev.SparkMaxConfig()
+        hood_motor_cfg.inverted(True)
         hood_motor_cfg.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         hood_motor_cfg.closedLoop.pid(0.005, 0, 0)  # TODO Tune these values
         hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
@@ -67,7 +67,7 @@ class ShooterComponent:
         hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
         hood_motor_cfg.absoluteEncoder.positionConversionFactor(
             1 / self.ENCODER_ROTS_PER_HOOD_DEGREE
-        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(True)
+        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(False)
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
@@ -109,6 +109,6 @@ class ShooterComponent:
             self.desired_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
-        """self.hood_motor_controller.setSetpoint(
+        self.hood_motor_controller.setSetpoint(
             self.desired_hood_angle, rev.SparkMax.ControlType.kPosition
-        )"""
+        )
