@@ -20,9 +20,6 @@ class TalonId(enum.IntEnum):
     FLYWHEEL = 9
     FEEDER = 11
 
-    LEFT_FUNNEL = 12
-    RIGHT_FUNNEL = 13
-
     INDEXER = 14
     INTAKE = 15
 
