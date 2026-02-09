@@ -1,5 +1,5 @@
 from magicbot import feedback, tunable, will_reset_to
-from phoenix6.configs import MotorOutputConfigs
+from phoenix6.configs import MotorOutputConfigs, TalonFXConfiguration
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from rev import LimitSwitchConfig, SparkMax, SparkMaxConfig
@@ -48,9 +48,11 @@ class ClimberComponent:
         configure_spark_reset_and_persist(self.climber_sensor, sensor_config)
 
         self.climber_motor.configurator.apply(
-            MotorOutputConfigs()
-            .with_neutral_mode(NeutralModeValue.BRAKE)
-            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            TalonFXConfiguration().with_motor_output(
+                MotorOutputConfigs()
+                .with_neutral_mode(NeutralModeValue.BRAKE)
+                .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            )
         )
 
     def deploy(self):
@@ -64,20 +66,25 @@ class ClimberComponent:
     def execute(self):
         if self.at_forward_limit():
             self.can_deploy = False
+        else:
+            self.can_deploy = True
+
         if self.at_reverse_limit():
             self.can_retract = False
+        else:
+            self.can_retract = True
             self.climber_motor.set_position(0)
 
         self.climber_motor.set(self.current_climber_speed)
 
     @feedback
-    def at_forward_limit(self):
+    def at_forward_limit(self) -> float:
         return self.forward_limit_switch.get()
 
     @feedback
-    def at_reverse_limit(self):
+    def at_reverse_limit(self) -> float:
         return self.reverse_limit_switch.get()
 
     @feedback
-    def get_climber_position(self):
-        return self.climber_motor.get_position()
+    def get_climber_position(self) -> float:
+        return self.climber_motor.get_position().value
