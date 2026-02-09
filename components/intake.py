@@ -24,7 +24,7 @@ class IntakeComponent:
     DEPLOYER_TO_ENCODER_GEARING = 1.0
 
     @feedback
-    def get_absolute_deployment_encoder_position(self):
+    def get_absolute_deployment_encoder_position(self) -> float:
         return self.deployment_encoder.get()
 
     def __init__(self) -> None:
@@ -75,10 +75,10 @@ class IntakeComponent:
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
 
-    def deploy_intake(self):
+    def deploy_intake(self) -> None:
         self.target_deployment_angle = self.DEPLOYED_INTAKE_ANGLE
 
-    def retract_intake(self):
+    def retract_intake(self) -> None:
         self.target_deployment_angle = self.RETRACTED_INTAKE_ANGLE
 
     def index(self) -> None:
