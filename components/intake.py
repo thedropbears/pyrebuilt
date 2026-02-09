@@ -1,25 +1,20 @@
 from magicbot import feedback, tunable, will_reset_to
-from phoenix5 import ControlMode, TalonSRX
 from phoenix6 import configs
 from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from wpilib import DutyCycleEncoder
 
-from ids import DioChannel, SparkId, TalonId
+from ids import DioChannel, TalonId
 
 
 class IntakeComponent:
     desired_intake_output = tunable(0.5)
     target_intake_output = will_reset_to(0.0)
 
-    funnel_output = tunable(1.0)
-
     indexer_output = tunable(0.5)
 
     desired_indexer = will_reset_to(0.0)
-    desired_funnel_output = tunable(1.0)
-    target_funnel_output = will_reset_to(0.0)
 
     RETRACTED_INTAKE_ANGLE = 0
     DEPLOYED_INTAKE_ANGLE = 90
@@ -34,11 +29,8 @@ class IntakeComponent:
 
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE)
-        self.intake_motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
         self.deployment_motor = TalonFX(TalonId.INTAKE_DEPLOYER)
         self.deployment_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYMENT_ENCODER)
-        self.left_funnel_motor = TalonSRX(TalonId.LEFT_FUNNEL)
-        self.right_funnel_motor = TalonSRX(TalonId.RIGHT_FUNNEL)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
 
         indexer_output_config = (
@@ -54,9 +46,6 @@ class IntakeComponent:
         motor_config.motor_output.with_inverted(
             InvertedValue.CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
-
-        self.left_funnel_motor.setInverted(True)
-        self.right_funnel_motor.setInverted(True)
 
         # TODO tune these
         deployment_motor_gains = (
@@ -85,7 +74,6 @@ class IntakeComponent:
 
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
-        self.target_funnel_output = self.desired_funnel_output
 
     def deploy_intake(self):
         self.target_deployment_angle = self.DEPLOYED_INTAKE_ANGLE
@@ -97,10 +85,6 @@ class IntakeComponent:
         self.desired_indexer = self.indexer_output
 
     def execute(self) -> None:
-        self.intake_motor.set(self.target_intake_output)
-        self.left_funnel_motor.set(ControlMode.PercentOutput, self.target_funnel_output)
-        self.right_funnel_motor.set(
-            ControlMode.PercentOutput, self.target_funnel_output
-        )
+        self.motor.set(self.target_intake_output)
         self.deployment_motor.set_position(self.target_deployment_angle)
         self.indexer_motor.set(self.desired_indexer)
