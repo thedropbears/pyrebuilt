@@ -37,7 +37,7 @@ class IntakeComponent:
 
         motor_config = configs.TalonFXConfiguration()
         motor_config.motor_output.with_inverted(
-            InvertedValue.CLOCKWISE_POSITIVE
+            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
 
         self.left_funnel_motor.setInverted(True)
