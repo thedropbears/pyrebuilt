@@ -19,6 +19,8 @@ class TurretComponent:
     _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
     ENCODER_OFFSET = _ENCODER_OFFSET_DUTY_CYCLE * math.tau / TURRET_TO_ENCODER_GEARING
 
+    ALLOWABLE_ERROR = math.radians(1.0)
+
     MAX_VELOCITY = 24.0
     MAX_ACCELERATION = 50.0
 
@@ -42,6 +44,7 @@ class TurretComponent:
         config.encoder.velocityConversionFactor(
             1 / 60 * TurretComponent.MOTOR_TO_TURRET_GEARING * math.tau
         )
+        config.closedLoop.allowedClosedLoopError(TurretComponent.ALLOWABLE_ERROR)
         configure_spark_reset_and_persist(self.motor, config)
 
         self.relative_encoder = self.motor.getEncoder()
