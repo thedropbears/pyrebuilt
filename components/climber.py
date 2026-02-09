@@ -78,11 +78,11 @@ class ClimberComponent:
         self.climber_motor.set(self.current_climber_speed)
 
     @feedback
-    def at_forward_limit(self) -> float:
+    def at_forward_limit(self) -> bool:
         return self.forward_limit_switch.get()
 
     @feedback
-    def at_reverse_limit(self) -> float:
+    def at_reverse_limit(self) -> bool:
         return self.reverse_limit_switch.get()
 
     @feedback
