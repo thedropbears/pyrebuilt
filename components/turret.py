@@ -105,7 +105,9 @@ class TurretComponent:
         self.desired_angle = angle
 
     def execute(self) -> None:
-        self.controller.setSetpoint(self.desired_angle, SparkMax.ControlType.kPosition)
+        self.controller.setSetpoint(
+            self.desired_angle, SparkMax.ControlType.kMAXMotionPositionControl
+        )
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(math.degrees(self.current_angle()))
