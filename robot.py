@@ -276,6 +276,8 @@ class MyRobot(magicbot.MagicRobot):
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
 
+        self.climber.try_index()
+
         self.chassis.update_alliance()
         self.chassis.update_odometry()
         self.port_vision.execute()

@@ -71,10 +71,12 @@ class ClimberComponent:
         if not self.at_reverse_limit():
             self.current_climber_speed = self.reverse_climber_speed * -1
 
-    def execute(self):
+    def try_index(self) -> None:
         if self.at_reverse_limit():
             self.climber_motor.set_position(0)
 
+    def execute(self):
+        self.try_index()
         self.climber_motor.set(self.current_climber_speed)
 
     @feedback
