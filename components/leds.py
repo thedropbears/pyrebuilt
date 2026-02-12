@@ -11,7 +11,7 @@ class LEDComponent:
     red = RGBWColor(255, 0, 0, 0)
     blue = RGBWColor(0, 0, 255, 0)
     green = RGBWColor(0, 255, 0, 0)
-    white = RGBWColor(0, 0, 0, 255)
+    white = RGBWColor(255, 255, 255, 255)
     BRIGHTNESS = 1.0
 
     def __init__(self):
