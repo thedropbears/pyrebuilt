@@ -1,5 +1,11 @@
+import math
+
 from magicbot import feedback, tunable, will_reset_to
-from phoenix6.configs import MotorOutputConfigs, TalonFXConfiguration
+from phoenix6.configs import (
+    FeedbackConfigs,
+    MotorOutputConfigs,
+    TalonFXConfiguration,
+)
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from rev import LimitSwitchConfig, SparkMax, SparkMaxConfig
@@ -12,6 +18,9 @@ class ClimberComponent:
     current_climber_speed = will_reset_to(0.0)
     forward_climber_speed = tunable(0.4)
     reverse_climber_speed = tunable(0.4)
+
+    GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
+    SHAFT_RADIUS = 0.00733  # m
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
@@ -36,10 +45,21 @@ class ClimberComponent:
         configure_spark_reset_and_persist(self.climber_sensor, sensor_config)
 
         self.climber_motor.configurator.apply(
-            TalonFXConfiguration().with_motor_output(
+            TalonFXConfiguration()
+            .with_motor_output(
                 MotorOutputConfigs()
                 .with_neutral_mode(NeutralModeValue.BRAKE)
                 .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            )
+            .with_feedback(
+                FeedbackConfigs().with_sensor_to_mechanism_ratio(
+                    1
+                    / (
+                        ClimberComponent.GEAR_RATIO
+                        * ClimberComponent.SHAFT_RADIUS
+                        * math.tau
+                    )
+                )
             )
         )
 
