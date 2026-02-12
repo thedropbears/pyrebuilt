@@ -13,9 +13,6 @@ class ClimberComponent:
     forward_climber_speed = tunable(0.4)
     reverse_climber_speed = tunable(0.4)
 
-    can_deploy = True
-    can_retract = True
-
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
         self.climber_motor = TalonFX(TalonId.CLIMBER)
