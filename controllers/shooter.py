@@ -25,7 +25,7 @@ class Shooter(StateMachine):
     def is_in_shooting_position(self) -> bool:
         chassis_pos = self.chassis.get_pose().translation()
         shooting_pos = game.RED_HUB_POS if game.is_red() else game.BLUE_HUB_POS
-        
+
         return shooting_pos.distance(chassis_pos) <= self.MAX_SHOOT_RANGE
 
     @state(first=True)
