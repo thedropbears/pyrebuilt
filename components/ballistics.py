@@ -3,7 +3,7 @@ from math import atan2
 import numpy as np
 from magicbot import will_reset_to
 from wpimath import units
-from wpimath.geometry import Pose2d, Translation3d, Twist2d
+from wpimath.geometry import Pose2d, Translation2d, Twist2d
 
 from components.shooter import ShooterComponent, rotations_per_second
 from components.turret import TurretComponent
@@ -26,7 +26,7 @@ class BallisticsComponent:
     def __init__(self) -> None:
         self.current_pose = Pose2d()
         self.current_twist = Twist2d()
-        self.target_position = Translation3d()
+        self.target_position = Translation2d()
 
     def setup(self) -> None:
         self.target_flywheel_speed = 0.0
@@ -40,7 +40,7 @@ class BallisticsComponent:
 
     def calculate_for(
         self,
-        target_position: Translation3d,
+        target_position: Translation2d,
         current_pose: Pose2d,
         current_twist: Twist2d,
     ) -> None:
@@ -67,9 +67,7 @@ class BallisticsComponent:
     def execute(self) -> None:
         current_position = self.current_pose.translation()
 
-        distance_to_target = current_position.distance(
-            self.target_position.toTranslation2d()
-        )
+        distance_to_target = current_position.distance(self.target_position)
         angle_to_target = atan2(
             self.target_position.y - current_position.y,
             self.target_position.x - current_position.x,
