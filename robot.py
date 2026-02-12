@@ -254,6 +254,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.chassis.execute()
         self.shooter.execute()
+        self.shooter_state_machine.execute()
         self.climber.execute()
         self.intake.execute()
         self.leds.execute()

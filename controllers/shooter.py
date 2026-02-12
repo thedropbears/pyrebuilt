@@ -26,6 +26,7 @@ class Shooter(StateMachine):
     def is_hub_active(self) -> bool:
         return is_alliance_hub_active()
 
+    @feedback
     def get_target_shoot_pos(self) -> Translation2d:
         if is_in_alliance_zone(self.chassis.get_pose().translation()):
             return alliance_hub_pos(is_red())
