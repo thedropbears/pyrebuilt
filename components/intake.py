@@ -50,7 +50,7 @@ class IntakeComponent:
 
         motor_config = configs.TalonFXConfiguration()
         motor_config.motor_output.with_inverted(
-            InvertedValue.CLOCKWISE_POSITIVE
+            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
 
         # TODO tune these
@@ -77,6 +77,7 @@ class IntakeComponent:
         self.deployment_motor_right.set_position(
             self.get_absolute_deployment_encoder_position()
         )
+        self.motor.configurator.apply(motor_config)
 
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output

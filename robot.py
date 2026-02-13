@@ -19,7 +19,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.shooter import Shooter
 from ids import DioChannel, PwmChannel, RioSerialNumber
-from utilities.game import is_red
+from utilities.game import RED_HUB_POS, is_red
 from utilities.scalers import rescale_js
 
 
@@ -43,8 +43,9 @@ class MyRobot(magicbot.MagicRobot):
     lower_max_speed = tunable(1.0)  # m/s
     lower_max_spin_rate = tunable(1.0)  # rad/s
 
-    # Temp turret:
-    turret_setpoint = tunable(0.0)
+    test_flywheel_speed = tunable(0.0)  # rotations/s
+    test_turret_angle = tunable(0.0)  # degrees
+    test_hood_angle = tunable(0.0)  # degrees
 
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
@@ -218,12 +219,10 @@ class MyRobot(magicbot.MagicRobot):
                 )
 
             self.chassis.drive_local(drive_x, drive_y, drive_z)
-            self.chassis.execute()
         else:
             self.chassis.stop()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.shooter.shoot()
             self.intake.intake()
 
         if self.gamepad.getAButton():
@@ -231,9 +230,6 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getYButton():
             self.climber.climb()
-
-        if self.gamepad.getXButton():
-            self.turret.slew_to(math.radians(self.turret_setpoint))
 
         if self.gamepad.getLeftBumperButton():
             self.intake.index()
@@ -244,7 +240,27 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getPOV() == 180:
             self.intake.retract_intake()
 
+        if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
+            if self.gamepad.getRightTriggerAxis() > 0.5:
+                self.ballistics.calculate_for(
+                    RED_HUB_POS,
+                    self.chassis.get_pose(),
+                    self.chassis.get_velocity().toTwist2d(0.02),
+                )
+            else:
+                self.ballistics.force_solution(
+                    self.test_flywheel_speed,
+                    math.radians(self.test_turret_angle),
+                    math.radians(self.test_hood_angle),
+                )
+
+            self.ballistics.energise_flywheels()
+            self.ballistics.shoot()
+            self.ballistics.execute()
+
+        self.chassis.execute()
         self.shooter.execute()
+        self.shooter_state_machine.execute()
         self.climber.execute()
         self.intake.execute()
         self.leds.execute()
