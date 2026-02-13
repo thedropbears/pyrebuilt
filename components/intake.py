@@ -35,13 +35,6 @@ class IntakeComponent:
         self.deployment_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYMENT_ENCODER)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
 
-        self.deployment_motor_left.set_control(
-            Follower(
-                TalonId.INTAKE_DEPLOYER_RIGHT,
-                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
-            )
-        )
-
         indexer_output_config = (
             configs.MotorOutputConfigs()
             .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
@@ -97,3 +90,9 @@ class IntakeComponent:
         self.motor.set(self.target_intake_output)
         self.deployment_motor_right.set_position(self.target_deployment_angle)
         self.indexer_motor.set(self.desired_indexer)
+        self.deployment_motor_left.set_control(
+            Follower(
+                TalonId.INTAKE_DEPLOYER_RIGHT,
+                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
+            )
+        )
