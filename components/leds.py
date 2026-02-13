@@ -3,7 +3,7 @@ from phoenix6.hardware.candle import CANdle
 from phoenix6.signals.rgbw_color import RGBWColor
 
 from ids import CandleId
-from utilities.game import is_hub_active
+from utilities.game import is_alliance_hub_active
 
 
 class LEDComponent:
@@ -38,7 +38,7 @@ class LEDComponent:
         self._set_flow_colour(LEDComponent.red)
 
     def set_teleop_lights(self):
-        if is_hub_active():
+        if is_alliance_hub_active():
             self._set_flow_colour(LEDComponent.green)
         else:
             self._set_flow_colour(LEDComponent.white)

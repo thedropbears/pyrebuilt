@@ -237,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
             if self.gamepad.getRightTriggerAxis() > 0.5:
                 self.ballistics.calculate_for(
-                    Translation3d(RED_HUB_POS),
+                    RED_HUB_POS,
                     self.chassis.get_pose(),
                     self.chassis.get_velocity().toTwist2d(0.02),
                 )
@@ -254,6 +254,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.chassis.execute()
         self.shooter.execute()
+        self.shooter_state_machine.execute()
         self.climber.execute()
         self.intake.execute()
         self.leds.execute()

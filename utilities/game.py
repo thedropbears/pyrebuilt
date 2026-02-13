@@ -77,36 +77,48 @@ RED_HUB_POS = (
     + get_fiducial_pose(10).translation().toTranslation2d()
 ) / 2
 
+BEHIND_RED_HUB_POS = (
+    get_fiducial_pose(10).translation().toTranslation2d()
+    + get_fiducial_pose(15).translation().toTranslation2d()
+) / 2
+
 BLUE_HUB_POS = (
     get_fiducial_pose(20).translation().toTranslation2d()
     + get_fiducial_pose(26).translation().toTranslation2d()
 ) / 2
 
-RED_SHOOT_LINE_X = (
-    (
-        get_fiducial_pose(12).translation().toTranslation2d()
-        + get_fiducial_pose(13).translation().toTranslation2d()
-    )
-    / 2
-).X  # TODO This is a temporary value, may require tuning or deletion
-
-BLUE_SHOOT_LINE_X = (
-    (
-        get_fiducial_pose(28).translation().toTranslation2d()
-        + get_fiducial_pose(29).translation().toTranslation2d()
-    )
-    / 2
-).X  # TODO This is a temporary value, may require tuning or deletion
+BEHIND_BLUE_HUB_POS = (
+    get_fiducial_pose(26).translation().toTranslation2d()
+    + get_fiducial_pose(31).translation().toTranslation2d()
+) / 2
 
 
-def get_hub_pos(is_red: bool):
+def is_in_alliance_zone(robot_pos: Translation2d):
+    if is_red():
+        return (
+            robot_pos.x > (FIELD_LENGTH - 3.977894)
+        )  # subtract distance between front of barge and driver station wall from field length
+    else:
+        return (
+            robot_pos.x < 3.977894
+        )  # distance between front of barge and driver station wall
+
+
+def alliance_hub_pos(is_red: bool):
     if is_red:
         return RED_HUB_POS
     else:
         return BLUE_HUB_POS
 
 
-def is_hub_active() -> bool:
+def behind_alliance_hub_pos(is_red: bool):
+    if is_red:
+        return BEHIND_RED_HUB_POS
+    else:
+        return BEHIND_BLUE_HUB_POS
+
+
+def is_alliance_hub_active() -> bool:
     alliance = wpilib.DriverStation.getAlliance()
 
     # If we have no alliance, we cannot be enabled, therefore no hub.
