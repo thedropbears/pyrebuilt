@@ -1,7 +1,7 @@
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6 import configs
 from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
-from phoenix6.controls import Follower
+from phoenix6.controls import Follower, PositionVoltage
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
 from wpilib import DutyCycleEncoder
@@ -93,7 +93,9 @@ class IntakeComponent:
 
     def execute(self) -> None:
         self.motor.set(self.target_intake_output)
-        self.deployment_motor_right.set_position(self.target_deployment_angle)
+        self.deployment_motor_right.set_control(
+            PositionVoltage(self.target_deployment_angle)
+        )
         self.indexer_motor.set(self.desired_indexer)
 
     @feedback

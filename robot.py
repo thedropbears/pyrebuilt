@@ -234,7 +234,7 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftBumperButton():
             self.intake.index()
 
-        if self.gamepad.getPOV(0):
+        if self.gamepad.getPOV() == 0:
             self.intake.deploy_intake()
 
         if self.gamepad.getPOV() == 180:
