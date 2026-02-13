@@ -17,7 +17,7 @@ class IntakeComponent:
 
     desired_indexer = will_reset_to(0.0)
 
-    RETRACTED_INTAKE_ANGLE = 0
+    RETRACTED_INTAKE_ANGLE = 0.0
     DEPLOYED_INTAKE_ANGLE = 0.25
 
     target_deployment_angle = RETRACTED_INTAKE_ANGLE
@@ -52,6 +52,7 @@ class IntakeComponent:
         motor_config.motor_output.with_inverted(
             InvertedValue.COUNTER_CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
+
 
         # TODO tune these
         deployment_motor_gains = (
