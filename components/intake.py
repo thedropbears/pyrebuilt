@@ -53,7 +53,6 @@ class IntakeComponent:
             InvertedValue.COUNTER_CLOCKWISE_POSITIVE
         ).with_neutral_mode(NeutralModeValue.COAST)
 
-
         # TODO tune these
         deployment_motor_gains = (
             Slot0Configs()
