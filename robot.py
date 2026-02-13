@@ -241,7 +241,7 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getPOV(0):
             self.intake.deploy_intake()
 
-        if self.gamepad.getPOV(180):
+        if self.gamepad.getPOV() == 180:
             self.intake.retract_intake()
 
         self.shooter.execute()

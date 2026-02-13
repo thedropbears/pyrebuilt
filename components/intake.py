@@ -1,3 +1,5 @@
+import math
+
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6 import configs
 from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
@@ -18,15 +20,16 @@ class IntakeComponent:
     desired_indexer = will_reset_to(0.0)
 
     RETRACTED_INTAKE_ANGLE = 0
-    DEPLOYED_INTAKE_ANGLE = 90
+    DEPLOYED_INTAKE_ANGLE = math.pi / 2
 
     target_deployment_angle = RETRACTED_INTAKE_ANGLE
 
     DEPLOYER_TO_ENCODER_GEARING = 1.0
+    ENCODER_ZERO_OFFSET = 0 
 
     @feedback
-    def get_absolute_deployment_encoder_position(self) -> float:
-        return self.deployment_encoder.get()
+    def get_absolute_deployment_encoder_position(self):
+        return self.deployment_encoder.get() - self.ENCODER_ZERO_OFFSET
 
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE)
