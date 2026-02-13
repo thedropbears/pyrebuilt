@@ -1,8 +1,9 @@
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6 import configs
 from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
+from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
-from phoenix6.signals import InvertedValue, NeutralModeValue
+from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
 from wpilib import DutyCycleEncoder
 
 from ids import DioChannel, TalonId
@@ -29,9 +30,12 @@ class IntakeComponent:
 
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE)
-        self.deployment_motor = TalonFX(TalonId.INTAKE_DEPLOYER)
+        self.deployment_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
+        self.deployment_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
         self.deployment_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYMENT_ENCODER)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
+        
+        self.deployment_motor_left.set_control(Follower(TalonId.INTAKE_DEPLOYER_RIGHT, MotorAlignmentValue(MotorAlignmentValue.OPPOSED)))
 
         indexer_output_config = (
             configs.MotorOutputConfigs()
@@ -62,13 +66,13 @@ class IntakeComponent:
             1 / self.DEPLOYER_TO_ENCODER_GEARING
         )
 
-        self.deployment_motor.configurator.apply(
+        self.deployment_motor_right.configurator.apply(
             TalonFXConfiguration()
             .with_slot0(deployment_motor_gains)
             .with_feedback(deployment_motor_gear_config)
         )
 
-        self.deployment_motor.set_position(
+        self.deployment_motor_right.set_position(
             self.get_absolute_deployment_encoder_position()
         )
 
@@ -86,5 +90,6 @@ class IntakeComponent:
 
     def execute(self) -> None:
         self.motor.set(self.target_intake_output)
-        self.deployment_motor.set_position(self.target_deployment_angle)
+        self.deployment_motor_right.set_position(self.target_deployment_angle)
         self.indexer_motor.set(self.desired_indexer)
+        

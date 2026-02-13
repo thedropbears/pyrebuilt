@@ -26,7 +26,8 @@ class TalonId(enum.IntEnum):
     INDEXER = 14
     INTAKE = 15
 
-    INTAKE_DEPLOYER = 16
+    INTAKE_DEPLOYER_LEFT = 16
+    INTAKE_DEPLOYER_RIGHT = 17
 
 
 @enum.unique
