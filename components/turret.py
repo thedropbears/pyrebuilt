@@ -24,6 +24,10 @@ class TurretComponent:
     MAX_VELOCITY = 24.0
     MAX_ACCELERATION = 50.0
 
+    MAX_TURRET_ROTATION = math.radians(200)
+    MIN_TURRET_ROTATION = math.radians(-200)
+    TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
+
     def __init__(self) -> None:
         # Initialise Motor
         self.motor = SparkMax(SparkId.TURRET, SparkMax.MotorType.kBrushless)
@@ -76,6 +80,14 @@ class TurretComponent:
         self._sync_encoder()
         self.slew_to(self.get_current_angle())
 
+    def wrap_range(self, target_angle: units.radians) -> units.radians:
+        if target_angle < self.MIN_TURRET_ROTATION:
+            target_angle += self.TURRET_MOTION_RANGE
+        elif target_angle > self.MAX_TURRET_ROTATION:
+            target_angle -= self.TURRET_MOTION_RANGE
+
+        return target_angle
+
     @feedback
     def get_raw_absolute_encoder(self) -> float:
         return self.absolute_encoder.get()
@@ -105,7 +117,7 @@ class TurretComponent:
     def slew_to(self, angle: units.radians) -> None:
         # update setpoint
         # TODO wrap angle
-        self.desired_angle = angle
+        self.desired_angle = self.wrap_range(angle)
 
     def execute(self) -> None:
         self.controller.setSetpoint(
