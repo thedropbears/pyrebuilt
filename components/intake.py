@@ -15,22 +15,8 @@ class IntakeComponent:
 
     funnel_output = tunable(1.0)
 
-    indexer_output = tunable(0.5)
-
-    desired_indexer = will_reset_to(0.0)
-
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE)
-        self.indexer_motor = TalonFX(TalonId.INDEXER)
-
-        indexer_output_config = (
-            configs.MotorOutputConfigs()
-            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
-            .with_neutral_mode(NeutralModeValue.COAST)
-        )
-        self.indexer_motor.configurator.apply(
-            configs.TalonFXConfiguration().with_motor_output(indexer_output_config)
-        )
 
         motor_config = configs.TalonFXConfiguration()
         motor_config.motor_output.with_inverted(
@@ -43,9 +29,5 @@ class IntakeComponent:
         self.desired_output = self.intake_output
         self.desired_funnel = self.funnel_output
 
-    def index(self) -> None:
-        self.desired_indexer = self.indexer_output
-
     def execute(self) -> None:
         self.motor.set(self.desired_output)
-        self.indexer_motor.set(self.desired_indexer)

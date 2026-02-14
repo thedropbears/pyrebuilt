@@ -6,6 +6,7 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 
 from components.chassis import ChassisComponent
+from components.hopper import HopperComponent
 from components.shooter import ShooterComponent, rotations_per_second
 from components.turret import TurretComponent
 from utilities.functions import constrain_angle
@@ -15,6 +16,7 @@ class BallisticsComponent:
     chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
+    hopper: HopperComponent
 
     # TODO Define lookup table for use
     DISTANCE_LOOKUP = [1.0, 2.0, 3.0, 4.0, 5.0]  # TODO Tune these values
@@ -54,7 +56,7 @@ class BallisticsComponent:
         self.use_ballistics = False
 
     def shoot(self) -> None:
-        self.shooter.shoot()
+        self.hopper.shoot()
 
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()

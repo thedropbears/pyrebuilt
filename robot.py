@@ -12,6 +12,7 @@ from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent, SwerveConfig
 from components.climber import ClimberComponent
+from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.shooter import ShooterComponent
@@ -29,6 +30,7 @@ class MyRobot(magicbot.MagicRobot):
     shooter_state_machine: Shooter
 
     # Components
+    hopper: HopperComponent
     chassis: ChassisComponent
     shooter: ShooterComponent
     climber: ClimberComponent
@@ -235,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
             self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
-            self.intake.index()
+            self.hopper.feed()
 
         self.targeter.execute()
 
@@ -259,6 +261,7 @@ class MyRobot(magicbot.MagicRobot):
         self.intake.execute()
         self.leds.execute()
         self.turret.execute()
+        self.hopper.execute()
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
