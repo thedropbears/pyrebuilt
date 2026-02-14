@@ -39,7 +39,9 @@ class IntakeComponent:
         self.deployment_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYMENT_ENCODER)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
         self.inversionconfig = TalonFXConfiguration()
-        self.inversionconfig.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+        self.inversionconfig.motor_output.inverted = (
+            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+        )
 
         indexer_output_config = (
             configs.MotorOutputConfigs()
