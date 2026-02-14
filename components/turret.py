@@ -127,8 +127,6 @@ class TurretComponent:
         self.slew_to(self.get_current_angle() + angle)
 
     def slew_to(self, angle: units.radians) -> None:
-        # update setpoint
-        # TODO wrap angle
         self.desired_angle = self.wrap_range(angle)
 
     def execute(self) -> None:
