@@ -3,14 +3,16 @@ from math import atan2
 import numpy as np
 from magicbot import will_reset_to
 from wpimath import units
-from wpimath.geometry import Pose2d, Translation2d, Twist2d
+from wpimath.geometry import Translation2d
 
+from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent, rotations_per_second
 from components.turret import TurretComponent
 from utilities.functions import constrain_angle
 
 
 class BallisticsComponent:
+    chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
 
@@ -20,12 +22,9 @@ class BallisticsComponent:
     ANGLE_LOOKUP = [80.0, 75.0, 70.0, 65.0, 60.0]  # TODO Tune these values
 
     use_ballistics = will_reset_to(True)
-
     should_energise_flywheels = will_reset_to(False)
 
     def __init__(self) -> None:
-        self.current_pose = Pose2d()
-        self.current_twist = Twist2d()
         self.target_position = Translation2d()
 
     def setup(self) -> None:
@@ -38,16 +37,9 @@ class BallisticsComponent:
         # but the hood and turret should always run
         self.should_energise_flywheels = True
 
-    def calculate_for(
-        self,
-        target_position: Translation2d,
-        current_pose: Pose2d,
-        current_twist: Twist2d,
-    ) -> None:
+    def solve_for(self, target_position) -> None:
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
-        self.current_pose = current_pose
-        self.current_twist = current_twist
         self.target_position = target_position
 
     def force_solution(
@@ -65,7 +57,10 @@ class BallisticsComponent:
         self.shooter.shoot()
 
     def execute(self) -> None:
-        current_position = self.current_pose.translation()
+        current_pose = self.chassis.get_pose()
+
+        current_position = current_pose.translation()
+        current_rotation = current_pose.rotation().radians()
 
         distance_to_target = current_position.distance(self.target_position)
         angle_to_target = atan2(
@@ -75,7 +70,7 @@ class BallisticsComponent:
 
         if self.use_ballistics:
             self.target_turret_angle = constrain_angle(
-                angle_to_target - self.current_pose.rotation().radians()
+                angle_to_target - current_rotation
             )
             self.target_hood_angle = float(
                 np.interp(
