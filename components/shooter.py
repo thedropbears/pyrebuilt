@@ -1,14 +1,17 @@
 import math
 
-import rev
 from magicbot import feedback, will_reset_to
 from phoenix6 import configs, controls, signals
 from phoenix6.hardware import TalonFX
+from wpilib import PWM, DutyCycleEncoder
 from wpimath import units
+from wpimath.controller import PIDController
 
-from ids import SparkId, TalonId
+from ids import DioChannel, PwmChannel, TalonId
 from utilities.functions import clamp
-from utilities.rev import configure_spark_reset_and_persist
+from utilities.rev import (
+    configure_through_bore_encoder,
+)
 
 
 class ShooterComponent:
@@ -22,6 +25,10 @@ class ShooterComponent:
     ENCODER_ZERO_OFFSET = (0.47222) + (
         ENCODER_ROTS_PER_HOOD_RADIAN * math.radians(30.0)
     )
+
+    HOOD_SERVO_MAX_SPEED = (
+        55.0 * math.tau / 60.0
+    )  # rad/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
     FLYWHEEL_GEAR_RATIO = 1 / (30 / 18)
 
@@ -50,23 +57,13 @@ class ShooterComponent:
             .with_motor_output(motor_output_config)
         )
 
-        self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)
-        self.hood_motor_controller = self.hood_motor.getClosedLoopController()
+        self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
+        self.hood_controller = PIDController(0.01, 0.0, 0.0)
 
-        hood_motor_cfg = rev.SparkMaxConfig()
-        hood_motor_cfg.inverted(True)
-        hood_motor_cfg.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
-        hood_motor_cfg.closedLoop.pid(0.005, 0, 0)  # TODO Tune these values
-        hood_motor_cfg.closedLoop.allowedClosedLoopError(self.hood_error_tolerance)
-        hood_motor_cfg.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
-
-        self.hood_encoder = self.hood_motor.getAbsoluteEncoder()
-        hood_motor_cfg.apply(rev.AbsoluteEncoderConfig.Presets.REV_ThroughBoreEncoder())
-        hood_motor_cfg.absoluteEncoder.positionConversionFactor(
-            1 / self.ENCODER_ROTS_PER_HOOD_RADIAN
-        ).zeroOffset(self.ENCODER_ZERO_OFFSET).zeroCentered(False).inverted(False)
-
-        configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
+        self.hood_encoder = DutyCycleEncoder(
+            DioChannel.HOOD_ENCODER, math.tau / self.ENCODER_ROTS_PER_HOOD_RADIAN, 0
+        )
+        configure_through_bore_encoder(self.hood_encoder)
 
         self.target_hood_angle = self.get_hood_angle()
 
@@ -75,7 +72,7 @@ class ShooterComponent:
         return math.degrees(self.get_hood_angle())
 
     def get_hood_angle(self) -> units.radians:
-        return self.hood_encoder.getPosition()
+        return self.hood_encoder.get() - ShooterComponent.ENCODER_ZERO_OFFSET
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
@@ -110,6 +107,15 @@ class ShooterComponent:
             self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
-        self.hood_motor_controller.setSetpoint(
-            self.target_hood_angle, rev.SparkMax.ControlType.kPosition
+        # perform calculation in units and then scale for interface
+        hood_velocity = (
+            clamp(
+                self.hood_controller.calculate(
+                    self.get_hood_angle(), self.target_hood_angle
+                ),
+                -ShooterComponent.HOOD_SERVO_MAX_SPEED,
+                ShooterComponent.HOOD_SERVO_MAX_SPEED,
+            )
+            / ShooterComponent.HOOD_SERVO_MAX_SPEED
         )
+        self.hood_servo.setSpeed(hood_velocity)

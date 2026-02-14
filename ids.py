@@ -49,7 +49,8 @@ class CancoderId(enum.IntEnum):
 class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
-    HOOD = 10
+    CLIMBER_SENSOR = 4
+
     TURRET = 2
 
 
@@ -63,6 +64,7 @@ class DioChannel(enum.IntEnum):
 
     CLIMBER_BREAKBEAM_SENSOR_FRONT = 2
     CLIMBER_BREAKBEAM_SENSOR_BACK = 4
+    HOOD_ENCODER = 3
 
 
 @enum.unique
@@ -70,6 +72,8 @@ class PwmChannel(enum.IntEnum):
     """roboRIO PWM output channel number."""
 
     PORT_VISION_SERVO = 0
+
+    HOOD_SERVO = 1
 
 
 @enum.unique
