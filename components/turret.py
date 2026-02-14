@@ -24,6 +24,10 @@ class TurretComponent:
     MAX_VELOCITY = 24.0
     MAX_ACCELERATION = 50.0
 
+    MAX_TURRET_ROTATION = math.radians(200)
+    MIN_TURRET_ROTATION = math.radians(-200)
+    TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
+
     def __init__(self) -> None:
         # Initialise Motor
         self.motor = SparkMax(SparkId.TURRET, SparkMax.MotorType.kBrushless)
@@ -76,36 +80,54 @@ class TurretComponent:
         self._sync_encoder()
         self.slew_to(self.get_current_angle())
 
+    def wrap_range(self, target_angle: units.radians) -> units.radians:
+        if target_angle < self.MIN_TURRET_ROTATION:
+            target_angle += self.TURRET_MOTION_RANGE
+        elif target_angle > self.MAX_TURRET_ROTATION:
+            target_angle -= self.TURRET_MOTION_RANGE
+
+        return target_angle
+
     @feedback
     def get_raw_absolute_encoder(self) -> float:
         return self.absolute_encoder.get()
 
-    @feedback
     def _get_absolute_encoder_position(self) -> units.radians:
         return self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET
+
+    @feedback
+    def _get_absolute_encoder_position_degrees(self) -> units.degrees:
+        return math.degrees(self._get_absolute_encoder_position())
 
     def _sync_encoder(self) -> None:
         self.relative_encoder.setPosition(self._get_absolute_encoder_position())
 
-    @feedback
     def get_current_angle(self) -> units.radians:
         return self.relative_encoder.getPosition()
 
     @feedback
+    def get_current_angle_degrees(self) -> units.degrees:
+        return math.degrees(self.get_current_angle())
+
     def get_current_velocity(self) -> units.radians_per_second:
         return self.relative_encoder.getVelocity()
 
     @feedback
+    def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
+        return math.degrees(self.get_current_velocity())
+
     def get_error(self) -> units.radians:
         return self.controller.getMAXMotionSetpointPosition() - self.get_current_angle()
+
+    @feedback
+    def get_error_degrees(self) -> units.degrees:
+        return math.degrees(self.get_error())
 
     def slew_relative(self, angle: units.radians) -> None:
         self.slew_to(self.get_current_angle() + angle)
 
     def slew_to(self, angle: units.radians) -> None:
-        # update setpoint
-        # TODO wrap angle
-        self.desired_angle = angle
+        self.desired_angle = self.wrap_range(angle)
 
     def execute(self) -> None:
         self.controller.setSetpoint(
@@ -113,4 +135,4 @@ class TurretComponent:
         )
 
     def periodic(self) -> None:
-        self.sim_pointer.setAngle(math.degrees(self.get_current_angle()))
+        self.sim_pointer.setAngle(self.get_current_angle_degrees())
