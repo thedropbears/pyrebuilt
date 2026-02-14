@@ -1,6 +1,10 @@
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6 import configs
-from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
+from phoenix6.configs import (
+    FeedbackConfigs,
+    Slot0Configs,
+    TalonFXConfiguration,
+)
 from phoenix6.controls import Follower
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
@@ -34,6 +38,8 @@ class IntakeComponent:
         self.deployment_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
         self.deployment_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYMENT_ENCODER)
         self.indexer_motor = TalonFX(TalonId.INDEXER)
+        self.inversionconfig = TalonFXConfiguration()
+        self.inversionconfig.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
 
         indexer_output_config = (
             configs.MotorOutputConfigs()
@@ -82,6 +88,7 @@ class IntakeComponent:
 
     def retract_intake(self) -> None:
         self.target_deployment_angle = self.RETRACTED_INTAKE_ANGLE
+        self.motor.configurator.apply(self.inversionconfig)
 
     def index(self) -> None:
         self.desired_indexer = self.indexer_output
