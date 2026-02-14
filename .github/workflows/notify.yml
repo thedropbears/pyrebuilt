@@ -17,7 +17,26 @@ jobs:
     runs-on: ubuntu-slim
 
     steps:
+      - uses: actions/checkout@v6
+
+      - name: Check if tool.robotpy changed
+        id: check
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          extract_robotpy_table() {
+            yq -p toml -oy '.tool.robotpy'
+          }
+
+          OLD="$(git show "$BEFORE":pyproject.toml | extract_robotpy_table)"
+          NEW="$(extract_robotpy_table < pyproject.toml)"
+
+          if [[ "$OLD" != "$NEW" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Post a message in a channel
+        if: steps.check.outputs.changed == 'true'
         uses: slackapi/slack-github-action@v2
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
