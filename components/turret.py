@@ -137,4 +137,4 @@ class TurretComponent:
         )
 
     def periodic(self) -> None:
-        self.sim_pointer.setAngle(math.degrees(self.get_current_angle()))
+        self.sim_pointer.setAngle(self.get_current_angle_degrees())
