@@ -96,13 +96,12 @@ class TurretComponent:
         return self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET
 
     @feedback
-    def get_absolute_encoder_position_degrees(self) -> units.degrees:
+    def _get_absolute_encoder_position_degrees(self) -> units.degrees:
         return math.degrees(self._get_absolute_encoder_position())
 
     def _sync_encoder(self) -> None:
         self.relative_encoder.setPosition(self._get_absolute_encoder_position())
 
-    @feedback
     def get_current_angle(self) -> units.radians:
         return self.relative_encoder.getPosition()
 
@@ -110,7 +109,6 @@ class TurretComponent:
     def get_current_angle_degrees(self) -> units.degrees:
         return math.degrees(self.get_current_angle())
 
-    @feedback
     def get_current_velocity(self) -> units.radians_per_second:
         return self.relative_encoder.getVelocity()
 
@@ -118,7 +116,6 @@ class TurretComponent:
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
         return math.degrees(self.get_current_velocity())
 
-    @feedback
     def get_error(self) -> units.radians:
         return self.controller.getMAXMotionSetpointPosition() - self.get_current_angle()
 
