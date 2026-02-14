@@ -15,6 +15,7 @@ from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.shooter import ShooterComponent
+from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.shooter import Shooter
@@ -34,6 +35,7 @@ class MyRobot(magicbot.MagicRobot):
     intake: IntakeComponent
     turret: TurretComponent
     ballistics: BallisticsComponent
+    targeter: Targeter
     leds: LEDComponent
     port_vision: VisualLocalizer
 
@@ -254,6 +256,7 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.execute()
 
         self.chassis.execute()
+        self.targeter.execute()
         self.shooter.execute()
         self.shooter_state_machine.execute()
         self.climber.execute()
