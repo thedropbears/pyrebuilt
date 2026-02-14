@@ -30,8 +30,8 @@ class BallisticsComponent:
 
     def setup(self) -> None:
         self.target_flywheel_speed = 0.0
-        self.target_turret_angle = self.turret.current_angle()
-        self.target_hood_angle = self.shooter.hood_angle()
+        self.target_turret_angle = self.turret.get_current_angle()
+        self.target_hood_angle = self.shooter.get_hood_angle()
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,

@@ -70,19 +70,19 @@ class ShooterComponent:
 
         configure_spark_reset_and_persist(self.hood_motor, hood_motor_cfg)
 
-        self.target_hood_angle = self.hood_angle()
+        self.target_hood_angle = self.get_hood_angle()
 
     @feedback
-    def hood_angle_degrees(self) -> units.degrees:
-        return math.degrees(self.hood_angle())
+    def get_hood_angle_degrees(self) -> units.degrees:
+        return math.degrees(self.get_hood_angle())
 
-    def hood_angle(self) -> units.radians:
+    def get_hood_angle(self) -> units.radians:
         return self.hood_encoder.getPosition()
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
-            self.hood_angle(),
+            self.get_hood_angle(),
             self.target_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )

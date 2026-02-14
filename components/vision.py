@@ -165,7 +165,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.override_setpoint = 0.5
 
     @feedback
-    def rotation_limits(self) -> list[float]:
+    def get_rotation_limits(self) -> list[float]:
         return [self.min_rotation, self.max_rotation]
 
     @feedback
@@ -177,7 +177,7 @@ class VisualLocalizer(HasPerLoopCache):
         return self.has_multitag
 
     @feedback
-    def raw_encoder_rotation(self) -> Rotation2d:
+    def get_raw_encoder_rotation(self) -> Rotation2d:
         # The encoder has been set up to return values in the interval [0, 2pi]
         return Rotation2d(self.encoder.get())
 
@@ -188,7 +188,7 @@ class VisualLocalizer(HasPerLoopCache):
     @feedback
     @cache_per_loop
     def relative_bearing_to_best_cluster(self) -> float:
-        tags = self.visible_tags()
+        tags = self.get_visible_tags()
         if len(tags) == 0:
             return 0.0
         relative_bearings = [tag.relative_bearing for tag in tags]
@@ -206,7 +206,7 @@ class VisualLocalizer(HasPerLoopCache):
 
     @feedback
     @cache_per_loop
-    def visible_tags(self) -> list[VisibleTag]:
+    def get_visible_tags(self) -> list[VisibleTag]:
         tags_in_view = []
 
         robot_pose = self.chassis.get_pose()
@@ -248,20 +248,20 @@ class VisualLocalizer(HasPerLoopCache):
         return tags_in_view
 
     @feedback
-    def desired_turret_rotation(self) -> float:
+    def get_desired_turret_rotation(self) -> float:
         # Read encoder angle and account for offset
         return self.relative_bearing_to_best_cluster()
 
     @feedback
-    def desired_servo_rotation(self) -> float:
-        return self.turret_to_servo(self.desired_turret_rotation())
+    def get_desired_servo_rotation(self) -> float:
+        return self.convert_turret_to_servo(self.get_desired_turret_rotation())
 
-    def turret_to_servo(self, turret: float) -> float:
+    def convert_turret_to_servo(self, turret: float) -> float:
         return turret - (self.servo_offsets.neutral - self.encoder_offset).radians()
 
     @property
     def turret_rotation(self) -> Rotation2d:
-        return self.raw_encoder_rotation() - self.encoder_offset
+        return self.get_raw_encoder_rotation() - self.encoder_offset
 
     def robot_to_camera(self, timestamp: float) -> Transform3d:
         turret_rotation = self.turret_rotation_buffer.sample(timestamp)
@@ -294,7 +294,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.override_setpoint = 0.99
 
     def execute(self) -> None:
-        desired = self.turret_to_servo(self.desired_turret_rotation())
+        desired = self.convert_turret_to_servo(self.get_desired_turret_rotation())
         new_turret_setpoint = clamp(
             (desired / self.servo_half_range + 1.0) / 2.0, 0.01, 0.99
         )
