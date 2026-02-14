@@ -1,3 +1,4 @@
+from magicbot import feedback
 from wpimath.geometry import Translation2d
 
 from components.chassis import ChassisComponent
@@ -15,6 +16,7 @@ class Targeter:
     def __init__(self) -> None:
         self.target = Translation2d()
 
+    @feedback
     def get_target(self) -> Translation2d:
         return self.target
 

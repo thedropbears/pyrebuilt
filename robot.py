@@ -34,8 +34,8 @@ class MyRobot(magicbot.MagicRobot):
     climber: ClimberComponent
     intake: IntakeComponent
     turret: TurretComponent
-    ballistics: BallisticsComponent
     targeter: Targeter
+    ballistics: BallisticsComponent
     leds: LEDComponent
     port_vision: VisualLocalizer
 
@@ -237,6 +237,8 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftBumperButton():
             self.intake.index()
 
+        self.targeter.execute()
+
         if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
             if self.gamepad.getRightTriggerAxis() > 0.5:
                 self.ballistics.calculate_for(
@@ -256,7 +258,6 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.execute()
 
         self.chassis.execute()
-        self.targeter.execute()
         self.shooter.execute()
         self.shooter_state_machine.execute()
         self.climber.execute()
