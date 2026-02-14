@@ -70,14 +70,14 @@ class TurretComponent:
 
     def setup(self) -> None:
         self._sync_encoder()
-        self.slew_to(self.current_angle())
+        self.slew_to(self.get_current_angle())
 
     def on_enable(self) -> None:
         self._sync_encoder()
-        self.slew_to(self.current_angle())
+        self.slew_to(self.get_current_angle())
 
     @feedback
-    def raw_absolute_encoder(self) -> float:
+    def get_raw_absolute_encoder(self) -> float:
         return self.absolute_encoder.get()
 
     @feedback
@@ -88,19 +88,19 @@ class TurretComponent:
         self.relative_encoder.setPosition(self._get_absolute_encoder_position())
 
     @feedback
-    def current_angle(self) -> units.radians:
+    def get_current_angle(self) -> units.radians:
         return self.relative_encoder.getPosition()
 
     @feedback
-    def current_velocity(self) -> units.radians_per_second:
+    def get_current_velocity(self) -> units.radians_per_second:
         return self.relative_encoder.getVelocity()
 
     @feedback
-    def error(self) -> units.radians:
-        return self.controller.getMAXMotionSetpointPosition() - self.current_angle()
+    def get_error(self) -> units.radians:
+        return self.controller.getMAXMotionSetpointPosition() - self.get_current_angle()
 
     def slew_relative(self, angle: units.radians) -> None:
-        self.slew_to(self.current_angle() + angle)
+        self.slew_to(self.get_current_angle() + angle)
 
     def slew_to(self, angle: units.radians) -> None:
         # update setpoint
@@ -113,4 +113,4 @@ class TurretComponent:
         )
 
     def periodic(self) -> None:
-        self.sim_pointer.setAngle(math.degrees(self.current_angle()))
+        self.sim_pointer.setAngle(math.degrees(self.get_current_angle()))
