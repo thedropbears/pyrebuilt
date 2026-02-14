@@ -56,7 +56,7 @@ class BallisticsComponent:
         self.use_ballistics = False
 
     def shoot(self) -> None:
-        self.hopper.shoot()
+        self.hopper.feed()
 
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
