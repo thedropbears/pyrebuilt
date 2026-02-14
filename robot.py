@@ -15,6 +15,7 @@ from components.climber import ClimberComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.shooter import ShooterComponent
+from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.shooter import Shooter
@@ -33,6 +34,7 @@ class MyRobot(magicbot.MagicRobot):
     climber: ClimberComponent
     intake: IntakeComponent
     turret: TurretComponent
+    targeter: Targeter
     ballistics: BallisticsComponent
     leds: LEDComponent
     port_vision: VisualLocalizer
@@ -234,6 +236,8 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftBumperButton():
             self.intake.index()
+
+        self.targeter.execute()
 
         if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
             if self.gamepad.getRightTriggerAxis() > 0.5:
