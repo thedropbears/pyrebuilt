@@ -1,7 +1,7 @@
 import math
 
 import rev
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import feedback, will_reset_to
 from phoenix6 import configs, controls
 from phoenix6.hardware import TalonFX
 from wpimath import units

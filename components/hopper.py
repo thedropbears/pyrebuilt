@@ -12,6 +12,7 @@ class HopperComponent:
     desired_indexer = will_reset_to(0.0)
     target_feeder_percentage = will_reset_to(0)
     desired_feeder_percentage = tunable(1)
+
     def __init__(self) -> None:
         self.indexer_motor = TalonFX(TalonId.INDEXER)
         self.indexer_output_config = (
@@ -20,10 +21,11 @@ class HopperComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
         self.indexer_motor.configurator.apply(
-            configs.TalonFXConfiguration().with_motor_output(self.indexer_output_config))
+            configs.TalonFXConfiguration().with_motor_output(self.indexer_output_config)
+        )
         self.feeder_motor = TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
-    
+
     def feed(self) -> None:
         self.desired_indexer = self.indexer_output
         self.target_feeder_percentage = self.desired_feeder_percentage
