@@ -41,15 +41,22 @@ class Conductor(StateMachine):
     chassis: ChassisComponent
     targeter: Targeter
 
-    def __init__(self):
+    def __init__(self) -> None:
         # TODO Implement this
         pass
+
+    def start_state_machine(self) -> None:
+        self.engage()
 
     @feedback
     def is_hub_active(self) -> bool:
         return is_alliance_hub_active()
 
-    @state(first=True)
+    @state(first=True, must_finish=True)
+    def tracking(self) -> None:
+        pass
+
+    @state(must_finish=True)
     def shooting(self) -> None:
         self.intake.intake()
         self.ballistics.solve_for(self.targeter.get_target())
