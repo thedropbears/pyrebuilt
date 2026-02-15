@@ -13,7 +13,7 @@ S = TypeVar("S", bound=HasPerLoopCache)
 T = TypeVar("T")
 
 
-def cache_per_loop(method: Callable[[S], T]) -> Callable[[S], T]:
+def cache_per_loop[S: HasPerLoopCache, T](method: Callable[[S], T]) -> Callable[[S], T]:
     """
     Cache a getter method on a component until the cache is cleared.
 
