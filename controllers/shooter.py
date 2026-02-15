@@ -24,9 +24,5 @@ class Shooter(StateMachine):
     @state(first=True)
     def shooting(self) -> None:
         self.intake.intake()
+        self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
-        self.ballistics.calculate_for(
-            self.targeter.get_target(),
-            self.chassis.get_pose(),
-            self.chassis.get_velocity().toTwist2d(0.02),
-        )

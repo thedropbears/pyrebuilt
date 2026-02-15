@@ -20,7 +20,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.shooter import Shooter
 from ids import DioChannel, PwmChannel, RioSerialNumber
-from utilities.game import RED_HUB_POS, is_red
+from utilities.game import is_red
 from utilities.scalers import rescale_js
 
 
@@ -241,11 +241,7 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
             if self.gamepad.getRightTriggerAxis() > 0.5:
-                self.ballistics.calculate_for(
-                    RED_HUB_POS,
-                    self.chassis.get_pose(),
-                    self.chassis.get_velocity().toTwist2d(0.02),
-                )
+                self.ballistics.solve_for(self.targeter.get_target())
             else:
                 self.ballistics.force_solution(
                     self.test_flywheel_speed,
@@ -259,7 +255,6 @@ class MyRobot(magicbot.MagicRobot):
 
         self.chassis.execute()
         self.shooter.execute()
-        self.shooter_state_machine.execute()
         self.climber.execute()
         self.intake.execute()
         self.leds.execute()
