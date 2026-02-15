@@ -18,7 +18,7 @@ from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
-from controllers.shooter import Shooter
+from controllers.conductor import Conductor
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import RED_HUB_POS, is_red
 from utilities.scalers import rescale_js
@@ -26,7 +26,7 @@ from utilities.scalers import rescale_js
 
 class MyRobot(magicbot.MagicRobot):
     # Controllers
-    shooter_state_machine: Shooter
+    shooter_state_machine: Conductor
 
     # Components
     chassis: ChassisComponent
