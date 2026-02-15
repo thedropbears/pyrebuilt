@@ -58,6 +58,12 @@ class ShooterComponent:
         )
 
         self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
+        self.hood_servo.setBounds(
+            2000, 1550, 1500, 1450, 1000
+        )  # TODO Update these with new servo
+        self.hood_servo.setPeriodMultiplier(
+            PWM.PeriodMultiplier.kPeriodMultiplier_4X
+        )  # TODO Update these with new servo
         self.hood_controller = PIDController(0.01, 0.0, 0.0)
 
         self.hood_encoder = DutyCycleEncoder(
