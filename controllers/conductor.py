@@ -30,6 +30,7 @@ from magicbot import StateMachine, default_state, feedback, state
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
+from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.targeter import Targeter
 from utilities.game import is_alliance_hub_active
@@ -40,6 +41,7 @@ class Conductor(StateMachine):
     intake: IntakeComponent
     chassis: ChassisComponent
     targeter: Targeter
+    hopper: HopperComponent
 
     def __init__(self) -> None:
         # TODO Implement this
@@ -61,6 +63,7 @@ class Conductor(StateMachine):
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
+        self.hopper.feed()
         self.intake.intake()
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
