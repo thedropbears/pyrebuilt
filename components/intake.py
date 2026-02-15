@@ -26,8 +26,14 @@ class IntakeComponent:
         self.motor.configurator.apply(motor_config)
 
     def intake(self) -> None:
+        # TODO make sure this deploys
         self.desired_output = self.intake_output
         self.desired_funnel = self.funnel_output
+
+    def retract(self) -> None:
+        # TODO make sure that this retracts the intake
+        # This is a placeholder function for use by the conductor state machine
+        pass
 
     def execute(self) -> None:
         self.motor.set(self.desired_output)
