@@ -7,7 +7,7 @@ from components.targeter import Targeter
 from utilities.game import is_alliance_hub_active
 
 
-class Shooter(StateMachine):
+class Conductor(StateMachine):
     ballistics: BallisticsComponent
     intake: IntakeComponent
     chassis: ChassisComponent
