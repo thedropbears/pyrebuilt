@@ -19,7 +19,7 @@ from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
-from controllers.shooter import Shooter
+from controllers.conductor import Conductor
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import is_red
 from utilities.scalers import rescale_js
@@ -27,7 +27,7 @@ from utilities.scalers import rescale_js
 
 class MyRobot(magicbot.MagicRobot):
     # Controllers
-    shooter_state_machine: Shooter
+    shooter_state_machine: Conductor
 
     # Components
     hopper: HopperComponent
@@ -197,6 +197,12 @@ class MyRobot(magicbot.MagicRobot):
 
         if drive_z != 0:
             self.chassis.stop_snapping()
+
+        if self.gamepad.getRightTriggerAxis() > 0.5:
+            self.shooter_state_machine.shoot()
+
+        if self.gamepad.getLeftTriggerAxis() > 0.5:
+            self.shooter_state_machine.stop_shooting()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
