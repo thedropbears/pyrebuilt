@@ -198,6 +198,12 @@ class MyRobot(magicbot.MagicRobot):
         if drive_z != 0:
             self.chassis.stop_snapping()
 
+        if self.gamepad.getRightTriggerAxis() > 0.5:
+            self.shooter_state_machine.shoot()
+
+        if self.gamepad.getLeftTriggerAxis() > 0.5:
+            self.shooter_state_machine.stop_shooting()
+
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
 
