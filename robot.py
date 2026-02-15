@@ -252,7 +252,6 @@ class MyRobot(magicbot.MagicRobot):
                 )
 
             self.ballistics.energise_flywheels()
-            self.ballistics.shoot()
             self.ballistics.execute()
 
         self.chassis.execute()
