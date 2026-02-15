@@ -26,14 +26,13 @@ shooting:
     ballistics.solve_for(target)
     ballistics.energise_flywheel"""
 
-from magicbot import StateMachine, default_state, feedback, state
+from magicbot import StateMachine, default_state, state
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.targeter import Targeter
-from utilities.game import is_alliance_hub_active
 
 
 class Conductor(StateMachine):
@@ -43,19 +42,11 @@ class Conductor(StateMachine):
     targeter: Targeter
     hopper: HopperComponent
 
-    def __init__(self) -> None:
-        # TODO Implement this
-        pass
-
     def shoot(self) -> None:
         self.engage()
 
     def stop_shooting(self) -> None:
         self.done()
-
-    @feedback
-    def is_hub_active(self) -> bool:
-        return is_alliance_hub_active()
 
     @default_state
     def tracking(self) -> None:
