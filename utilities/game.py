@@ -71,6 +71,7 @@ APRILTAGS_2D = [
 
 FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
+FRONT_OF_BARGE_TO_DS_WALL_DISTANCE = 3.977894
 
 RED_HUB_POS = (
     get_fiducial_pose(4).translation().toTranslation2d()
@@ -95,13 +96,17 @@ BEHIND_BLUE_HUB_POS = (
 
 def is_in_alliance_zone(robot_pos: Translation2d):
     if is_red():
-        return (
-            robot_pos.x > (FIELD_LENGTH - 3.977894)
-        )  # subtract distance between front of barge and driver station wall from field length
+        return robot_pos.x > (FIELD_LENGTH - FRONT_OF_BARGE_TO_DS_WALL_DISTANCE)
     else:
-        return (
-            robot_pos.x < 3.977894
-        )  # distance between front of barge and driver station wall
+        return robot_pos.x < FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
+
+
+def is_in_neutral_zone(robot_pos: Translation2d):
+    return (
+        FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
+        < robot_pos.x
+        < (FIELD_LENGTH - FRONT_OF_BARGE_TO_DS_WALL_DISTANCE)
+    )
 
 
 def alliance_hub_pos(is_red: bool):
