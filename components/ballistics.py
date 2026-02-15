@@ -53,9 +53,6 @@ class BallisticsComponent:
         self.target_hood_angle = desired_hood_angle
         self.use_ballistics = False
 
-    def shoot(self) -> None:
-        self.shooter.shoot()
-
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
 

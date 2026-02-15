@@ -1,8 +1,7 @@
 import math
 
 import rev
-from magicbot import feedback, tunable, will_reset_to
-from phoenix5 import ControlMode, TalonSRX
+from magicbot import feedback, will_reset_to
 from phoenix6 import configs, controls
 from phoenix6.hardware import TalonFX
 from wpimath import units
@@ -16,9 +15,6 @@ rotations_per_second = float
 
 class ShooterComponent:
     target_shooter_rps = will_reset_to(0.0)
-
-    target_feeder_percentage = will_reset_to(0)
-    desired_feeder_percentage = tunable(1)
 
     hood_error_tolerance = math.radians(1.0)
     MIN_HOOD_ANGLE = math.radians(30)
@@ -48,9 +44,6 @@ class ShooterComponent:
             .with_slot0(flywheel_gains_cfg)
             .with_feedback(feedback_config)
         )
-
-        self.feeder_motor = TalonSRX(TalonId.FEEDER)
-        self.feeder_motor.setInverted(False)
 
         self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)
         self.hood_motor_controller = self.hood_motor.getClosedLoopController()
@@ -100,15 +93,10 @@ class ShooterComponent:
     def set_flywheel(self, speed: rotations_per_second):
         self.target_shooter_rps = speed
 
-    def shoot(self) -> None:
-        self.target_feeder_percentage = self.desired_feeder_percentage
-
     def execute(self) -> None:
         self.flywheel_motor.set_control(
             controls.VelocityVoltage(self.target_shooter_rps)
         )
-
-        self.feeder_motor.set(ControlMode.PercentOutput, self.target_feeder_percentage)
 
         self.target_hood_angle = clamp(
             self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
