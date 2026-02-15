@@ -1,16 +1,12 @@
 import functools
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any
 
 
 class HasPerLoopCache:
     def __init__(self) -> None:
         super().__init__()
         self._per_loop_cache: dict[Callable, Any] = {}
-
-
-S = TypeVar("S", bound=HasPerLoopCache)
-T = TypeVar("T")
 
 
 def cache_per_loop[S: HasPerLoopCache, T](method: Callable[[S], T]) -> Callable[[S], T]:
