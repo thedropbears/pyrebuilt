@@ -244,6 +244,9 @@ class MyRobot(magicbot.MagicRobot):
         # if self.gamepad.getBButton():
         #     self.climber.retract()
 
+        if self.gamepad.getYButton():
+            self.intake.retract()
+
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed()
 
