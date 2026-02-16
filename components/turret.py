@@ -1,21 +1,30 @@
 import math
 
 from magicbot import feedback, tunable
-from rev import FeedbackSensor, SparkMax, SparkMaxConfig
+from phoenix6.configs import (
+    CommutationConfigs,
+    ExternalFeedbackConfigs,
+    MotionMagicConfigs,
+    MotorOutputConfigs,
+    Slot0Configs,
+    TalonFXSConfiguration,
+)
+from phoenix6.controls import PositionVoltage
+from phoenix6.hardware import TalonFXS
+from phoenix6.signals import InvertedValue, MotorArrangementValue, NeutralModeValue
 from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
 from wpimath import units
 from wpimath.geometry import Rotation2d
 
-from ids import DioChannel, SparkId
+from ids import DioChannel, TalonId
 from utilities.functions import constrain_angle
 from utilities.rev import (
-    configure_spark_reset_and_persist,
     configure_through_bore_encoder,
 )
 
 
 class TurretComponent:
-    MOTOR_TO_TURRET_GEARING = (1 / 5) * (25 / 145)
+    MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
 
     _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
@@ -35,31 +44,6 @@ class TurretComponent:
     TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
 
     def __init__(self) -> None:
-        # Initialise Motor
-        self.motor = SparkMax(SparkId.TURRET, SparkMax.MotorType.kBrushless)
-        config = SparkMaxConfig()
-        config.inverted(True)
-        config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        config.closedLoop.pid(2.8421, 0.0, 1.3842)
-        config.closedLoop.feedForward.kS(0.091518)
-        config.closedLoop.feedForward.kV(0.57874)
-        config.closedLoop.feedForward.kA(0.067156)
-        config.closedLoop.maxMotion.maxAcceleration(TurretComponent.MAX_ACCELERATION)
-        config.closedLoop.maxMotion.cruiseVelocity(TurretComponent.MAX_VELOCITY)
-        config.closedLoop.maxMotion.allowedProfileError(math.radians(5))
-        config.closedLoop.setFeedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        config.encoder.positionConversionFactor(
-            TurretComponent.MOTOR_TO_TURRET_GEARING * math.tau
-        )
-        config.encoder.velocityConversionFactor(
-            1 / 60 * TurretComponent.MOTOR_TO_TURRET_GEARING * math.tau
-        )
-        config.closedLoop.allowedClosedLoopError(TurretComponent.ALLOWABLE_ERROR)
-        configure_spark_reset_and_persist(self.motor, config)
-
-        self.relative_encoder = self.motor.getEncoder()
-        self.controller = self.motor.getClosedLoopController()
-
         # Initialise Encoder
         self.absolute_encoder = DutyCycleEncoder(
             DioChannel.TURRET_ENCODER,
@@ -68,6 +52,49 @@ class TurretComponent:
         )
         configure_through_bore_encoder(self.absolute_encoder)
         self.absolute_encoder.setInverted(True)
+
+        self.motor = TalonFXS(TalonId.TURRET)
+        # Motor gains
+        motor_gains_config = (
+            Slot0Configs()
+            .with_k_p(2.4883)
+            .with_k_i(0.0)
+            .with_k_d(0.16793)
+            .with_k_s(0.08682)
+            .with_k_v(0.37558)
+            .with_k_a(0.0086723)
+        )
+
+        motor_output_config = (
+            MotorOutputConfigs()
+            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_neutral_mode(NeutralModeValue.BRAKE)
+        )
+
+        motor_feedback_config = (
+            ExternalFeedbackConfigs().with_sensor_to_mechanism_ratio(
+                1 / (self.MOTOR_TO_TURRET_GEARING * math.tau)
+            )
+        )
+
+        motor_motion_magic_config = (
+            MotionMagicConfigs()
+            .with_motion_magic_cruise_velocity(self.MAX_VELOCITY)
+            .with_motion_magic_acceleration(self.MAX_ACCELERATION)
+        )
+
+        motor_commutation_config = CommutationConfigs().with_motor_arrangement(
+            MotorArrangementValue.MINION_JST
+        )
+
+        self.motor.configurator.apply(
+            TalonFXSConfiguration()
+            .with_slot0(motor_gains_config)
+            .with_motor_output(motor_output_config)
+            .with_external_feedback(motor_feedback_config)
+            .with_motion_magic(motor_motion_magic_config)
+            .with_commutation(motor_commutation_config)
+        )
 
         mech = Mechanism2d(2, 2)
         SmartDashboard.putData("Turret", mech)
@@ -104,27 +131,28 @@ class TurretComponent:
         return math.degrees(self._get_absolute_encoder_position())
 
     def _sync_encoder(self) -> None:
-        self.relative_encoder.setPosition(self._get_absolute_encoder_position())
+        self.motor.set_position(self._get_absolute_encoder_position())
 
     def get_current_bearing(self) -> Rotation2d:
         return Rotation2d(self.get_current_angle())
 
     def get_current_angle(self) -> units.radians:
-        return self.relative_encoder.getPosition()
+        return self.motor.get_position().value
 
     @feedback
     def get_current_angle_degrees(self) -> units.degrees:
         return math.degrees(self.get_current_angle())
 
     def get_current_velocity(self) -> units.radians_per_second:
-        return self.relative_encoder.getVelocity()
+        return self.motor.get_velocity().value
 
     @feedback
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
         return math.degrees(self.get_current_velocity())
 
+    @feedback
     def get_error(self) -> units.radians:
-        return self.controller.getMAXMotionSetpointPosition() - self.get_current_angle()
+        return self.motor.get_closed_loop_error().value
 
     @feedback
     def get_error_degrees(self) -> units.degrees:
@@ -149,9 +177,7 @@ class TurretComponent:
         self.desired_angle = desired_angle
 
     def execute(self) -> None:
-        self.controller.setSetpoint(
-            self.desired_angle, SparkMax.ControlType.kMAXMotionPositionControl
-        )
+        self.motor.set_control(PositionVoltage(self.desired_angle))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())

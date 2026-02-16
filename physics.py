@@ -339,10 +339,10 @@ class PhysicsEngine:
         ]
 
         self.turret_sim = TurretSim(
-            SparkMotorSim(
-                DCMotor.NEO,
+            TalonFXMotorSim(
+                DCMotor.minion,
                 robot.turret.motor,
-                gearing=robot.turret.MOTOR_TO_TURRET_GEARING,
+                gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
             ),
             0.02890532995,
             robot.turret.absolute_encoder,

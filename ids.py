@@ -28,6 +28,8 @@ class TalonId(enum.IntEnum):
     INTAKE_DEPLOYER_LEFT = 16
     INTAKE_DEPLOYER_RIGHT = 17
 
+    TURRET = 20
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
