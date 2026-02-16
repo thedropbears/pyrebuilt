@@ -1,39 +1,109 @@
-from magicbot import tunable, will_reset_to
-from phoenix6 import configs
-from phoenix6.hardware import TalonFX
-from phoenix6.signals import InvertedValue, NeutralModeValue
+from math import radians, tau
 
-from ids import TalonId
+from magicbot import feedback, tunable, will_reset_to
+from phoenix6.configs import (
+    FeedbackConfigs,
+    MotionMagicConfigs,
+    MotorOutputConfigs,
+    Slot0Configs,
+    TalonFXConfiguration,
+)
+from phoenix6.controls import Follower, MotionMagicVoltage
+from phoenix6.hardware import TalonFX
+from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
+from wpilib import DutyCycleEncoder
+
+from ids import DioChannel, TalonId
 
 
 class IntakeComponent:
-    desired_output = will_reset_to(0.0)
+    target_intake_output = will_reset_to(0.0)
+    desired_intake_output = tunable(0.5)
 
-    intake_output = tunable(0.5)
+    RETRACTED_INTAKE_ANGLE = radians(0)
+    DEPLOYED_INTAKE_ANGLE = radians(90)
 
-    desired_funnel = will_reset_to(0.0)
+    target_deployer_angle = RETRACTED_INTAKE_ANGLE
 
-    funnel_output = tunable(1.0)
+    MAX_DEPLOYER_ACCEL = 5
+    MAX_DEPLOYER_VELOCITY = 5
+
+    DEPLOYER_TO_ENCODER_GEARING = 1.0
+    ENCODER_ZERO_OFFSET = 0
 
     def __init__(self) -> None:
-        self.motor = TalonFX(TalonId.INTAKE)
+        self.intake_motor = TalonFX(TalonId.INTAKE)
+        self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
+        self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
+        self.deployer_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYER_ENCODER)
 
-        motor_config = configs.TalonFXConfiguration()
-        motor_config.motor_output.with_inverted(
-            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-        ).with_neutral_mode(NeutralModeValue.COAST)
+        intake_motor_output_config = (
+            MotorOutputConfigs()
+            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_neutral_mode(NeutralModeValue.COAST)
+        )
 
-        self.motor.configurator.apply(motor_config)
+        self.intake_motor.configurator.apply(
+            TalonFXConfiguration().with_motor_output(intake_motor_output_config)
+        )
+
+        # TODO tune these
+        intake_deployer_slot_config = (
+            Slot0Configs()
+            .with_k_p(0.1)
+            .with_k_i(0)
+            .with_k_d(0)
+            .with_k_s(0)
+            .with_k_v(0)
+            .with_k_a(0)
+        )
+
+        intake_deployer_magic_config = (
+            MotionMagicConfigs()
+            .with_motion_magic_acceleration(self.MAX_DEPLOYER_ACCEL)
+            .with_motion_magic_cruise_velocity(self.MAX_DEPLOYER_VELOCITY)
+        )
+
+        intake_deployer_feedback_config = (
+            FeedbackConfigs().with_sensor_to_mechanism_ratio(
+                1 / (self.DEPLOYER_TO_ENCODER_GEARING * tau)
+            )
+        )
+
+        self.deployer_motor_left.configurator.apply(
+            TalonFXConfiguration()
+            .with_slot0(intake_deployer_slot_config)
+            .with_feedback(intake_deployer_feedback_config)
+            .with_motion_magic(intake_deployer_magic_config)
+        )
+
+        self.deployer_motor_left.set_position(
+            self.get_absolute_deployer_encoder_position()
+        )
 
     def intake(self) -> None:
-        # TODO make sure this deploys
-        self.desired_output = self.intake_output
-        self.desired_funnel = self.funnel_output
+        self.target_intake_output = self.desired_intake_output
+        self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def retract(self) -> None:
-        # TODO make sure that this retracts the intake
-        # This is a placeholder function for use by the conductor state machine
-        pass
+        self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
 
     def execute(self) -> None:
-        self.motor.set(self.desired_output)
+        self.deployer_motor_left.set_control(
+            MotionMagicVoltage(self.target_deployer_angle)
+        )
+        self.deployer_motor_right.set_control(
+            Follower(
+                TalonId.INTAKE_DEPLOYER_RIGHT,
+                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
+            )
+        )
+        self.intake_motor.set(self.target_intake_output)
+
+    @feedback
+    def get_absolute_deployer_encoder_position(self) -> float:
+        return self.deployer_encoder.get() - self.ENCODER_ZERO_OFFSET
+
+    @feedback
+    def get_raw_absolute_deployer_encoder_position(self) -> float:
+        return self.deployer_encoder.get()
