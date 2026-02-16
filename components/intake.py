@@ -11,7 +11,7 @@ from phoenix6.configs import (
 from phoenix6.controls import Follower, MotionMagicVoltage
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
-from wpilib import DutyCycleEncoder
+from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
 
 from ids import DioChannel, TalonId
 
@@ -31,7 +31,14 @@ class IntakeComponent:
     DEPLOYER_TO_ENCODER_GEARING = 1.0
     ENCODER_ZERO_OFFSET = 0
 
-    def __init__(self) -> None:
+    # Sim
+    ARM_LENGTH = 0.22  # meters
+    ARM_MOI = 0.181717788
+
+    def __init__(self, intake_mech_root: MechanismRoot2d) -> None:
+        self.intake_ligament = intake_mech_root.appendLigament(
+            "intake", 0.25, 90, color=Color8Bit(Color.kGreen)
+        )
         self.intake_motor = TalonFX(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
