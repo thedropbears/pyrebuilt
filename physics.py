@@ -22,6 +22,7 @@ from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
+from components.intake import IntakeComponent
 from utilities import game
 from utilities.functions import constrain_angle
 
@@ -303,6 +304,17 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
+        self.intake_deployer_encoder = DutyCycleEncoderSim(
+            robot.intake.deployer_encoder
+        )
+        self.intake_deployer_sim = TalonFXMotorSim(
+            DCMotor.falcon500,
+            robot.intake.deployer_motor_left,
+            robot.intake.deployer_motor_right,
+            gearing=IntakeComponent.DEPLOYER_TO_ENCODER_GEARING,
+            moi=IntakeComponent.ARM_MOI,
+        )
+
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
             wheel.update(tm_diff)
@@ -319,6 +331,12 @@ class PhysicsEngine:
         )
 
         self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
+
+        self.intake_deployer_sim.update(tm_diff)
+
+        self.intake_deployer_encoder.set(
+            units.radiansToRotations(self.intake_deployer_sim.get_angular_position())
+        )
 
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
