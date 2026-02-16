@@ -87,6 +87,7 @@ class IntakeComponent:
 
     def retract_intake(self) -> None:
         self.target_deployment_angle = self.RETRACTED_INTAKE_ANGLE
+        self.target_intake_output = -self.desired_intake_output
 
     def index(self) -> None:
         self.desired_indexer = self.indexer_output
