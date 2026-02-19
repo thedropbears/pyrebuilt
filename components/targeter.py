@@ -35,7 +35,6 @@ class Targeter:
         # TODO Fill in the actual logic for this
         return behind_alliance_hub_pos(is_red())
 
-    @feedback
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
 
