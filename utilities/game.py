@@ -78,19 +78,42 @@ RED_HUB_POS = (
     + get_fiducial_pose(10).translation().toTranslation2d()
 ) / 2
 
-BEHIND_RED_HUB_POS = (
-    get_fiducial_pose(10).translation().toTranslation2d()
-    + get_fiducial_pose(15).translation().toTranslation2d()
+RED_SHOOT_ANCHOR_1 = (
+    get_fiducial_pose(5).translation().toTranslation2d()
+    + get_fiducial_pose(6).translation().toTranslation2d()
+    + get_fiducial_pose(7).translation().toTranslation2d()
+) / 3  # Point halfway between one side of hub and wall
+
+RED_SHOOT_ANCHOR_2 = (
+    get_fiducial_pose(1).translation().toTranslation2d()
+    + get_fiducial_pose(2).translation().toTranslation2d()
+    + get_fiducial_pose(12).translation().toTranslation2d()
+) / 3  # Point halfway between one side of hub and wall
+
+RED_SHOOT_LINE = (
+    get_fiducial_pose(10).translation().x + get_fiducial_pose(15).translation().x
 ) / 2
+
 
 BLUE_HUB_POS = (
     get_fiducial_pose(20).translation().toTranslation2d()
     + get_fiducial_pose(26).translation().toTranslation2d()
 ) / 2
 
-BEHIND_BLUE_HUB_POS = (
-    get_fiducial_pose(26).translation().toTranslation2d()
-    + get_fiducial_pose(31).translation().toTranslation2d()
+BLUE_SHOOT_ANCHOR_1 = (
+    get_fiducial_pose(21).translation().toTranslation2d()
+    + get_fiducial_pose(22).translation().toTranslation2d()
+    + get_fiducial_pose(23).translation().toTranslation2d()
+) / 3  # Point halfway between one side of hub and wall
+
+BLUE_SHOOT_ANCHOR_2 = (
+    get_fiducial_pose(17).translation().toTranslation2d()
+    + get_fiducial_pose(18).translation().toTranslation2d()
+    + get_fiducial_pose(28).translation().toTranslation2d()
+) / 3  # Point halfway between one side of hub and wall
+
+BLUE_SHOOT_LINE = (
+    get_fiducial_pose(26).translation().x + get_fiducial_pose(31).translation().x
 ) / 2
 
 
@@ -116,11 +139,18 @@ def alliance_hub_pos(is_red: bool):
         return BLUE_HUB_POS
 
 
-def behind_alliance_hub_pos(is_red: bool):
+def alliance_shoot_anchor_pos(is_red: bool) -> tuple:
     if is_red:
-        return BEHIND_RED_HUB_POS
+        return (RED_SHOOT_ANCHOR_1, RED_SHOOT_ANCHOR_2)
     else:
-        return BEHIND_BLUE_HUB_POS
+        return (BLUE_SHOOT_ANCHOR_1, BLUE_SHOOT_ANCHOR_2)
+
+
+def alliance_shoot_line(is_red: bool):
+    if is_red:
+        return RED_SHOOT_LINE
+    else:
+        return BLUE_SHOOT_LINE
 
 
 def is_alliance_hub_active() -> bool:

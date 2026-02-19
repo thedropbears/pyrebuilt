@@ -4,7 +4,8 @@ from wpimath.geometry import Translation2d
 from components.chassis import ChassisComponent
 from utilities.game import (
     alliance_hub_pos,
-    behind_alliance_hub_pos,
+    alliance_shoot_anchor_pos,
+    alliance_shoot_line,
     is_in_alliance_zone,
     is_in_neutral_zone,
     is_red,
@@ -28,12 +29,12 @@ class Targeter:
     @feedback
     def get_optimal_target_from_neutral_zone(self) -> Translation2d:
         # TODO Fill in the actual logic for this
-        return behind_alliance_hub_pos(is_red())
+        return Translation2d(0, 0)
 
     @feedback
     def get_optimal_target_from_enemy_zone(self) -> Translation2d:
         # TODO Fill in the actual logic for this
-        return behind_alliance_hub_pos(is_red())
+        return Translation2d(0, 0)
 
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
