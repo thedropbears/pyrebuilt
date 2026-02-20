@@ -1,9 +1,10 @@
 from math import tau
 
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import feedback, tunable
 from phoenix6.configs import (
     FeedbackConfigs,
     MotorOutputConfigs,
+    Slot0Configs,
     SoftwareLimitSwitchConfigs,
     TalonFXConfiguration,
 )
@@ -17,19 +18,20 @@ from utilities.rev import configure_spark_reset_and_persist
 
 
 class ClimberComponent:
-    current_climber_speed = will_reset_to(0.0)
-    forward_climber_speed = tunable(0.4)
-    reverse_climber_speed = tunable(0.4)
-
     has_indexed = False
 
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
     FUDGE_FACTOR = 0.773  # FOR THE LIFE OF ME I DONT KNOW WHY. MAYBE THE BRAKE STAGE ISNT REALLY 1:1
 
+    RETRACTED_POS = 0
+    EXTENDED_POS = 0.174316
+
+    target_pos = tunable(EXTENDED_POS)
+
     ALLOWABLE_OVERSPOOL = degreesToRotations(5)
-    MAX_RETRACTION_LIMIT = 0 - ALLOWABLE_OVERSPOOL
-    MAX_EXTENSION_LIMIT = 0.174316 + ALLOWABLE_OVERSPOOL
+    MAX_RETRACTION_LIMIT = RETRACTED_POS - ALLOWABLE_OVERSPOOL
+    MAX_EXTENSION_LIMIT = EXTENDED_POS + ALLOWABLE_OVERSPOOL
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
@@ -84,15 +86,24 @@ class ClimberComponent:
                 .with_reverse_soft_limit_threshold(self.MAX_RETRACTION_LIMIT)
                 .with_reverse_soft_limit_enable(True)
             )
+            .with_slot0(
+                Slot0Configs()  # TODO tune these
+                .with_k_p(0.5)
+                .with_k_i(0)
+                .with_k_d(0)
+                .with_k_s(0)
+                .with_k_v(0)
+                .with_k_a(0)
+            )
         )
 
     def deploy(self):
         if not self.at_extension_limit():
-            self.current_climber_speed = self.forward_climber_speed
+            self.target_pos = self.EXTENDED_POS
 
     def retract(self):
         if not self.at_retraction_limit():
-            self.current_climber_speed = self.reverse_climber_speed * -1
+            self.target_pos = self.RETRACTED_POS
 
     def try_index(self) -> None:
         if self.at_retraction_limit():
@@ -101,7 +112,7 @@ class ClimberComponent:
 
     def execute(self):
         self.try_index()
-        self.climber_motor.set(self.current_climber_speed)
+        self.climber_motor.set_position(self.target_pos)
 
     @feedback
     def at_extension_limit(self) -> bool:
@@ -121,8 +132,6 @@ class ClimberComponent:
     def get_position(self) -> float:
         return self.climber_motor.get_position().value
 
-    @feedback
-    def get_indexed_state(
-        self,
-    ) -> bool:  # the naming between the variable and function is confusing
-        return self.is_climber_indexed
+    @feedback  # the naming between the variable and function is confusing
+    def get_indexed_state(self) -> bool:
+        return self.has_indexed
