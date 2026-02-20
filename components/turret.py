@@ -120,8 +120,13 @@ class TurretComponent:
         return target_angle
 
     @feedback
-    def get_raw_absolute_encoder(self) -> float:
-        return self.absolute_encoder.get()
+    def get_raw_absolute_encoder_duty(self) -> float:
+        # This needs to have the inverse transform manually applied if we want to be able to recalibrate it
+        return (
+            self.absolute_encoder.get()
+            * TurretComponent.TURRET_TO_ENCODER_GEARING
+            / math.tau
+        )
 
     def _get_absolute_encoder_position(self) -> units.radians:
         return self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET
