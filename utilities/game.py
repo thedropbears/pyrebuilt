@@ -71,7 +71,10 @@ APRILTAGS_2D = [
 
 FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
-FRONT_OF_HUB_TO_DS_WALL_DISTANCE = 3.977894
+
+INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL = 3.9
+INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL = 6
+
 SHOOT_POINT_OFFSET = 0.75
 
 
@@ -113,16 +116,33 @@ BLUE_SHOOT_LINE = get_fiducial_pose(26).translation().x - SHOOT_POINT_OFFSET
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
     if is_red():
-        return robot_pos.x > (FIELD_LENGTH - FRONT_OF_HUB_TO_DS_WALL_DISTANCE)
+        return robot_pos.x > (
+            FIELD_LENGTH - INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+        )
     else:
-        return robot_pos.x < FRONT_OF_HUB_TO_DS_WALL_DISTANCE
+        return robot_pos.x < INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+
+
+def is_in_transition_zone(robot_pos: Translation2d) -> bool:
+    if is_red():
+        return (
+            (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
+            < robot_pos.x
+            < (FIELD_LENGTH - INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL)
+        )
+    else:
+        return (
+            INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
+            < robot_pos.x
+            < INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+        )
 
 
 def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
     return (
-        FRONT_OF_HUB_TO_DS_WALL_DISTANCE
+        INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
         < robot_pos.x
-        < (FIELD_LENGTH - FRONT_OF_HUB_TO_DS_WALL_DISTANCE)
+        < (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
     )
 
 
@@ -131,6 +151,13 @@ def alliance_hub_pos(is_red: bool) -> Translation2d:
         return RED_HUB_POS
     else:
         return BLUE_HUB_POS
+
+
+def behind_alliance_hub_pos(is_red: bool) -> Translation2d:
+    if is_red:
+        return Translation2d(RED_HUB_POS.x + 1.5, RED_HUB_POS.y)
+    else:
+        return Translation2d(BLUE_HUB_POS.x - 1.5, BLUE_HUB_POS.y)
 
 
 def alliance_shoot_anchor_pos(is_red: bool) -> tuple:

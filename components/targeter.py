@@ -7,8 +7,10 @@ from utilities.game import (
     alliance_hub_pos,
     alliance_shoot_anchor_pos,
     alliance_shoot_line,
+    behind_alliance_hub_pos,
     is_in_alliance_zone,
     is_in_neutral_zone,
+    is_in_transition_zone,
     is_red,
 )
 
@@ -28,6 +30,10 @@ class Targeter:
     @feedback
     def get_optimal_target_from_alliance_zone(self) -> Translation2d:
         return alliance_hub_pos(is_red())
+
+    @feedback
+    def get_optimal_target_from_transition_zone(self) -> Translation2d:
+        return behind_alliance_hub_pos(is_red())
 
     @feedback
     def get_optimal_target_from_neutral_zone(
@@ -88,6 +94,9 @@ class Targeter:
 
         if is_in_alliance_zone(current_pos):
             self.target = self.get_optimal_target_from_alliance_zone()
+
+        elif is_in_transition_zone(current_pos):
+            self.target = self.get_optimal_target_from_transition_zone()
 
         elif is_in_neutral_zone(current_pos):
             self.target = self.get_optimal_target_from_neutral_zone()
