@@ -21,10 +21,8 @@ class ShooterComponent:
     MIN_HOOD_ANGLE = math.radians(30)
     MAX_HOOD_ANGLE = math.radians(68)
 
-    ENCODER_ROTS_PER_HOOD_RADIAN = 4 / math.tau
-    ENCODER_ZERO_OFFSET = (0.47222) + (
-        ENCODER_ROTS_PER_HOOD_RADIAN * math.radians(30.0)
-    )
+    ENCODER_ZERO_OFFSET = 0.798288
+    ENCODER_FRAME_OFFSET = math.radians(30.0)
 
     HOOD_SERVO_MAX_SPEED = (
         55.0 * math.tau / 60.0
@@ -66,9 +64,7 @@ class ShooterComponent:
         )  # TODO Update these with new servo
         self.hood_controller = PIDController(0.01, 0.0, 0.0)
 
-        self.hood_encoder = DutyCycleEncoder(
-            DioChannel.HOOD_ENCODER, math.tau / self.ENCODER_ROTS_PER_HOOD_RADIAN, 0
-        )
+        self.hood_encoder = DutyCycleEncoder(DioChannel.HOOD_ENCODER, math.tau, 0)
         configure_through_bore_encoder(self.hood_encoder)
 
         self.target_hood_angle = self.get_hood_angle()
@@ -78,7 +74,14 @@ class ShooterComponent:
         return math.degrees(self.get_hood_angle())
 
     def get_hood_angle(self) -> units.radians:
-        return self.hood_encoder.get() - ShooterComponent.ENCODER_ZERO_OFFSET
+        return (
+            self.hood_encoder.get()
+            - ShooterComponent.ENCODER_ZERO_OFFSET
+            + ShooterComponent.ENCODER_FRAME_OFFSET
+        )
+
+    def _get_hood_absolute_encoder(self) -> units.radians:
+        return self.hood_encoder.get()
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
