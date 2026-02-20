@@ -67,6 +67,9 @@ class ShooterComponent:
 
         self.target_hood_angle = self.get_hood_angle()
 
+    def on_enable(self) -> None:
+        self.target_hood_angle = self.get_hood_angle()
+
     @feedback
     def get_hood_angle_degrees(self) -> units.degrees:
         return math.degrees(self.get_hood_angle())
