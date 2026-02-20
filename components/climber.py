@@ -1,4 +1,4 @@
-import math
+from math import tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
@@ -29,8 +29,8 @@ class ClimberComponent:
         self.climber_sensor = SparkMax(
             SparkId.CLIMBER_SENSOR, SparkMax.MotorType.kBrushless
         )
-        self.forward_limit_switch = self.climber_sensor.getForwardLimitSwitch()
-        self.reverse_limit_switch = self.climber_sensor.getReverseLimitSwitch()
+        self.retraction_limit_switch = self.climber_sensor.getForwardLimitSwitch()
+        self.extension_limit_switch = self.climber_sensor.getReverseLimitSwitch()
 
         sensor_config = SparkMaxConfig()
         sensor_config.limitSwitch.forwardLimitSwitchType(
@@ -41,7 +41,9 @@ class ClimberComponent:
             LimitSwitchConfig.Type.kNormallyClosed
         ).reverseLimitSwitchTriggerBehavior(
             LimitSwitchConfig.Behavior.kStopMovingMotorAndSetPosition
-        ).reverseLimitSwitchPosition(0)
+        ).reverseLimitSwitchPosition(
+            0
+        )
 
         configure_spark_reset_and_persist(self.climber_sensor, sensor_config)
 
@@ -59,7 +61,7 @@ class ClimberComponent:
                         / (
                             ClimberComponent.GEAR_RATIO
                             * ClimberComponent.SHAFT_RADIUS
-                            * math.tau
+                            * tau
                         )
                     )
                     * ClimberComponent.FUDGE_FACTOR
@@ -68,15 +70,15 @@ class ClimberComponent:
         )
 
     def deploy(self):
-        if not self.at_forward_limit():
+        if not self.at_extension_limit():
             self.current_climber_speed = self.forward_climber_speed
 
     def retract(self):
-        if not self.at_reverse_limit():
+        if not self.at_retraction_limit():
             self.current_climber_speed = self.reverse_climber_speed * -1
 
     def try_index(self) -> None:
-        if self.at_reverse_limit():
+        if self.at_retraction_limit():
             self.climber_motor.set_position(0)
 
     def execute(self):
@@ -84,12 +86,12 @@ class ClimberComponent:
         self.climber_motor.set(self.current_climber_speed)
 
     @feedback
-    def at_forward_limit(self) -> bool:
-        return self.forward_limit_switch.get()
+    def at_extension_limit(self) -> bool:
+        return self.extension_limit_switch.get()
 
     @feedback
-    def at_reverse_limit(self) -> bool:
-        return self.reverse_limit_switch.get()
+    def at_retraction_limit(self) -> bool:
+        return self.retraction_limit_switch.get()
 
     @feedback
     def get_climber_position(self) -> float:
