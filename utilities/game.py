@@ -117,14 +117,14 @@ BLUE_SHOOT_LINE = (
 ) / 2
 
 
-def is_in_alliance_zone(robot_pos: Translation2d):
+def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
     if is_red():
         return robot_pos.x > (FIELD_LENGTH - FRONT_OF_BARGE_TO_DS_WALL_DISTANCE)
     else:
         return robot_pos.x < FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
 
 
-def is_in_neutral_zone(robot_pos: Translation2d):
+def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
     return (
         FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
         < robot_pos.x
@@ -132,7 +132,7 @@ def is_in_neutral_zone(robot_pos: Translation2d):
     )
 
 
-def alliance_hub_pos(is_red: bool):
+def alliance_hub_pos(is_red: bool) -> Translation2d:
     if is_red:
         return RED_HUB_POS
     else:
@@ -146,7 +146,7 @@ def alliance_shoot_anchor_pos(is_red: bool) -> tuple:
         return (BLUE_SHOOT_ANCHOR_1, BLUE_SHOOT_ANCHOR_2)
 
 
-def alliance_shoot_line(is_red: bool):
+def alliance_shoot_line(is_red: bool) -> float:
     if is_red:
         return RED_SHOOT_LINE
     else:
