@@ -71,28 +71,26 @@ APRILTAGS_2D = [
 
 FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
-FRONT_OF_BARGE_TO_DS_WALL_DISTANCE = 3.977894
+FRONT_OF_HUB_TO_DS_WALL_DISTANCE = 3.977894
+SHOOT_POINT_OFFSET = 0.75
+
 
 RED_HUB_POS = (
     get_fiducial_pose(4).translation().toTranslation2d()
     + get_fiducial_pose(10).translation().toTranslation2d()
 ) / 2
 
-RED_SHOOT_ANCHOR_1 = (
-    get_fiducial_pose(5).translation().toTranslation2d()
-    + get_fiducial_pose(6).translation().toTranslation2d()
-    + get_fiducial_pose(7).translation().toTranslation2d()
-) / 3  # Point halfway between one side of hub and wall
+RED_SHOOT_ANCHOR_1 = Translation2d(
+    get_fiducial_pose(5).translation().toTranslation2d().x,
+    get_fiducial_pose(5).translation().y - SHOOT_POINT_OFFSET,
+)
 
-RED_SHOOT_ANCHOR_2 = (
-    get_fiducial_pose(1).translation().toTranslation2d()
-    + get_fiducial_pose(2).translation().toTranslation2d()
-    + get_fiducial_pose(12).translation().toTranslation2d()
-) / 3  # Point halfway between one side of hub and wall
+RED_SHOOT_ANCHOR_2 = Translation2d(
+    get_fiducial_pose(2).translation().toTranslation2d().x,
+    get_fiducial_pose(2).translation().y + SHOOT_POINT_OFFSET,
+)
 
-RED_SHOOT_LINE = (
-    get_fiducial_pose(10).translation().x + get_fiducial_pose(15).translation().x
-) / 2
+RED_SHOOT_LINE = get_fiducial_pose(10).translation().x + SHOOT_POINT_OFFSET
 
 
 BLUE_HUB_POS = (
@@ -100,35 +98,31 @@ BLUE_HUB_POS = (
     + get_fiducial_pose(26).translation().toTranslation2d()
 ) / 2
 
-BLUE_SHOOT_ANCHOR_1 = (
-    get_fiducial_pose(21).translation().toTranslation2d()
-    + get_fiducial_pose(22).translation().toTranslation2d()
-    + get_fiducial_pose(23).translation().toTranslation2d()
-) / 3  # Point halfway between one side of hub and wall
+BLUE_SHOOT_ANCHOR_1 = Translation2d(
+    get_fiducial_pose(18).translation().toTranslation2d().x,
+    get_fiducial_pose(18).translation().y - SHOOT_POINT_OFFSET,
+)
 
-BLUE_SHOOT_ANCHOR_2 = (
-    get_fiducial_pose(17).translation().toTranslation2d()
-    + get_fiducial_pose(18).translation().toTranslation2d()
-    + get_fiducial_pose(28).translation().toTranslation2d()
-) / 3  # Point halfway between one side of hub and wall
+BLUE_SHOOT_ANCHOR_2 = Translation2d(
+    get_fiducial_pose(21).translation().toTranslation2d().x,
+    get_fiducial_pose(21).translation().y + SHOOT_POINT_OFFSET,
+)
 
-BLUE_SHOOT_LINE = (
-    get_fiducial_pose(26).translation().x + get_fiducial_pose(31).translation().x
-) / 2
+BLUE_SHOOT_LINE = get_fiducial_pose(26).translation().x - SHOOT_POINT_OFFSET
 
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
     if is_red():
-        return robot_pos.x > (FIELD_LENGTH - FRONT_OF_BARGE_TO_DS_WALL_DISTANCE)
+        return robot_pos.x > (FIELD_LENGTH - FRONT_OF_HUB_TO_DS_WALL_DISTANCE)
     else:
-        return robot_pos.x < FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
+        return robot_pos.x < FRONT_OF_HUB_TO_DS_WALL_DISTANCE
 
 
 def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
     return (
-        FRONT_OF_BARGE_TO_DS_WALL_DISTANCE
+        FRONT_OF_HUB_TO_DS_WALL_DISTANCE
         < robot_pos.x
-        < (FIELD_LENGTH - FRONT_OF_BARGE_TO_DS_WALL_DISTANCE)
+        < (FIELD_LENGTH - FRONT_OF_HUB_TO_DS_WALL_DISTANCE)
     )
 
 
