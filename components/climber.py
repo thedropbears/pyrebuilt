@@ -21,6 +21,8 @@ class ClimberComponent:
     forward_climber_speed = tunable(0.4)
     reverse_climber_speed = tunable(0.4)
 
+    has_indexed = False
+
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
     FUDGE_FACTOR = 0.773  # FOR THE LIFE OF ME I DONT KNOW WHY. MAYBE THE BRAKE STAGE ISNT REALLY 1:1
@@ -95,6 +97,7 @@ class ClimberComponent:
     def try_index(self) -> None:
         if self.at_retraction_limit():
             self.climber_motor.set_position(0)
+            self.is_climber_indexed = True
 
     def execute(self):
         self.try_index()
@@ -115,5 +118,11 @@ class ClimberComponent:
         )
 
     @feedback
-    def get_climber_position(self) -> float:
+    def get_position(self) -> float:
         return self.climber_motor.get_position().value
+
+    @feedback
+    def get_indexed_state(
+        self,
+    ) -> bool:  # the naming between the variable and function is confusing
+        return self.is_climber_indexed
