@@ -7,9 +7,14 @@ def apply_deadzone(value: float, threshold: float) -> float:
     This ensures that the rest of the input space maps to [-1,1].
     """
     assert 0 <= threshold < 1
-    if abs(value) < threshold:
+    magnitude = abs(value)
+    if magnitude < threshold:
         return 0
-    return (value - math.copysign(threshold, value)) / (1 - threshold)
+    if threshold < 1e-3:
+        # Avoid instability when threshold is small.
+        return (value - math.copysign(threshold, value)) / (1 - threshold)
+    scaled = 1 - (1 - magnitude) / (1 - threshold)
+    return math.copysign(scaled, value)
 
 
 def map_exponential(value: float, base: float) -> float:
