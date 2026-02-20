@@ -5,10 +5,9 @@ from phoenix6 import configs, controls, signals
 from phoenix6.hardware import TalonFX
 from wpilib import PWM, DutyCycleEncoder
 from wpimath import units
-from wpimath.controller import PIDController
 
 from ids import DioChannel, PwmChannel, TalonId
-from utilities.functions import clamp
+from utilities.functions import clamp, sign
 from utilities.rev import (
     configure_through_bore_encoder,
 )
@@ -62,7 +61,6 @@ class ShooterComponent:
         self.hood_servo.setPeriodMultiplier(
             PWM.PeriodMultiplier.kPeriodMultiplier_4X
         )  # TODO Update these with new servo
-        self.hood_controller = PIDController(0.01, 0.0, 0.0)
 
         self.hood_encoder = DutyCycleEncoder(DioChannel.HOOD_ENCODER, math.tau, 0)
         configure_through_bore_encoder(self.hood_encoder)
@@ -116,15 +114,6 @@ class ShooterComponent:
             self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
-        # perform calculation in units and then scale for interface
-        hood_velocity = (
-            clamp(
-                self.hood_controller.calculate(
-                    self.get_hood_angle(), self.target_hood_angle
-                ),
-                -ShooterComponent.HOOD_SERVO_MAX_SPEED,
-                ShooterComponent.HOOD_SERVO_MAX_SPEED,
-            )
-            / ShooterComponent.HOOD_SERVO_MAX_SPEED
-        )
+        # bang bang
+        hood_velocity = sign(self.target_hood_angle - self.get_hood_angle()) * 1.0
         self.hood_servo.setSpeed(hood_velocity)
