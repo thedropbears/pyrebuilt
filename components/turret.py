@@ -25,7 +25,7 @@ from utilities.rev import (
 
 class TurretComponent:
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
-    TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
+    TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
     _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
     ENCODER_OFFSET = _ENCODER_OFFSET_DUTY_CYCLE * math.tau / TURRET_TO_ENCODER_GEARING
