@@ -19,6 +19,7 @@ from wpilib.simulation import (
 )
 from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.system import LinearSystem_2_1_2
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
@@ -80,13 +81,16 @@ class TalonFXMotorSim(MotorSim):
         # DCMotor gearbox factory, e.g. DCMotor.falcon500
         gearbox_motor: Callable[[int], DCMotor],
         *motors: phoenix6.hardware.TalonFX | phoenix6.hardware.TalonFXS,
+        plant: Callable[
+            [DCMotor, units.kilogram_square_meters, float], LinearSystem_2_1_2
+        ],
         # Reduction between motor and encoder readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
         moi: units.kilogram_square_meters,
     ):
         gearbox = gearbox_motor(len(motors))
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.plant = plant(gearbox, moi, gearing)
         self.gearing = gearing
         self.sim_states = [motor.sim_state for motor in motors]
         for sim_state in self.sim_states:
@@ -135,6 +139,9 @@ class SparkMotorSim(MotorSim):
         self,
         gearbox_motor: Callable[[int], DCMotor],
         *motors: rev.SparkMax,
+        plant: Callable[
+            [DCMotor, units.kilogram_square_meters, float], LinearSystem_2_1_2
+        ],
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
@@ -142,7 +149,7 @@ class SparkMotorSim(MotorSim):
     ):
         gearbox = gearbox_motor(len(motors))
         self.sim_states = [rev.SparkSim(motor, gearbox) for motor in motors]
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.plant = plant(gearbox, moi, gearing)
         self.motor_sim = DCMotorSim(self.plant, gearbox)
 
     @override
@@ -203,6 +210,7 @@ class PhysicsEngine:
             TalonFXMotorSim(
                 DCMotor.krakenX60,
                 module.steer,
+                plant=LinearSystemId.DCMotorSystem,
                 gearing=1 / robot.chassis.swerve_config.steer_ratio,
                 # measured from MKCad CAD
                 moi=0.0009972,
@@ -214,6 +222,7 @@ class PhysicsEngine:
             SparkMotorSim(
                 DCMotor.NEO,
                 robot.turret.motor,
+                plant=LinearSystemId.DCMotorSystem,
                 gearing=robot.turret.MOTOR_TO_TURRET_GEARING,
                 moi=0.02890532995,
             ),
