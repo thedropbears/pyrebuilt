@@ -10,7 +10,12 @@ from phoenix6.configs import (
 )
 from phoenix6.controls import Follower, MotionMagicVoltage
 from phoenix6.hardware import TalonFX
-from phoenix6.signals import InvertedValue, MotorAlignmentValue, NeutralModeValue
+from phoenix6.signals import (
+    GravityTypeValue,
+    InvertedValue,
+    MotorAlignmentValue,
+    NeutralModeValue,
+)
 from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
 
 from ids import DioChannel, TalonId
@@ -28,7 +33,7 @@ class IntakeComponent:
     MAX_DEPLOYER_ACCEL = 5
     MAX_DEPLOYER_VELOCITY = 5
 
-    DEPLOYER_TO_ENCODER_GEARING = 1.0
+    DEPLOYER_TO_ENCODER_GEARING = (5 / 1) * (26 / 50)
     ENCODER_ZERO_OFFSET = 0
 
     # Sim
@@ -57,12 +62,14 @@ class IntakeComponent:
         # TODO tune these
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(0.1)
+            .with_k_p(0.02)
             .with_k_i(0)
-            .with_k_d(0)
+            .with_k_d(0.75)
             .with_k_s(0)
-            .with_k_v(0)
-            .with_k_a(0)
+            .with_k_v(0.05)
+            .with_k_a(1.37)
+            .with_k_g(6.43)
+            .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
         intake_deployer_magic_config = (
@@ -114,3 +121,7 @@ class IntakeComponent:
     @feedback
     def get_raw_absolute_deployer_encoder_position(self) -> float:
         return self.deployer_encoder.get()
+
+    @feedback
+    def get_target_deployment_angle(self) -> float:
+        return self.target_deployer_angle
