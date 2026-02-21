@@ -14,9 +14,12 @@ class BallisticsComponent:
     turret: TurretComponent
 
     # TODO: Tune lookup tables for use
-    DISTANCE_LOOKUP = np.array([1.0, 2.0, 3.0, 4.0, 5.0], dtype=float)
-    SPEED_LOOKUP = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
-    ANGLE_LOOKUP = np.array([80.0, 75.0, 70.0, 65.0, 60.0], dtype=float)
+    DISTANCE_LOOKUP_30 = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
+    SPEED_LOOKUP_30 = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
+    DISTANCE_LOOKUP_45 = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
+    SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
+    DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
+    SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
 
     use_ballistics = will_reset_to(True)
     should_energise_flywheels = will_reset_to(False)
