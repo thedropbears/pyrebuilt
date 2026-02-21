@@ -21,6 +21,7 @@ class ClimberComponent:
 
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
+    FUDGE_FACTOR = 0.773  # FOR THE LIFE OF ME I DONT KNOW WHY. MAYBE THE BRAKE STAGE ISNT REALLY 1:1
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
@@ -53,12 +54,15 @@ class ClimberComponent:
             )
             .with_feedback(
                 FeedbackConfigs().with_sensor_to_mechanism_ratio(
-                    1
-                    / (
-                        ClimberComponent.GEAR_RATIO
-                        * ClimberComponent.SHAFT_RADIUS
-                        * math.tau
+                    (
+                        1
+                        / (
+                            ClimberComponent.GEAR_RATIO
+                            * ClimberComponent.SHAFT_RADIUS
+                            * math.tau
+                        )
                     )
+                    * ClimberComponent.FUDGE_FACTOR
                 )
             )
         )
