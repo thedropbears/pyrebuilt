@@ -1,6 +1,6 @@
 import math
 
-from magicbot import feedback
+from magicbot import feedback, tunable
 from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
 from wpimath import units
@@ -25,6 +25,8 @@ class TurretComponent:
 
     MAX_VELOCITY = 24.0
     MAX_ACCELERATION = 50.0
+
+    desired_angle = tunable(0.0).with_properties(unit="radians")
 
     MAX_TURRET_ROTATION = math.radians(200)
     NEGATIVE_OVERLAP_START = constrain_angle(MAX_TURRET_ROTATION)
@@ -66,8 +68,6 @@ class TurretComponent:
         )
         configure_through_bore_encoder(self.absolute_encoder)
         self.absolute_encoder.setInverted(True)
-
-        self.desired_angle: units.radians = 0.0
 
         mech = Mechanism2d(2, 2)
         SmartDashboard.putData("Turret", mech)
