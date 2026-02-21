@@ -26,18 +26,19 @@ from utilities.scalers import rescale_js
 
 
 class MyRobot(magicbot.MagicRobot):
+    chassis: ChassisComponent
+    targeter: Targeter
+
     # Controllers
     shooter_state_machine: Conductor
 
     # Components
     hopper: HopperComponent
-    chassis: ChassisComponent
+    ballistics: BallisticsComponent
     shooter: ShooterComponent
     climber: ClimberComponent
     intake: IntakeComponent
     turret: TurretComponent
-    targeter: Targeter
-    ballistics: BallisticsComponent
     leds: LEDComponent
     port_vision: VisualLocalizer
 
