@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from magicbot import will_reset_to
+from magicbot import feedback, will_reset_to
 from wpimath import units
 from wpimath.geometry import Translation2d
 
@@ -33,11 +33,31 @@ class BallisticsComponent:
     def setup(self) -> None:
         self.active_table_dist = self.DISTANCE_LOOKUP_30
         self.active_table_speed = self.SPEED_LOOKUP_30
+        self.active_table_name = "30 degree table"
         self.tables = (
-            (self.DISTANCE_LOOKUP_30, self.SPEED_LOOKUP_30, math.radians(30)),
-            (self.DISTANCE_LOOKUP_45, self.SPEED_LOOKUP_45, math.radians(45)),
-            (self.DISTANCE_LOOKUP_60, self.SPEED_LOOKUP_60, math.radians(60)),
+            (
+                self.DISTANCE_LOOKUP_30,
+                self.SPEED_LOOKUP_30,
+                math.radians(30),
+                "30 degree table",
+            ),
+            (
+                self.DISTANCE_LOOKUP_45,
+                self.SPEED_LOOKUP_45,
+                math.radians(45),
+                "45 degree table",
+            ),
+            (
+                self.DISTANCE_LOOKUP_60,
+                self.SPEED_LOOKUP_60,
+                math.radians(60),
+                "60 degree table",
+            ),
         )
+
+    @feedback
+    def get_active_table(self) -> str:
+        return self.active_table_name
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
@@ -86,6 +106,7 @@ class BallisticsComponent:
                         self.active_table_dist = table_pair[0]
                         self.active_table_speed = table_pair[1]
                         target_hood_angle = table_pair[2]
+                        self.active_table_name = table_pair[3]
             self.target_flywheel_speed = np.interp(
                 distance_to_target,
                 self.active_table_dist,
