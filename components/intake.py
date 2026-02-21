@@ -37,13 +37,14 @@ class IntakeComponent:
     ENCODER_ZERO_OFFSET = 0
 
     # Sim
-    ARM_LENGTH = 0.22  # meters
+    ARM_LENGTH = 0.38  # meters
     ARM_MOI = 0.181717788
 
-    def __init__(self, intake_mech_root: MechanismRoot2d) -> None:
-        self.intake_ligament = intake_mech_root.appendLigament(
-            "intake", 0.25, 90, color=Color8Bit(Color.kGreen)
+    def __init__(self, mech_root: MechanismRoot2d) -> None:
+        self.intake_ligament = mech_root.appendLigament(
+            "intake", length=2, angle=0, lineWidth=1, color=Color8Bit(Color.kGreen)
         )
+
         self.intake_motor = TalonFX(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
@@ -113,6 +114,9 @@ class IntakeComponent:
             )
         )
         self.intake_motor.set(self.target_intake_output)
+
+    def periodic(self) -> None:
+        self.intake_ligament.setAngle(self.get_absolute_deployer_encoder_position())
 
     @feedback
     def get_absolute_deployer_encoder_position(self) -> float:
