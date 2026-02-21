@@ -78,22 +78,20 @@ INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL = 6
 SHOOT_POINT_OFFSET = 0.75
 
 
-RED_HUB_POS = (
-    get_fiducial_pose(4).translation().toTranslation2d()
-    + get_fiducial_pose(10).translation().toTranslation2d()
-) / 2
+# TODO: write functions for rotational symmetry
+def field_flip_pose2d(p: Pose2d):
+    return Pose2d(
+        field_flip_translation2d(p.translation()),
+        field_flip_rotation2d(p.rotation()),
+    )
 
-RED_SHOOT_ANCHOR_1 = Translation2d(
-    get_fiducial_pose(5).translation().toTranslation2d().x,
-    get_fiducial_pose(5).translation().y - SHOOT_POINT_OFFSET,
-)
 
-RED_SHOOT_ANCHOR_2 = Translation2d(
-    get_fiducial_pose(2).translation().toTranslation2d().x,
-    get_fiducial_pose(2).translation().y + SHOOT_POINT_OFFSET,
-)
+def field_flip_rotation2d(r: Rotation2d):
+    return Rotation2d(-r.cos(), r.sin())
 
-RED_SHOOT_LINE = get_fiducial_pose(10).translation().x + SHOOT_POINT_OFFSET
+
+def field_flip_translation2d(t: Translation2d):
+    return Translation2d(FIELD_LENGTH - t.x, t.y)
 
 
 BLUE_HUB_POS = (
@@ -112,6 +110,14 @@ BLUE_SHOOT_ANCHOR_2 = Translation2d(
 )
 
 BLUE_SHOOT_LINE = get_fiducial_pose(26).translation().x - SHOOT_POINT_OFFSET
+
+
+RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
+
+RED_SHOOT_ANCHOR_1 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_1)
+RED_SHOOT_ANCHOR_2 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_2)
+
+RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
 
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
@@ -221,24 +227,6 @@ def is_alliance_hub_active() -> bool:
         return not shift1_active
     else:
         return True  # End game, hub always active
-
-
-# TODO: write functions for rotational symmetry
-
-
-def field_flip_pose2d(p: Pose2d):
-    return Pose2d(
-        field_flip_translation2d(p.translation()),
-        field_flip_rotation2d(p.rotation()),
-    )
-
-
-def field_flip_rotation2d(r: Rotation2d):
-    return Rotation2d(-r.cos(), r.sin())
-
-
-def field_flip_translation2d(t: Translation2d):
-    return Translation2d(FIELD_LENGTH - t.x, t.y)
 
 
 # This will default to the blue alliance if a proper link to the driver station has not yet been established

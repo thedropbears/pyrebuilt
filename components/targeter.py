@@ -38,56 +38,30 @@ class Targeter:
     @feedback
     def get_optimal_target_from_neutral_zone(
         self,
-    ) -> Translation2d:  # Code for neutral zone and enemy zone is the same, but this MIGHT change in future, so keep it as seperate functions
+    ) -> Translation2d:
         robot_pos = self.chassis.get_pose().translation()
 
-        anchor1_pos = alliance_shoot_anchor_pos(is_red())[0]
-        anchor2_pos = alliance_shoot_anchor_pos(is_red())[1]
-
+        anchor_positions = alliance_shoot_anchor_pos(is_red())
         shot_x = alliance_shoot_line(is_red())
 
-        shot1_y = robot_pos.y + (
-            (anchor1_pos.y - robot_pos.y) / (anchor1_pos.x - robot_pos.x)
+        close_anchor = (
+            anchor_positions[0]
+            if robot_pos.distance(anchor_positions[0])
+            <= robot_pos.distance(anchor_positions[1])
+            else anchor_positions[1]
+        )
+
+        target_y = robot_pos.y + (
+            (close_anchor.y - robot_pos.y) / (close_anchor.x - robot_pos.x)
         ) * (shot_x - robot_pos.x)
 
-        shot2_y = robot_pos.y + (
-            (anchor2_pos.y - robot_pos.y) / (anchor2_pos.x - robot_pos.x)
-        ) * (shot_x - robot_pos.x)
-
-        target1 = Translation2d(shot_x, shot1_y)
-        target2 = Translation2d(shot_x, shot2_y)
-
-        if robot_pos.distance(target1) <= robot_pos.distance(target2):
-            return target1
-        else:
-            return target2
+        return Translation2d(shot_x, target_y)
 
     @feedback
     def get_optimal_target_from_enemy_zone(
         self,
-    ) -> Translation2d:  # Code for neutral zone and enemy zone is the same, but this MIGHT change in future, so keep it as seperate functions
-        robot_pos = self.chassis.get_pose().translation()
-
-        anchor1_pos = alliance_shoot_anchor_pos(is_red())[0]
-        anchor2_pos = alliance_shoot_anchor_pos(is_red())[1]
-
-        shot_x = alliance_shoot_line(is_red())
-
-        shot1_y = robot_pos.y + (
-            (anchor1_pos.y - robot_pos.y) / (anchor1_pos.x - robot_pos.x)
-        ) * (shot_x - robot_pos.x)
-
-        shot2_y = robot_pos.y + (
-            (anchor2_pos.y - robot_pos.y) / (anchor2_pos.x - robot_pos.x)
-        ) * (shot_x - robot_pos.x)
-
-        target1 = Translation2d(shot_x, shot1_y)
-        target2 = Translation2d(shot_x, shot2_y)
-
-        if robot_pos.distance(target1) <= robot_pos.distance(target2):
-            return target1
-        else:
-            return target2
+    ) -> Translation2d:
+        return self.get_optimal_target_from_neutral_zone()
 
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
