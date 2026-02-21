@@ -1,14 +1,15 @@
 import math
 
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from hypothesis.strategies import floats, tuples
 from pytest import approx
 
 from utilities.scalers import apply_deadzone, map_exponential, scale_value
 
 
+@example(value=0.9999999999999999, threshold=0.36968879801934323)
 @given(value=floats(0, 1), threshold=floats(0, 1, exclude_min=True, exclude_max=True))
-def test_deadzone(value, threshold):
+def test_deadzone(value: float, threshold: float) -> None:
     result = apply_deadzone(value, threshold)
     neg_result = apply_deadzone(-value, threshold)
     if value in (0, 1):
@@ -21,7 +22,7 @@ def test_deadzone(value, threshold):
 
 
 @given(value=floats(0, 1))
-def test_deadzone_zero_threshold(value):
+def test_deadzone_zero_threshold(value: float) -> None:
     result = apply_deadzone(value, 0)
     neg_result = apply_deadzone(-value, 0)
     assert result == value
@@ -31,7 +32,7 @@ def test_deadzone_zero_threshold(value):
 @given(
     value=floats(0, 1), base=floats(1, exclude_min=True, allow_infinity=False, width=16)
 )
-def test_exponential(value, base):
+def test_exponential(value: float, base: float) -> None:
     result = map_exponential(value, base)
     neg_result = map_exponential(-value, base)
     if value in (0, 1):
@@ -51,7 +52,7 @@ real_halves = floats(allow_nan=False, allow_infinity=False, width=16)
 )
 def test_scale_value(
     value: float, input_range: tuple[float, float], output_range: tuple[float, float]
-):
+) -> None:
     input_lower, input_upper = input_range
     output_lower, output_upper = output_range
     assume(min(input_lower, input_upper) <= value <= max(input_lower, input_upper))
