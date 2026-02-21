@@ -1,4 +1,4 @@
-from math import radians, tau
+from math import degrees, radians, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
@@ -17,6 +17,7 @@ from phoenix6.signals import (
     NeutralModeValue,
 )
 from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
+from wpimath import units
 
 from ids import DioChannel, TalonId
 
@@ -42,13 +43,19 @@ class IntakeComponent:
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
         self.intake_ligament = mech_root.appendLigament(
-            "intake", length=2, angle=0, lineWidth=1, color=Color8Bit(Color.kGreen)
+            "intake",
+            length=2,
+            angle=self.get_deployer_position_degrees(),
+            lineWidth=1,
+            color=Color8Bit(Color.kGreen),
         )
 
         self.intake_motor = TalonFX(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
-        self.deployer_encoder = DutyCycleEncoder(DioChannel.INTAKE_DEPLOYER_ENCODER)
+        self.deployer_encoder = DutyCycleEncoder(
+            DioChannel.INTAKE_DEPLOYER_ENCODER, tau, 0
+        )
 
         intake_motor_output_config = (
             MotorOutputConfigs()
@@ -91,10 +98,14 @@ class IntakeComponent:
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
         )
+        self._sync_encoders()
 
-        self.deployer_motor_left.set_position(
-            self.get_absolute_deployer_encoder_position()
-        )
+    def _sync_encoders(self) -> None:
+        self.deployer_motor_left.set_position(self.get_absolute_deployer_position())
+        self.intake_ligament.setAngle(self.get_deployer_position_degrees())
+
+    def on_enable(self) -> None:
+        self._sync_encoders()
 
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
@@ -116,16 +127,18 @@ class IntakeComponent:
         self.intake_motor.set(self.target_intake_output)
 
     def periodic(self) -> None:
-        self.intake_ligament.setAngle(self.get_absolute_deployer_encoder_position())
+        self.intake_ligament.setAngle(self.get_deployer_position_degrees())
+
+    def get_absolute_deployer_position(self) -> units.radians:
+        return self._get_raw_absolute_deployer_position() - self.ENCODER_ZERO_OFFSET
 
     @feedback
-    def get_absolute_deployer_encoder_position(self) -> float:
-        return self.deployer_encoder.get() - self.ENCODER_ZERO_OFFSET
-
-    @feedback
-    def get_raw_absolute_deployer_encoder_position(self) -> float:
+    def _get_raw_absolute_deployer_position(self) -> units.radians:
         return self.deployer_encoder.get()
 
     @feedback
-    def get_target_deployment_angle(self) -> float:
-        return self.target_deployer_angle
+    def get_deployer_position(self) -> units.radians:
+        return self.deployer_motor_left.get_position().value
+
+    def get_deployer_position_degrees(self) -> units.degrees:
+        return degrees(self.get_deployer_position())
