@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from magicbot import feedback, will_reset_to
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Rotation2d, Translation2d
 
 from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent, rotations_per_second
@@ -74,11 +74,11 @@ class BallisticsComponent:
     def force_solution(
         self,
         desired_flywheel_speed: rotations_per_second,
-        desired_turret_angle: units.radians,
+        desired_turret_bearing: Rotation2d,
         desired_hood_angle: units.radians,
     ) -> None:
         self.target_flywheel_speed = desired_flywheel_speed
-        self.target_turret_angle = desired_turret_angle
+        self.target_turret_bearing = desired_turret_bearing
         self.target_hood_angle = desired_hood_angle
         self.use_ballistics = False
 
@@ -92,8 +92,7 @@ class BallisticsComponent:
         angle_to_target = (self.target_position - current_position).angle()
 
         if self.use_ballistics:
-            required_turret_angle = angle_to_target - current_rotation
-            target_turret_angle = required_turret_angle.radians()
+            target_turret_bearing = angle_to_target - current_rotation
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(distance_to_target):
                 for table_pair in self.tables:
@@ -106,11 +105,11 @@ class BallisticsComponent:
                 self.active_table.speed,
             )
         else:
-            target_turret_angle = self.target_turret_angle
+            target_turret_bearing = self.target_turret_bearing
             target_hood_angle = self.target_hood_angle
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(self.target_flywheel_speed)
 
         self.shooter.pitch_to(target_hood_angle)
-        self.turret.slew_to(target_turret_angle)
+        self.turret.slew_to(target_turret_bearing)
