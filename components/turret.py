@@ -136,14 +136,14 @@ class TurretComponent:
     def slew_to(self, bearing: Rotation2d) -> None:
         desired_angle = bearing.radians()
         current_angle = self.get_current_angle()
-        error = desired_angle - current_angle
+        error = abs(desired_angle - current_angle)
         if desired_angle >= self.POSITIVE_OVERLAP_START:
             wraparound_angle = desired_angle - math.tau
-            if wraparound_angle - current_angle < error:
+            if abs(wraparound_angle - current_angle) < error:
                 desired_angle = wraparound_angle
         elif desired_angle <= self.NEGATIVE_OVERLAP_START:
             wraparound_angle = desired_angle + math.tau
-            if wraparound_angle - current_angle < error:
+            if abs(wraparound_angle - current_angle) < error:
                 desired_angle = wraparound_angle
 
         self.desired_angle = desired_angle
