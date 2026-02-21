@@ -134,27 +134,28 @@ class SparkMotorSim(MotorSim):
     def __init__(
         self,
         gearbox_motor: Callable[[int], DCMotor],
-        motor: rev.SparkMax,
+        *motors: rev.SparkMax,
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
         moi: units.kilogram_square_meters,
     ):
-        gearbox = gearbox_motor(1)
+        gearbox = gearbox_motor(len(motors))
+        self.sim_states = [rev.SparkSim(motor, gearbox) for motor in motors]
         self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
-        self.mech_sim = DCMotorSim(self.plant, gearbox)
-        self.motor_sim = rev.SparkSim(motor, gearbox)
+        self.motor_sim = DCMotorSim(self.plant, gearbox)
 
     @override
     def update(self, dt: units.seconds):
-        vbus = self.motor_sim.getBusVoltage()
-        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
-        self.mech_sim.update(dt)
-        self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
+        voltage = self.sim_states[0].getBusVoltage()
+        self.motor_sim.setInputVoltage(self.sim_states[0].getAppliedOutput() * voltage)
+        self.motor_sim.update(dt)
+        for sim_state in self.sim_states:
+            sim_state.iterate(self.motor_sim.getAngularVelocity(), voltage, dt)
 
     @override
     def get_angular_position(self) -> units.radians:
-        return self.mech_sim.getAngularPosition()
+        return self.motor_sim.getAngularPosition()
 
 
 class SparkArmSim:
@@ -213,7 +214,7 @@ class PhysicsEngine:
             SparkMotorSim(
                 DCMotor.NEO,
                 robot.turret.motor,
-                robot.turret.MOTOR_TO_TURRET_GEARING,
+                gearing=robot.turret.MOTOR_TO_TURRET_GEARING,
                 moi=0.02890532995,
             ),
             robot.turret.absolute_encoder,
