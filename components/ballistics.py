@@ -1,5 +1,3 @@
-from math import atan2
-
 import numpy as np
 from magicbot import will_reset_to
 from wpimath import units
@@ -8,7 +6,6 @@ from wpimath.geometry import Translation2d
 from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent, rotations_per_second
 from components.turret import TurretComponent
-from utilities.functions import constrain_angle
 
 
 class BallisticsComponent:
@@ -16,19 +13,19 @@ class BallisticsComponent:
     shooter: ShooterComponent
     turret: TurretComponent
 
-    # TODO Define lookup table for use
-    DISTANCE_LOOKUP = [1.0, 2.0, 3.0, 4.0, 5.0]  # TODO Tune these values
-    SPEED_LOOKUP = [22.0, 33.0, 44.0, 55.0, 66.0]  # TODO Tune these values
-    ANGLE_LOOKUP = [80.0, 75.0, 70.0, 65.0, 60.0]  # TODO Tune these values
+    # TODO: Tune lookup tables for use
+    DISTANCE_LOOKUP = np.array([1.0, 2.0, 3.0, 4.0, 5.0], dtype=float)
+    SPEED_LOOKUP = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
+    ANGLE_LOOKUP = np.array([80.0, 75.0, 70.0, 65.0, 60.0], dtype=float)
 
     use_ballistics = will_reset_to(True)
     should_energise_flywheels = will_reset_to(False)
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
+        self.target_flywheel_speed = 0.0
 
     def setup(self) -> None:
-        self.target_flywheel_speed = 0.0
         self.target_turret_angle = self.turret.get_current_angle()
         self.target_hood_angle = self.shooter.get_hood_angle()
 
@@ -37,7 +34,7 @@ class BallisticsComponent:
         # but the hood and turret should always run
         self.should_energise_flywheels = True
 
-    def solve_for(self, target_position) -> None:
+    def solve_for(self, target_position: Translation2d) -> None:
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
         self.target_position = target_position
@@ -57,32 +54,23 @@ class BallisticsComponent:
         current_pose = self.chassis.get_pose()
 
         current_position = current_pose.translation()
-        current_rotation = current_pose.rotation().radians()
+        current_rotation = current_pose.rotation()
 
         distance_to_target = current_position.distance(self.target_position)
-        angle_to_target = atan2(
-            self.target_position.y - current_position.y,
-            self.target_position.x - current_position.x,
-        )
+        angle_to_target = (self.target_position - current_position).angle()
 
         if self.use_ballistics:
-            self.target_turret_angle = constrain_angle(
-                angle_to_target - current_rotation
+            required_turret_angle = angle_to_target - current_rotation
+            self.target_turret_angle = required_turret_angle.radians()
+            self.target_hood_angle = np.interp(
+                distance_to_target,
+                self.DISTANCE_LOOKUP,
+                self.ANGLE_LOOKUP,
             )
-            self.target_hood_angle = float(
-                np.interp(
-                    distance_to_target,
-                    self.DISTANCE_LOOKUP,
-                    self.ANGLE_LOOKUP,
-                )
-            )
-
-            self.target_flywheel_speed = float(
-                np.interp(
-                    distance_to_target,
-                    self.DISTANCE_LOOKUP,
-                    self.SPEED_LOOKUP,
-                )
+            self.target_flywheel_speed = np.interp(
+                distance_to_target,
+                self.DISTANCE_LOOKUP,
+                self.SPEED_LOOKUP,
             )
 
         if self.should_energise_flywheels:
