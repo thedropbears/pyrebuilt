@@ -237,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.intake.intake()
 
-        if self.gamepad.getYButton():
+        if self.gamepad.getPOV() == 0:
             self.intake.retract()
 
         if self.gamepad.getAButton():
