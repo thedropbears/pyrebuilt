@@ -21,6 +21,7 @@ from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system import LinearSystem_2_1_2
 from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.units import volts
 
 from components.chassis import SwerveModule
 from utilities import game
@@ -31,14 +32,14 @@ if typing.TYPE_CHECKING:
 
 
 class MotorSim(typing.Protocol):
-    gearing: float
-    gearbox: DCMotor
-    plant: LinearSystem_2_1_2
+    # gearing: float
+    # gearbox: DCMotor
+    # plant: LinearSystem_2_1_2
 
-    def update(self, dt: units.seconds) -> None: ...
+    def update(self, angular_velocity: units.radians_per_second, dt: units.seconds) -> None: ...
     def get_motor_voltage(self) -> units.volts: ...
 
-    def get_angular_position(self) -> units.radians: ...
+    # def get_angular_position(self) -> units.radians: ...
 
 
 
@@ -96,17 +97,19 @@ class TalonFXMotorSim(MotorSim):
         gearing: float,
         moi: units.kilogram_square_meters,
     ):
-        self.gearbox = gearbox_motor(len(motors))
-        self.plant = plant(self.gearbox, moi, gearing)
+        # gearbox = gearbox_motor(len(motors))
+
+
+        # self.plant = plant(self.gearbox, moi, gearing)
         self.gearing = gearing
+        # self.motor_sim = DCMotorSim(self.plant, self.gearbox)
+
         self.sim_states = [motor.sim_state for motor in motors]
         for sim_state in self.sim_states:
             sim_state.set_supply_voltage(12.0)
-        self.motor_sim = DCMotorSim(self.plant, self.gearbox)
 
     @override
     def update(self, dt: units.seconds) -> None:
-        voltage = self.sim_states[0].motor_voltage
         self.motor_sim.setInputVoltage(voltage)
         self.motor_sim.update(dt)
         motor_rev_per_mechanism_rad = self.gearing / math.tau
@@ -114,13 +117,14 @@ class TalonFXMotorSim(MotorSim):
             sim_state.set_raw_rotor_position(
                 self.motor_sim.getAngularPosition() * motor_rev_per_mechanism_rad
             )
+            sim_state.a
             sim_state.set_rotor_velocity(
                 self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
             )
 
     @override
-    def get_angular_position(self) -> units.radians:
-        return self.motor_sim.getAngularPosition()
+    def get_motor_voltage(self) -> float:
+        return self.sim_states[0].motor_voltage
 
 
 class TurretSim:
@@ -162,8 +166,8 @@ class SparkMotorSim(MotorSim):
 
     @override
     def update(self, dt: units.seconds):
-        voltage = self.sim_states[0].getBusVoltage()
-        self.motor_sim.setInputVoltage(self.sim_states[0].getAppliedOutput() * voltage)
+        voltage = 
+        self.motor_sim.setInputVoltage(self.get_motor_voltage())
         self.motor_sim.update(dt)
         for sim_state in self.sim_states:
             sim_state.iterate(self.motor_sim.getAngularVelocity(), voltage, dt)
@@ -171,7 +175,25 @@ class SparkMotorSim(MotorSim):
     @override
     def get_angular_position(self) -> units.radians:
         return self.motor_sim.getAngularPosition()
+    
+    @override
+    def get_motor_voltage(self) -> volts:
+        return self.sim_states[0].getBusVoltage() * self.sim_states[0].getAppliedOutput()
 
+
+class SystemSim():
+    def __ini
+
+class MechanismSim()
+    
+    def __init__(self, motor_sim: MotorSim, ):
+        self.motor_sim = motor_sim
+        pass
+
+    def update(self, dt: units.seconds) -> None:
+        voltage = self.motor_sim.get_motor_voltage()
+
+        # iterate system
 
 class ArmSim:
     def __init__(
