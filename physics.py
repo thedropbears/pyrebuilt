@@ -29,11 +29,6 @@ if typing.TYPE_CHECKING:
     from robot import MyRobot
 
 
-class MotorSim(typing.Protocol):
-    def update(self, dt: units.seconds) -> None: ...
-    def get_angular_position(self) -> units.radians: ...
-
-
 class RollingBuffer:
     def __init__(self, max_length: int):
         self.max_length = max_length
@@ -74,6 +69,11 @@ class SimpleTalonFXMotorSim:
         self.sim_state.add_rotor_position(velocity_rps * dt)
 
 
+class MotorSim(typing.Protocol):
+    def update(self, dt: units.seconds) -> None: ...
+    def get_angular_position(self) -> units.radians: ...
+
+
 class TalonFXMotorSim(MotorSim):
     def __init__(
         self,
@@ -112,24 +112,6 @@ class TalonFXMotorSim(MotorSim):
         return self.motor_sim.getAngularPosition()
 
 
-class TurretSim:
-    def __init__(
-        self,
-        motor_sim: MotorSim,
-        encoder: wpilib.DutyCycleEncoder,
-        encoder_offset: float,
-    ):
-        self.motor_sim = motor_sim
-        self.encoder_sim = DutyCycleEncoderSim(encoder)
-        self.encoder_offset = encoder_offset
-
-    def update(self, dt: units.seconds):
-        self.motor_sim.update(dt)
-        self.encoder_sim.set(
-            self.motor_sim.get_angular_position() + self.encoder_offset
-        )
-
-
 class SparkMotorSim(MotorSim):
     def __init__(
         self,
@@ -156,6 +138,24 @@ class SparkMotorSim(MotorSim):
     @override
     def get_angular_position(self) -> units.radians:
         return self.motor_sim.getAngularPosition()
+
+
+class TurretSim:
+    def __init__(
+        self,
+        motor_sim: MotorSim,
+        encoder: wpilib.DutyCycleEncoder,
+        encoder_offset: float,
+    ):
+        self.motor_sim = motor_sim
+        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_offset = encoder_offset
+
+    def update(self, dt: units.seconds):
+        self.motor_sim.update(dt)
+        self.encoder_sim.set(
+            self.motor_sim.get_angular_position() + self.encoder_offset
+        )
 
 
 class SparkArmSim:
