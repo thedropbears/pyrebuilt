@@ -72,50 +72,112 @@ APRILTAGS_2D = [
 FIELD_WIDTH = apriltag_layout.getFieldWidth()
 FIELD_LENGTH = apriltag_layout.getFieldLength()
 
-RED_HUB_POS = (
-    get_fiducial_pose(4).translation().toTranslation2d()
-    + get_fiducial_pose(10).translation().toTranslation2d()
-) / 2
+INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL = 3.9
+INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL = 6
 
-BEHIND_RED_HUB_POS = (
-    get_fiducial_pose(10).translation().toTranslation2d()
-    + get_fiducial_pose(15).translation().toTranslation2d()
-) / 2
+SHOOT_POINT_OFFSET = 0.75
+
+
+# TODO: write functions for rotational symmetry
+def field_flip_pose2d(p: Pose2d):
+    return Pose2d(
+        field_flip_translation2d(p.translation()),
+        field_flip_rotation2d(p.rotation()),
+    )
+
+
+def field_flip_rotation2d(r: Rotation2d):
+    return Rotation2d(-r.cos(), r.sin())
+
+
+def field_flip_translation2d(t: Translation2d):
+    return Translation2d(FIELD_LENGTH - t.x, t.y)
+
 
 BLUE_HUB_POS = (
     get_fiducial_pose(20).translation().toTranslation2d()
     + get_fiducial_pose(26).translation().toTranslation2d()
 ) / 2
 
-BEHIND_BLUE_HUB_POS = (
-    get_fiducial_pose(26).translation().toTranslation2d()
-    + get_fiducial_pose(31).translation().toTranslation2d()
-) / 2
+BLUE_SHOOT_ANCHOR_1 = Translation2d(
+    get_fiducial_pose(18).translation().toTranslation2d().x,
+    get_fiducial_pose(18).translation().y - SHOOT_POINT_OFFSET,
+)
+
+BLUE_SHOOT_ANCHOR_2 = Translation2d(
+    get_fiducial_pose(21).translation().toTranslation2d().x,
+    get_fiducial_pose(21).translation().y + SHOOT_POINT_OFFSET,
+)
+
+BLUE_SHOOT_LINE = get_fiducial_pose(26).translation().x - SHOOT_POINT_OFFSET
 
 
-def is_in_alliance_zone(robot_pos: Translation2d):
+RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
+
+RED_SHOOT_ANCHOR_1 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_1)
+RED_SHOOT_ANCHOR_2 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_2)
+
+RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
+
+
+def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
+    if is_red():
+        return robot_pos.x > (
+            FIELD_LENGTH - INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+        )
+    else:
+        return robot_pos.x < INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+
+
+def is_in_transition_zone(robot_pos: Translation2d) -> bool:
     if is_red():
         return (
-            robot_pos.x > (FIELD_LENGTH - 3.977894)
-        )  # subtract distance between front of barge and driver station wall from field length
+            (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
+            < robot_pos.x
+            < (FIELD_LENGTH - INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL)
+        )
     else:
         return (
-            robot_pos.x < 3.977894
-        )  # distance between front of barge and driver station wall
+            INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
+            < robot_pos.x
+            < INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+        )
 
 
-def alliance_hub_pos(is_red: bool):
+def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
+    return (
+        INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
+        < robot_pos.x
+        < (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
+    )
+
+
+def alliance_hub_pos(is_red: bool) -> Translation2d:
     if is_red:
         return RED_HUB_POS
     else:
         return BLUE_HUB_POS
 
 
-def behind_alliance_hub_pos(is_red: bool):
+def behind_alliance_hub_pos(is_red: bool) -> Translation2d:
     if is_red:
-        return BEHIND_RED_HUB_POS
+        return Translation2d(RED_HUB_POS.x + 1.5, RED_HUB_POS.y)
     else:
-        return BEHIND_BLUE_HUB_POS
+        return Translation2d(BLUE_HUB_POS.x - 1.5, BLUE_HUB_POS.y)
+
+
+def alliance_shoot_anchor_pos(is_red: bool) -> tuple:
+    if is_red:
+        return (RED_SHOOT_ANCHOR_1, RED_SHOOT_ANCHOR_2)
+    else:
+        return (BLUE_SHOOT_ANCHOR_1, BLUE_SHOOT_ANCHOR_2)
+
+
+def alliance_shoot_line(is_red: bool) -> float:
+    if is_red:
+        return RED_SHOOT_LINE
+    else:
+        return BLUE_SHOOT_LINE
 
 
 def is_alliance_hub_active() -> bool:
@@ -165,24 +227,6 @@ def is_alliance_hub_active() -> bool:
         return not shift1_active
     else:
         return True  # End game, hub always active
-
-
-# TODO: write functions for rotational symmetry
-
-
-def field_flip_pose2d(p: Pose2d):
-    return Pose2d(
-        field_flip_translation2d(p.translation()),
-        field_flip_rotation2d(p.rotation()),
-    )
-
-
-def field_flip_rotation2d(r: Rotation2d):
-    return Rotation2d(-r.cos(), r.sin())
-
-
-def field_flip_translation2d(t: Translation2d):
-    return Translation2d(FIELD_LENGTH - t.x, t.y)
 
 
 # This will default to the blue alliance if a proper link to the driver station has not yet been established
