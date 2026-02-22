@@ -128,7 +128,7 @@ class MyRobot(magicbot.MagicRobot):
                 Rotation2d(1.25),
             )
 
-        else:
+        else:  # assume comp bot
             self.chassis_swerve_config = SwerveConfig(
                 drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
                 drive_gains=Slot0Configs()
@@ -152,7 +152,9 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis_wheel_base = 0.517
 
             self.port_vision_name = "port_turret"
-            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
+            self.port_vision_turret_pos = Translation3d(
+                0.065, -0.284, (0.201_594 + 0.202_273) / 2
+            )
             self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
             self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
             self.port_vision_camera_pitch = math.radians(-10.0)
