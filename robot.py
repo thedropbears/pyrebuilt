@@ -155,17 +155,17 @@ class MyRobot(magicbot.MagicRobot):
             self.port_vision_turret_pos = Translation3d(
                 0.065, -0.284, (0.201_594 + 0.202_273) / 2
             )
-            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
+            self.port_vision_turret_rot = Rotation2d()
             self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
             self.port_vision_camera_pitch = math.radians(-10.0)
-            self.port_vision_encoder_offset = Rotation2d(6.103)
+            self.port_vision_encoder_offset = Rotation2d(4.554)
             self.port_vision_servo_offsets = ServoOffsets(
-                neutral=Rotation2d(1.052),
-                full_range=Rotation2d(3.121),
+                neutral=Rotation2d(4.009),
+                full_range=Rotation2d(6.186),
             )
             self.port_vision_rotation_range = (
-                Rotation2d(1.733),
-                Rotation2d(5.034),
+                Rotation2d(2.4),
+                Rotation2d(5.6),
             )
 
     def teleopInit(self) -> None:
@@ -276,6 +276,8 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
+        elif self.gamepad.getRightStickButton():
+            self.port_vision.full_range_servo_()
 
         self.port_vision.execute()
 
