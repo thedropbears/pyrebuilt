@@ -34,7 +34,7 @@ class ShooterComponent:
         55.0 * math.tau / 60.0
     )  # rad/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
-    ENCODER_TO_FLYWHEEL_RATIO = 1 / (30 / 18)
+    FLYWHEEL_GEAR_RATIO = 1 / (40 / 20)
 
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
@@ -47,12 +47,13 @@ class ShooterComponent:
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
-            .with_k_s(0.16635)
-            .with_k_v(0.070258)
-            .with_k_a(0.0045557)
+            .with_k_s(0.23739)
+            .with_k_v(0.060043)
+            .with_k_a(0.0089409)
+            .with_k_p(0.0071216)
         )
         feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
-            self.ENCODER_TO_FLYWHEEL_RATIO
+            self.FLYWHEEL_GEAR_RATIO
         )
         self.flywheel_motor.configurator.apply(
             configs.TalonFXConfiguration()
