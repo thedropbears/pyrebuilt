@@ -72,6 +72,7 @@ class SimpleTalonFXMotorSim:
 class MotorSim(typing.Protocol):
     def update(self, dt: units.seconds) -> None: ...
     def get_angular_position(self) -> units.radians: ...
+    def get_motor_voltage(self) -> units.volts: ...
 
 
 class TalonFXMotorSim(MotorSim):
@@ -95,8 +96,7 @@ class TalonFXMotorSim(MotorSim):
 
     @override
     def update(self, dt: units.seconds) -> None:
-        voltage = self.sim_states[0].motor_voltage
-        self.motor_sim.setInputVoltage(voltage)
+        self.motor_sim.setInputVoltage(self.get_motor_voltage())
         self.motor_sim.update(dt)
         motor_rev_per_mechanism_rad = self.gearing / math.tau
         for sim_state in self.sim_states:
@@ -110,6 +110,10 @@ class TalonFXMotorSim(MotorSim):
     @override
     def get_angular_position(self) -> units.radians:
         return self.motor_sim.getAngularPosition()
+
+    @override
+    def get_motor_voltage(self) -> units.volts:
+        return self.sim_states[0].motor_voltage
 
 
 class SparkMotorSim(MotorSim):
@@ -129,15 +133,24 @@ class SparkMotorSim(MotorSim):
 
     @override
     def update(self, dt: units.seconds):
-        voltage = self.sim_states[0].getBusVoltage()
-        self.motor_sim.setInputVoltage(self.sim_states[0].getAppliedOutput() * voltage)
+        self.motor_sim.setInputVoltage(self.get_motor_voltage())
         self.motor_sim.update(dt)
         for sim_state in self.sim_states:
-            sim_state.iterate(self.motor_sim.getAngularVelocity(), voltage, dt)
+            sim_state.iterate(
+                self.motor_sim.getAngularVelocity(), self.get_bus_voltage(), dt
+            )
 
     @override
     def get_angular_position(self) -> units.radians:
         return self.motor_sim.getAngularPosition()
+
+    @override
+    def get_motor_voltage(self) -> units.volts:
+        sim_state = self.sim_states[0]
+        return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
+
+    def get_bus_voltage(self) -> units.volts:
+        return self.sim_states[0].getBusVoltage()
 
 
 class TurretSim:
