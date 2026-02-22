@@ -73,6 +73,12 @@ class MotorSim(typing.Protocol):
     def update(self, dt: units.seconds) -> None: ...
     def get_angular_position(self) -> units.radians: ...
     def get_motor_voltage(self) -> units.volts: ...
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None: ...
 
 
 class TalonFXMotorSim(MotorSim):
@@ -98,14 +104,9 @@ class TalonFXMotorSim(MotorSim):
     def update(self, dt: units.seconds) -> None:
         self.motor_sim.setInputVoltage(self.get_motor_voltage())
         self.motor_sim.update(dt)
-        motor_rev_per_mechanism_rad = self.gearing / math.tau
-        for sim_state in self.sim_states:
-            sim_state.set_raw_rotor_position(
-                self.motor_sim.getAngularPosition() * motor_rev_per_mechanism_rad
-            )
-            sim_state.set_rotor_velocity(
-                self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
-            )
+        self.update_from_mechanism(
+            self.motor_sim.getAngularPosition(), self.motor_sim.getAngularVelocity(), dt
+        )
 
     @override
     def get_angular_position(self) -> units.radians:
@@ -114,6 +115,18 @@ class TalonFXMotorSim(MotorSim):
     @override
     def get_motor_voltage(self) -> units.volts:
         return self.sim_states[0].motor_voltage
+
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
+        motor_rev_per_mechanism_rad = self.gearing / math.tau
+        for sim_state in self.sim_states:
+            sim_state.set_raw_rotor_position(position * motor_rev_per_mechanism_rad)
+            sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
 class SparkMotorSim(MotorSim):
@@ -135,10 +148,9 @@ class SparkMotorSim(MotorSim):
     def update(self, dt: units.seconds):
         self.motor_sim.setInputVoltage(self.get_motor_voltage())
         self.motor_sim.update(dt)
-        for sim_state in self.sim_states:
-            sim_state.iterate(
-                self.motor_sim.getAngularVelocity(), self.get_bus_voltage(), dt
-            )
+        self.update_from_mechanism(
+            self.motor_sim.getAngularPosition(), self.motor_sim.getAngularVelocity(), dt
+        )
 
     @override
     def get_angular_position(self) -> units.radians:
@@ -148,6 +160,16 @@ class SparkMotorSim(MotorSim):
     def get_motor_voltage(self) -> units.volts:
         sim_state = self.sim_states[0]
         return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
+
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
+        for sim_state in self.sim_states:
+            sim_state.iterate(velocity, self.get_bus_voltage(), dt)
 
     def get_bus_voltage(self) -> units.volts:
         return self.sim_states[0].getBusVoltage()
