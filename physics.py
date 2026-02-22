@@ -31,8 +31,15 @@ if typing.TYPE_CHECKING:
 
 
 class MotorSim(typing.Protocol):
+    gearing: float
+    gearbox: DCMotor
+    plant: LinearSystem_2_1_2
+
     def update(self, dt: units.seconds) -> None: ...
+    def get_motor_voltage(self) -> units.volts: ...
+
     def get_angular_position(self) -> units.radians: ...
+
 
 
 class RollingBuffer:
@@ -89,13 +96,13 @@ class TalonFXMotorSim(MotorSim):
         gearing: float,
         moi: units.kilogram_square_meters,
     ):
-        gearbox = gearbox_motor(len(motors))
-        self.plant = plant(gearbox, moi, gearing)
+        self.gearbox = gearbox_motor(len(motors))
+        self.plant = plant(self.gearbox, moi, gearing)
         self.gearing = gearing
         self.sim_states = [motor.sim_state for motor in motors]
         for sim_state in self.sim_states:
             sim_state.set_supply_voltage(12.0)
-        self.motor_sim = DCMotorSim(self.plant, gearbox)
+        self.motor_sim = DCMotorSim(self.plant, self.gearbox)
 
     @override
     def update(self, dt: units.seconds) -> None:
@@ -147,10 +154,11 @@ class SparkMotorSim(MotorSim):
         gearing: float,
         moi: units.kilogram_square_meters,
     ):
-        gearbox = gearbox_motor(len(motors))
-        self.sim_states = [rev.SparkSim(motor, gearbox) for motor in motors]
-        self.plant = plant(gearbox, moi, gearing)
-        self.motor_sim = DCMotorSim(self.plant, gearbox)
+        self.gearbox = gearbox_motor(len(motors))
+        self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
+        self.gearing = gearing
+        self.plant = plant(self.gearbox, moi, gearing)
+        self.motor_sim = DCMotorSim(self.plant, self.gearbox) SingleJointedArmSim()
 
     @override
     def update(self, dt: units.seconds):
@@ -165,16 +173,43 @@ class SparkMotorSim(MotorSim):
         return self.motor_sim.getAngularPosition()
 
 
-class SparkArmSim:
-    def __init__(self, mech_sim: SingleJointedArmSim, motor_sim: rev.SparkSim) -> None:
-        self.mech_sim = mech_sim
+class ArmSim:
+    def __init__(
+        self,
+        arm_length: units.meters,
+        min_angle: units.radians,
+        max_angle: units.radians,
+        motor_sim: MotorSim,
+        encoder: wpilib.DutyCycleEncoder,
+        encoder_offset: float,
+    ) -> None:
+
         self.motor_sim = motor_sim
-        self.motor_encoder_sim = self.motor_sim.getRelativeEncoderSim()
+        self.mech_sim = SingleJointedArmSim(
+            self.motor_sim.plant,
+            self.motor_sim.gearbox,
+            self.motor_sim.gearing,
+            arm_length,
+            min_angle,
+            max_angle,
+            True,
+            self.motor_sim.get_angular_position(),
+        )
+        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_offset = encoder_offset
 
     def update(self, dt: units.seconds) -> None:
+
+        self.mech_sim.setInputVoltage()
+        self.mech_sim.update(dt)
+
+
+        self.motor_sim
         vbus = self.motor_sim.getBusVoltage()
         self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
         self.mech_sim.update(dt)
+
+
         self.motor_sim.iterate(self.mech_sim.getVelocity(), vbus, dt)
         self.motor_encoder_sim.iterate(self.mech_sim.getVelocity(), dt)
 
