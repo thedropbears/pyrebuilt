@@ -100,22 +100,31 @@ BLUE_HUB_POS = (
 ) / 2
 
 BLUE_SHOOT_ANCHOR_1 = Translation2d(
-    get_fiducial_pose(18).translation().toTranslation2d().x,
-    get_fiducial_pose(18).translation().y - SHOOT_POINT_OFFSET,
+    get_fiducial_pose(18).x,
+    get_fiducial_pose(18).y - SHOOT_POINT_OFFSET,
 )
-
 BLUE_SHOOT_ANCHOR_2 = Translation2d(
-    get_fiducial_pose(21).translation().toTranslation2d().x,
-    get_fiducial_pose(21).translation().y + SHOOT_POINT_OFFSET,
+    get_fiducial_pose(21).x,
+    get_fiducial_pose(21).y + SHOOT_POINT_OFFSET,
 )
 
-BLUE_SHOOT_LINE = get_fiducial_pose(26).translation().x - SHOOT_POINT_OFFSET
+BLUE_TRENCH_SHOOT_POS_1 = Translation2d(
+    get_fiducial_pose(17).x + 0.5, get_fiducial_pose(17).y
+)
+BLUE_TRENCH_SHOOT_POS_2 = Translation2d(
+    get_fiducial_pose(22).x + 0.5, get_fiducial_pose(22).y
+)
+
+BLUE_SHOOT_LINE = get_fiducial_pose(26).x - SHOOT_POINT_OFFSET
 
 
 RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
 
 RED_SHOOT_ANCHOR_1 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_1)
 RED_SHOOT_ANCHOR_2 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_2)
+
+RED_TRENCH_SHOOT_POS_1 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_1)
+RED_TRENCH_SHOOT_POS_2 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_2)
 
 RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
 
@@ -171,6 +180,13 @@ def alliance_shoot_anchor_pos(is_red: bool) -> tuple:
         return (RED_SHOOT_ANCHOR_1, RED_SHOOT_ANCHOR_2)
     else:
         return (BLUE_SHOOT_ANCHOR_1, BLUE_SHOOT_ANCHOR_2)
+
+
+def alliance_trench_shoot_pos(is_red: bool) -> tuple:
+    if is_red:
+        return (RED_TRENCH_SHOOT_POS_1, RED_TRENCH_SHOOT_POS_2)
+    else:
+        return (BLUE_TRENCH_SHOOT_POS_1, BLUE_TRENCH_SHOOT_POS_2)
 
 
 def alliance_shoot_line(is_red: bool) -> float:
