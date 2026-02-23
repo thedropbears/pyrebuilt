@@ -42,13 +42,6 @@ class IntakeComponent:
     ARM_MOI = 0.181717788
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
-        self.intake_ligament = mech_root.appendLigament(
-            "intake",
-            length=2,
-            angle=self.get_deployer_position_degrees(),
-            lineWidth=1,
-            color=Color8Bit(Color.kGreen),
-        )
 
         self.intake_motor = TalonFX(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
@@ -98,6 +91,15 @@ class IntakeComponent:
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
         )
+
+        self.intake_ligament = mech_root.appendLigament(
+            "intake",
+            length=2,
+            angle=self.get_deployer_position_degrees(),
+            lineWidth=1,
+            color=Color8Bit(Color.kGreen),
+        )
+
         self._sync_encoders()
 
     def _sync_encoders(self) -> None:
