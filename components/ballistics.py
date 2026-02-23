@@ -1,5 +1,7 @@
+import math
+
 import numpy as np
-from magicbot import will_reset_to
+from magicbot import feedback, will_reset_to
 from wpimath import units
 from wpimath.geometry import Translation2d
 
@@ -14,9 +16,12 @@ class BallisticsComponent:
     turret: TurretComponent
 
     # TODO: Tune lookup tables for use
-    DISTANCE_LOOKUP = np.array([1.0, 2.0, 3.0, 4.0, 5.0], dtype=float)
-    SPEED_LOOKUP = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
-    ANGLE_LOOKUP = np.array([80.0, 75.0, 70.0, 65.0, 60.0], dtype=float)
+    DISTANCE_LOOKUP_30 = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
+    SPEED_LOOKUP_30 = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
+    DISTANCE_LOOKUP_45 = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
+    SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
+    DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
+    SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
 
     use_ballistics = will_reset_to(True)
     should_energise_flywheels = will_reset_to(False)
@@ -26,8 +31,33 @@ class BallisticsComponent:
         self.target_flywheel_speed = 0.0
 
     def setup(self) -> None:
-        self.target_turret_angle = self.turret.get_current_angle()
-        self.target_hood_angle = self.shooter.get_hood_angle()
+        self.active_table_dist = self.DISTANCE_LOOKUP_30
+        self.active_table_speed = self.SPEED_LOOKUP_30
+        self.active_table_name = "30 degree table"
+        self.tables = (
+            (
+                self.DISTANCE_LOOKUP_30,
+                self.SPEED_LOOKUP_30,
+                math.radians(30),
+                "30 degree table",
+            ),
+            (
+                self.DISTANCE_LOOKUP_45,
+                self.SPEED_LOOKUP_45,
+                math.radians(45),
+                "45 degree table",
+            ),
+            (
+                self.DISTANCE_LOOKUP_60,
+                self.SPEED_LOOKUP_60,
+                math.radians(60),
+                "60 degree table",
+            ),
+        )
+
+    @feedback
+    def get_active_table(self) -> str:
+        return self.active_table_name
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
@@ -60,21 +90,34 @@ class BallisticsComponent:
         angle_to_target = (self.target_position - current_position).angle()
 
         if self.use_ballistics:
+            target_hood_angle = 0.0
             required_turret_angle = angle_to_target - current_rotation
-            self.target_turret_angle = required_turret_angle.radians()
-            self.target_hood_angle = np.interp(
-                distance_to_target,
-                self.DISTANCE_LOOKUP,
-                self.ANGLE_LOOKUP,
-            )
+            target_turret_angle = required_turret_angle.radians()
+            # Check if distance is within range of distance table and switch if necessary
+            if not (
+                distance_to_target < self.active_table_dist.max()
+                and distance_to_target > self.active_table_dist.min()
+            ):
+                for table_pair in self.tables:
+                    if (
+                        distance_to_target < table_pair[0].max()
+                        and distance_to_target > table_pair[0].min()
+                    ):
+                        self.active_table_dist = table_pair[0]
+                        self.active_table_speed = table_pair[1]
+                        target_hood_angle = table_pair[2]
+                        self.active_table_name = table_pair[3]
             self.target_flywheel_speed = np.interp(
                 distance_to_target,
-                self.DISTANCE_LOOKUP,
-                self.SPEED_LOOKUP,
+                self.active_table_dist,
+                self.active_table_speed,
             )
+        else:
+            target_turret_angle = self.turret.get_current_angle()
+            target_hood_angle = self.shooter.get_hood_angle()
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(self.target_flywheel_speed)
 
-        self.shooter.pitch_to(self.target_hood_angle)
-        self.turret.slew_to(self.target_turret_angle)
+        self.shooter.pitch_to(target_hood_angle)
+        self.turret.slew_to(target_turret_angle)
