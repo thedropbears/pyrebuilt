@@ -29,11 +29,6 @@ if typing.TYPE_CHECKING:
     from robot import MyRobot
 
 
-class MotorSim(typing.Protocol):
-    def update(self, dt: units.seconds) -> None: ...
-    def get_angular_position(self) -> units.radians: ...
-
-
 class RollingBuffer:
     def __init__(self, max_length: int):
         self.max_length = max_length
@@ -74,6 +69,19 @@ class SimpleTalonFXMotorSim:
         self.sim_state.add_rotor_position(velocity_rps * dt)
 
 
+class MotorSim(typing.Protocol):
+    gearbox: DCMotor
+    gearing: float
+
+    def get_motor_voltage(self) -> units.volts: ...
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None: ...
+
+
 class TalonFXMotorSim(MotorSim):
     def __init__(
         self,
@@ -83,78 +91,132 @@ class TalonFXMotorSim(MotorSim):
         # Reduction between motor and encoder readings, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
-        moi: units.kilogram_square_meters,
     ):
-        gearbox = gearbox_motor(len(motors))
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.gearbox = gearbox_motor(len(motors))
         self.gearing = gearing
         self.sim_states = [motor.sim_state for motor in motors]
         for sim_state in self.sim_states:
             sim_state.set_supply_voltage(12.0)
-        self.motor_sim = DCMotorSim(self.plant, gearbox)
 
     @override
-    def update(self, dt: units.seconds) -> None:
-        voltage = self.sim_states[0].motor_voltage
-        self.motor_sim.setInputVoltage(voltage)
-        self.motor_sim.update(dt)
+    def get_motor_voltage(self) -> units.volts:
+        return self.sim_states[0].motor_voltage
+
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
         motor_rev_per_mechanism_rad = self.gearing / math.tau
         for sim_state in self.sim_states:
-            sim_state.set_raw_rotor_position(
-                self.motor_sim.getAngularPosition() * motor_rev_per_mechanism_rad
-            )
-            sim_state.set_rotor_velocity(
-                self.motor_sim.getAngularVelocity() * motor_rev_per_mechanism_rad
-            )
-
-    @override
-    def get_angular_position(self) -> units.radians:
-        return self.motor_sim.getAngularPosition()
-
-
-class TurretSim:
-    def __init__(
-        self,
-        motor_sim: MotorSim,
-        encoder: wpilib.DutyCycleEncoder,
-        encoder_offset: float,
-    ):
-        self.motor_sim = motor_sim
-        self.encoder_sim = DutyCycleEncoderSim(encoder)
-        self.encoder_offset = encoder_offset
-
-    def update(self, dt: units.seconds):
-        self.motor_sim.update(dt)
-        self.encoder_sim.set(
-            self.motor_sim.get_angular_position() + self.encoder_offset
-        )
+            sim_state.set_raw_rotor_position(position * motor_rev_per_mechanism_rad)
+            sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
 class SparkMotorSim(MotorSim):
     def __init__(
         self,
         gearbox_motor: Callable[[int], DCMotor],
-        motor: rev.SparkMax,
+        *motors: rev.SparkMax,
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.
         gearing: float,
-        moi: units.kilogram_square_meters,
     ):
-        gearbox = gearbox_motor(1)
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
-        self.mech_sim = DCMotorSim(self.plant, gearbox)
-        self.motor_sim = rev.SparkSim(motor, gearbox)
+        self.gearbox = gearbox_motor(len(motors))
+        self.gearing = gearing
+        self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
 
     @override
-    def update(self, dt: units.seconds):
-        vbus = self.motor_sim.getBusVoltage()
-        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
+    def get_motor_voltage(self) -> units.volts:
+        sim_state = self.sim_states[0]
+        return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
+
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
+        for sim_state in self.sim_states:
+            sim_state.iterate(velocity, self.get_bus_voltage(), dt)
+
+    def get_bus_voltage(self) -> units.volts:
+        return self.sim_states[0].getBusVoltage()
+
+
+class MechanismSim(typing.Protocol):
+    def update(self, motor_voltage: units.volts, dt: units.seconds) -> None: ...
+
+    def get_angular_position(self) -> units.radians: ...
+    def get_angular_velocity(self) -> units.radians_per_second: ...
+
+
+class SimpleMechanism(MechanismSim):
+    def __init__(
+        self, gearbox: DCMotor, moi: units.kilogram_square_meters, gearing: float
+    ) -> None:
+        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
+        self.mech_sim = DCMotorSim(self.plant, gearbox)
+
+    @override
+    def update(self, motor_voltage: float, dt: float) -> None:
+        self.mech_sim.setInputVoltage(motor_voltage)
         self.mech_sim.update(dt)
-        self.motor_sim.iterate(self.mech_sim.getAngularVelocity(), vbus, dt)
 
     @override
     def get_angular_position(self) -> units.radians:
         return self.mech_sim.getAngularPosition()
+
+    def get_angular_velocity(self) -> units.radians_per_second:
+        return self.mech_sim.getAngularVelocity()
+
+
+class SteerModuleSim:
+    def __init__(
+        self,
+        motor_sim: MotorSim,
+        moi: units.kilogram_square_meters,
+    ):
+        self.motor_sim = motor_sim
+        self.mech_sim = SimpleMechanism(
+            self.motor_sim.gearbox, moi, self.motor_sim.gearing
+        )
+
+    def update(self, dt: units.seconds):
+        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
+        self.motor_sim.update_from_mechanism(
+            self.mech_sim.get_angular_position(),
+            self.mech_sim.get_angular_velocity(),
+            dt,
+        )
+
+
+class TurretSim:
+    def __init__(
+        self,
+        motor_sim: MotorSim,
+        moi: units.kilogram_square_meters,
+        encoder: wpilib.DutyCycleEncoder,
+        encoder_offset: float,
+    ):
+        self.motor_sim = motor_sim
+        self.mech_sim = SimpleMechanism(
+            self.motor_sim.gearbox, moi, self.motor_sim.gearing
+        )
+        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_offset = encoder_offset
+
+    def update(self, dt: units.seconds):
+        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
+        self.motor_sim.update_from_mechanism(
+            self.mech_sim.get_angular_position(),
+            self.mech_sim.get_angular_velocity(),
+            dt,
+        )
+        self.encoder_sim.set(self.mech_sim.get_angular_position() + self.encoder_offset)
 
 
 class SparkArmSim:
@@ -199,12 +261,14 @@ class PhysicsEngine:
             for module in robot.chassis.modules
         ]
         self.steer = [
-            TalonFXMotorSim(
-                DCMotor.krakenX60,
-                module.steer,
-                gearing=1 / robot.chassis.swerve_config.steer_ratio,
+            SteerModuleSim(
+                TalonFXMotorSim(
+                    DCMotor.krakenX60,
+                    module.steer,
+                    gearing=1 / robot.chassis.swerve_config.steer_ratio,
+                ),
                 # measured from MKCad CAD
-                moi=0.0009972,
+                0.0009972,
             )
             for module in robot.chassis.modules
         ]
@@ -213,9 +277,9 @@ class PhysicsEngine:
             SparkMotorSim(
                 DCMotor.NEO,
                 robot.turret.motor,
-                robot.turret.MOTOR_TO_TURRET_GEARING,
-                moi=0.02890532995,
+                gearing=robot.turret.MOTOR_TO_TURRET_GEARING,
             ),
+            0.02890532995,
             robot.turret.absolute_encoder,
             robot.turret.ENCODER_OFFSET,
         )
