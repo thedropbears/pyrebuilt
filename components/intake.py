@@ -29,7 +29,9 @@ class IntakeComponent:
     RETRACTED_INTAKE_ANGLE = radians(0)
     DEPLOYED_INTAKE_ANGLE = radians(90)
 
-    target_deployer_angle = RETRACTED_INTAKE_ANGLE
+    target_deployer_angle = tunable(
+        RETRACTED_INTAKE_ANGLE
+    )  # for testing only, untunable it before merging
 
     MAX_DEPLOYER_ACCEL = 5
     MAX_DEPLOYER_VELOCITY = 5
@@ -63,7 +65,7 @@ class IntakeComponent:
         # TODO tune these
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(0.02)
+            .with_k_p(10)
             .with_k_i(0)
             .with_k_d(0.75)
             .with_k_s(0)
