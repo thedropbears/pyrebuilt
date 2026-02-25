@@ -388,7 +388,7 @@ class PhysicsEngine:
             robot.intake.ENCODER_ZERO_OFFSET,
             robot.intake.DEPLOYED_INTAKE_ANGLE,
             robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.target_deployer_angle,
+            robot.intake.RETRACTED_INTAKE_ANGLE,
         )
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
