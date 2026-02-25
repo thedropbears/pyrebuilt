@@ -42,7 +42,7 @@ class IntakeComponent:
 
     # Sim
     ARM_LENGTH = 0.38  # meters
-    ARM_MOI = 0.181717788
+    ARM_MOI = 0.398668741
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
 
