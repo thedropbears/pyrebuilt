@@ -22,7 +22,6 @@ class TalonId(enum.IntEnum):
 
     CLIMBER = 12
 
-    INDEXER = 14
     INTAKE = 15
 
 
@@ -42,7 +41,7 @@ class SparkId(enum.IntEnum):
 
     CLIMBER_SENSOR = 4
 
-    SPINDEXER = 5
+    INDEXER = 5
 
     HOOD = 10
     TURRET = 2
