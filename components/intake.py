@@ -64,17 +64,23 @@ class IntakeComponent:
         )
 
         # TODO verify on the bot:
-        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
+        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D        intake_deployer_slot_config = (
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(5.51)
+            .with_k_p(202.50)
             .with_k_i(0)
-            .with_k_d(2.73)
+            .with_k_d(28.79)
             .with_k_s(0)
             .with_k_v(1.09)
             .with_k_a(0.26)
             .with_k_g(1.60)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
+        )
+
+        intake_deployer_output_config = (
+            MotorOutputConfigs()
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+            .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
         intake_deployer_magic_config = (
@@ -91,6 +97,7 @@ class IntakeComponent:
 
         self.deployer_motor_left.configurator.apply(
             TalonFXConfiguration()
+            .with_motor_output(intake_deployer_output_config)
             .with_slot0(intake_deployer_slot_config)
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
@@ -125,7 +132,7 @@ class IntakeComponent:
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
-            PositionVoltage(self.target_deployer_angle)
+            PositionVoltage(self.target_deployer_angle / tau)
         )
         self.deployer_motor_right.set_control(
             Follower(
@@ -161,5 +168,10 @@ class IntakeComponent:
     def get_total_control_effort(self) -> float:
         return self.deployer_motor_left.get_closed_loop_output().value
 
+    @feedback
     def get_closed_loop_target(self) -> float:
-        return self.deployer_motor_left.get_closed_loop_reference().value
+        return self.deployer_motor_left.get_closed_loop_reference().value * tau
+
+    @feedback
+    def get_closed_loop_error(self) -> float:
+        return self.deployer_motor_left.get_closed_loop_error().value * tau
