@@ -9,12 +9,10 @@ from phoenix6.configs import (
     TalonFXConfiguration,
 )
 from phoenix6.controls import PositionVoltage, VoltageOut
-from phoenix6.hardware import TalonFX
+from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import GravityTypeValue, InvertedValue, NeutralModeValue
-from rev import LimitSwitchConfig, SparkMax, SparkMaxConfig
 
-from ids import SparkId, TalonId
-from utilities.rev import configure_spark_reset_and_persist
+from ids import CandiId, TalonId
 
 
 class ClimberComponent:
@@ -38,19 +36,9 @@ class ClimberComponent:
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
         self.climber_motor = TalonFX(TalonId.CLIMBER)
-        self.climber_sensor = SparkMax(
-            SparkId.CLIMBER_SENSOR, SparkMax.MotorType.kBrushless
-        )
+        self.climber_sensor = CANdi(CandiId.CLIMBER_SENSOR)
 
-        self.retraction_limit_switch = self.climber_sensor.getForwardLimitSwitch()
-        self.extension_limit_switch = self.climber_sensor.getReverseLimitSwitch()
-
-        sensor_config = SparkMaxConfig()
-        sensor_config.limitSwitch.forwardLimitSwitchType(
-            LimitSwitchConfig.Type.kNormallyClosed
-        ).reverseLimitSwitchType(LimitSwitchConfig.Type.kNormallyClosed)
-
-        configure_spark_reset_and_persist(self.climber_sensor, sensor_config)
+        self.retraction_limit_switch = self.climber_sensor
 
         self.climber_motor.configurator.apply(
             TalonFXConfiguration()
@@ -99,7 +87,6 @@ class ClimberComponent:
         self.target_pos = self.RETRACTED_POS
 
     def try_index(self) -> None:
-
         if self.at_retraction_limit() and not self.has_indexed:
             self.climber_motor.set_position(self.RETRACTED_POS)
             self.has_indexed = True
@@ -126,14 +113,14 @@ class ClimberComponent:
     @feedback
     def at_extension_limit(self) -> bool:
         return (
-            self.extension_limit_switch.get()
+            self.climber_sensor.get_s2_closed().value
             or self.climber_motor.get_fault_forward_soft_limit().value
         )
 
     @feedback
     def at_retraction_limit(self) -> bool:
         return (
-            self.retraction_limit_switch.get()
+            self.climber_sensor.get_s1_closed().value
             or self.climber_motor.get_fault_reverse_soft_limit().value
         )
 
@@ -141,6 +128,6 @@ class ClimberComponent:
     def get_position(self) -> float:
         return self.climber_motor.get_position().value
 
-    @feedback  # the naming between the variable and function is confusing
+    @feedback
     def get_indexed_state(self) -> bool:
         return self.has_indexed

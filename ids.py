@@ -40,8 +40,6 @@ class CancoderId(enum.IntEnum):
 class SparkId(enum.IntEnum):
     """CAN ID for REV SPARK motor controllers (Spark Max, Spark Flex)."""
 
-    CLIMBER_SENSOR = 4
-
     HOOD = 10
     TURRET = 2
 
@@ -80,3 +78,10 @@ class CandleId(enum.IntEnum):
     """CAN ID for CTRE CANdle devices"""
 
     LED = 0
+
+
+@enum.unique
+class CandiId(enum.IntEnum):
+    """CAN ID for CTRE CANdi devices"""
+
+    CLIMBER_SENSOR = 0
