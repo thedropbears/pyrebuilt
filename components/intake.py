@@ -97,9 +97,9 @@ class IntakeComponent:
 
         self.intake_ligament = mech_root.appendLigament(
             "intake",
-            length=2,
-            angle=self.get_deployer_position_degrees(),
-            lineWidth=1,
+            length=0.8,
+            angle=0.0,
+            lineWidth=3,
             color=Color8Bit(Color.kGreen),
         )
 
