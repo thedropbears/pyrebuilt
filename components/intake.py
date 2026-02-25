@@ -1,9 +1,8 @@
 from magicbot import tunable, will_reset_to
-from phoenix6 import configs
-from phoenix6.hardware import TalonFX
-from phoenix6.signals import InvertedValue, NeutralModeValue
+from rev import SparkMax, SparkMaxConfig
 
-from ids import TalonId
+from ids import SparkId
+from utilities.rev import configure_spark_ephemeral
 
 
 class IntakeComponent:
@@ -11,24 +10,18 @@ class IntakeComponent:
 
     intake_output = tunable(0.5)
 
-    desired_funnel = will_reset_to(0.0)
-
-    funnel_output = tunable(1.0)
-
     def __init__(self) -> None:
-        self.motor = TalonFX(TalonId.INTAKE)
+        self.motor = SparkMax(SparkId.INTAKE, SparkMax.MotorType.kBrushless)
 
-        motor_config = configs.TalonFXConfiguration()
-        motor_config.motor_output.with_inverted(
-            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-        ).with_neutral_mode(NeutralModeValue.COAST)
+        intake_motor_config = SparkMaxConfig()
+        intake_motor_config.inverted(False)
+        intake_motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
 
-        self.motor.configurator.apply(motor_config)
+        configure_spark_ephemeral(self.motor, intake_motor_config)
 
     def intake(self) -> None:
         # TODO make sure this deploys
         self.desired_output = self.intake_output
-        self.desired_funnel = self.funnel_output
 
     def retract(self) -> None:
         # TODO make sure that this retracts the intake
