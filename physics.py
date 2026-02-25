@@ -73,7 +73,6 @@ class MotorSim(typing.Protocol):
     gearbox: DCMotor
     gearing: float
 
-    def set_position(self, position: units.radians) -> None: ...
     def get_motor_voltage(self) -> units.volts: ...
     def update_from_mechanism(
         self,
@@ -102,12 +101,6 @@ class TalonFXMotorSim(MotorSim):
     @override
     def get_motor_voltage(self) -> units.volts:
         return self.sim_states[0].motor_voltage
-
-    @override
-    def set_position(self, position: units.radians) -> None:
-        motor_rev_per_mechanism_rad = self.gearing / math.tau
-        for sim_state in self.sim_states:
-            sim_state.set_raw_rotor_position(position * motor_rev_per_mechanism_rad)
 
     @override
     def update_from_mechanism(
@@ -139,11 +132,6 @@ class SparkMotorSim(MotorSim):
     def get_motor_voltage(self) -> units.volts:
         sim_state = self.sim_states[0]
         return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
-
-    @override
-    def set_position(self, position: units.radians) -> None:
-        for sim_state in self.sim_states:
-            sim_state.setPosition(position)
 
     @override
     def update_from_mechanism(
@@ -284,7 +272,6 @@ class ArmSim:
         self.encoder_sim = DutyCycleEncoderSim(encoder)
         self.encoder_offset = encoder_offset
         self.encoder_sim.set(starting_angle + self.encoder_offset)
-        # self.motor_sim.set_position(starting_angle)
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
