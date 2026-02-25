@@ -116,6 +116,7 @@ class IntakeComponent:
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def retract(self) -> None:
+        self.target_intake_output = self.desired_intake_output * -1
         self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
 
     def execute(self) -> None:
