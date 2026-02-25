@@ -42,6 +42,8 @@ class SparkId(enum.IntEnum):
 
     CLIMBER_SENSOR = 4
 
+    SPINDEXER = 5
+
     HOOD = 10
     TURRET = 2
 

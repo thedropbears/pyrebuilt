@@ -1,10 +1,9 @@
 from magicbot import tunable, will_reset_to
 from phoenix5 import WPI_TalonSRX
-from phoenix6 import configs
-from phoenix6.hardware import TalonFXS
-from phoenix6.signals import InvertedValue, MotorArrangementValue, NeutralModeValue
+from rev import SparkMax, SparkMaxConfig
 
-from ids import TalonId
+from ids import SparkId, TalonId
+from utilities.rev import configure_spark_ephemeral
 
 
 class HopperComponent:
@@ -14,21 +13,12 @@ class HopperComponent:
     desired_feeder_dutycycle = tunable(1)
 
     def __init__(self) -> None:
-        self.indexer_motor = TalonFXS(TalonId.INDEXER)
-        motor_commutation_config = configs.CommutationConfigs().with_motor_arrangement(
-            MotorArrangementValue.MINION_JST
-        )
+        self.indexer_motor = SparkMax(SparkId.INDEXER, SparkMax.MotorType.kBrushless)
+        indexer_motor_config = SparkMaxConfig()
+        indexer_motor_config.inverted(False)
+        indexer_motor_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
+        configure_spark_ephemeral(self.indexer_motor, indexer_motor_config)
 
-        indexer_output_config = (
-            configs.MotorOutputConfigs()
-            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
-            .with_neutral_mode(NeutralModeValue.COAST)
-        )
-        self.indexer_motor.configurator.apply(
-            configs.TalonFXSConfiguration()
-            .with_motor_output(indexer_output_config)
-            .with_commutation(motor_commutation_config)
-        )
         self.feeder_motor = WPI_TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
 
