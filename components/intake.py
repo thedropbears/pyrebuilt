@@ -103,13 +103,11 @@ class IntakeComponent:
             color=Color8Bit(Color.kGreen),
         )
 
-        self._sync_encoders()
-
     def _sync_encoders(self) -> None:
         self.deployer_motor_left.set_position(self.get_absolute_deployer_position())
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
-    def on_enable(self) -> None:
+    def on_disable(self) -> None:
         self._sync_encoders()
 
     def intake(self) -> None:
