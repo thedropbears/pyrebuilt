@@ -110,6 +110,9 @@ class IntakeComponent:
     def on_disable(self) -> None:
         self._sync_encoders()
 
+    def on_enable(self) -> None:
+        self.retract()
+
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
