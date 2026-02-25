@@ -146,5 +146,6 @@ class IntakeComponent:
     def get_deployer_position(self) -> units.radians:
         return self.deployer_motor_left.get_position().value
 
+    @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
         return degrees(self.get_deployer_position())
