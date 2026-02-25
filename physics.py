@@ -73,7 +73,7 @@ class MotorSim(typing.Protocol):
     gearbox: DCMotor
     gearing: float
 
-    def set_position(self, position: float) -> None: ...
+    def set_position(self, position: units.radians) -> None: ...
     def get_motor_voltage(self) -> units.volts: ...
     def update_from_mechanism(
         self,
@@ -284,7 +284,7 @@ class ArmSim:
         self.encoder_sim = DutyCycleEncoderSim(encoder)
         self.encoder_offset = encoder_offset
         self.encoder_sim.set(starting_angle + self.encoder_offset)
-        self.motor_sim.set_position(starting_angle)
+        # self.motor_sim.set_position(starting_angle)
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
@@ -388,7 +388,7 @@ class PhysicsEngine:
             robot.intake.ENCODER_ZERO_OFFSET,
             robot.intake.DEPLOYED_INTAKE_ANGLE,
             robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
+            robot.intake.DEPLOYED_INTAKE_ANGLE,
         )
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
