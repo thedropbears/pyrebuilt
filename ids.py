@@ -56,6 +56,7 @@ class DioChannel(enum.IntEnum):
     TURRET_ENCODER = 1
 
     INTAKE_DEPLOYER_ENCODER = 7
+    CLIMBER_BREAKBEAM_SENSOR = 2
 
 
 @enum.unique

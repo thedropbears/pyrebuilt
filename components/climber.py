@@ -17,8 +17,9 @@ from phoenix6.signals import (
     NeutralModeValue,
     ReverseLimitSourceValue,
 )
+from wpilib import DigitalInput
 
-from ids import CandiId, TalonId
+from ids import CandiId, DioChannel, TalonId
 
 
 class ClimberComponent:
@@ -44,7 +45,7 @@ class ClimberComponent:
         self.climber_motor = TalonFX(TalonId.CLIMBER)
         self.climber_sensor = CANdi(CandiId.CLIMBER_SENSOR)
 
-        self.retraction_limit_switch = self.climber_sensor
+        self.breakbeam_sensor = DigitalInput(DioChannel.CLIMBER_BREAKBEAM_SENSOR)
 
         self.climber_motor.configurator.apply(
             TalonFXConfiguration()
@@ -134,3 +135,11 @@ class ClimberComponent:
     @feedback
     def get_position(self) -> float:
         return self.climber_motor.get_position().value
+
+    @feedback
+    def get_indexed_state(self) -> bool:
+        return self.has_indexed
+
+    @feedback
+    def at_tower(self) -> bool:
+        return self.breakbeam_sensor.get()
