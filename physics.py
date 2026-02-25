@@ -366,7 +366,7 @@ class PhysicsEngine:
                 DCMotor.falcon500,
                 robot.intake.deployer_motor_left,
                 robot.intake.deployer_motor_right,
-                gearing=robot.intake.DEPLOYER_TO_ENCODER_GEARING,
+                gearing=1 / robot.intake.DEPLOYER_TO_ENCODER_GEARING,
             ),
             robot.intake.ARM_MOI,
             robot.intake.ARM_LENGTH,

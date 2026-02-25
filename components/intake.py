@@ -36,8 +36,9 @@ class IntakeComponent:
     MAX_DEPLOYER_ACCEL = 5
     MAX_DEPLOYER_VELOCITY = 5
 
-    DEPLOYER_TO_ENCODER_GEARING = (5 / 1) * (26 / 50)
-    ENCODER_ZERO_OFFSET = 0
+    DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
+
+    ENCODER_ZERO_OFFSET = 3.419406
 
     # Sim
     ARM_LENGTH = 0.38  # meters
