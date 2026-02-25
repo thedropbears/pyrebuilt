@@ -63,7 +63,8 @@ class IntakeComponent:
             TalonFXConfiguration().with_motor_output(intake_motor_output_config)
         )
 
-        # TODO tune these
+        # TODO verify on the bot:
+        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
         intake_deployer_slot_config = (
             Slot0Configs()
             .with_k_p(5.51)
