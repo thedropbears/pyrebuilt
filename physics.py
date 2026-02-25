@@ -372,8 +372,8 @@ class PhysicsEngine:
             robot.intake.ARM_LENGTH,
             robot.intake.deployer_encoder,
             robot.intake.ENCODER_ZERO_OFFSET,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
             robot.intake.DEPLOYED_INTAKE_ANGLE,
+            robot.intake.RETRACTED_INTAKE_ANGLE,
             robot.intake.target_deployer_angle,
         )
 
