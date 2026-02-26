@@ -11,7 +11,8 @@ from wpimath.geometry import Rotation2d, Translation3d
 from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent, SwerveConfig
-from components.climber import ClimberComponent
+
+# from components.climber import ClimberComponent
 from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
@@ -36,7 +37,7 @@ class MyRobot(magicbot.MagicRobot):
     hopper: HopperComponent
     ballistics: BallisticsComponent
     shooter: ShooterComponent
-    climber: ClimberComponent
+    # climber: ClimberComponent
     intake: IntakeComponent
     turret: TurretComponent
     leds: LEDComponent
@@ -237,11 +238,11 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.intake.intake()
 
-        if self.gamepad.getAButton():
-            self.climber.deploy()
+        # if self.gamepad.getAButton():
+        #     self.climber.deploy()
 
-        if self.gamepad.getBButton():
-            self.climber.retract()
+        # if self.gamepad.getBButton():
+        #     self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed()
@@ -263,7 +264,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.chassis.execute()
         self.shooter.execute()
-        self.climber.execute()
+        # self.climber.execute()
         self.intake.execute()
         self.leds.execute()
         self.turret.execute()
@@ -284,7 +285,7 @@ class MyRobot(magicbot.MagicRobot):
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
 
-        self.climber.try_index()
+        # self.climber.try_index()
 
         self.chassis.update_alliance()
         self.chassis.update_odometry()
