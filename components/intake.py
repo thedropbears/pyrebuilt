@@ -16,7 +16,7 @@ from phoenix6.signals import (
     MotorAlignmentValue,
     NeutralModeValue,
 )
-from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
+from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d, RobotBase
 from wpimath import units
 
 from ids import DioChannel, TalonId
@@ -79,7 +79,11 @@ class IntakeComponent:
 
         intake_deployer_output_config = (
             MotorOutputConfigs()
-            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+            .with_inverted(
+                InvertedValue.CLOCKWISE_POSITIVE
+                if not RobotBase.isSimulation()
+                else InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+            )
             .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
