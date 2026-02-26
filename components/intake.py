@@ -2,18 +2,21 @@ from math import degrees, radians, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
+    CommutationConfigs,
     FeedbackConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
     TalonFXConfiguration,
+    TalonFXSConfiguration,
 )
 from phoenix6.controls import Follower, PositionVoltage
-from phoenix6.hardware import TalonFX
+from phoenix6.hardware import TalonFX, TalonFXS
 from phoenix6.signals import (
     GravityTypeValue,
     InvertedValue,
     MotorAlignmentValue,
+    MotorArrangementValue,
     NeutralModeValue,
 )
 from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d, RobotBase
@@ -46,7 +49,7 @@ class IntakeComponent:
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
 
-        self.intake_motor = TalonFX(TalonId.INTAKE)
+        self.intake_motor = TalonFXS(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
         self.deployer_encoder = DutyCycleEncoder(
@@ -59,8 +62,14 @@ class IntakeComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
+        intake_motor_commutation_config = CommutationConfigs().with_motor_arrangement(
+            MotorArrangementValue.MINION_JST
+        )
+
         self.intake_motor.configurator.apply(
-            TalonFXConfiguration().with_motor_output(intake_motor_output_config)
+            TalonFXSConfiguration()
+            .with_motor_output(intake_motor_output_config)
+            .with_commutation(intake_motor_commutation_config)
         )
 
         # TODO verify on the bot:
