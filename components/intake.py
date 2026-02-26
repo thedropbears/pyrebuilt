@@ -149,7 +149,7 @@ class IntakeComponent:
         )
         self.deployer_motor_right.set_control(
             Follower(
-                TalonId.INTAKE_DEPLOYER_RIGHT,
+                TalonId.INTAKE_DEPLOYER_LEFT,
                 MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
             )
         )
