@@ -1,8 +1,8 @@
 from magicbot import tunable, will_reset_to
 from phoenix5 import WPI_TalonSRX
 from phoenix6 import configs
-from phoenix6.hardware import TalonFXS
-from phoenix6.signals import InvertedValue, MotorArrangementValue, NeutralModeValue
+from phoenix6.hardware import TalonFX
+from phoenix6.signals import InvertedValue, NeutralModeValue
 
 from ids import TalonId
 
@@ -14,10 +14,7 @@ class HopperComponent:
     desired_feeder_dutycycle = tunable(1)
 
     def __init__(self) -> None:
-        self.indexer_motor = TalonFXS(TalonId.INDEXER)
-        motor_commutation_config = configs.CommutationConfigs().with_motor_arrangement(
-            MotorArrangementValue.MINION_JST
-        )
+        self.indexer_motor = TalonFX(TalonId.INDEXER)
 
         indexer_output_config = (
             configs.MotorOutputConfigs()
@@ -25,9 +22,7 @@ class HopperComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
         self.indexer_motor.configurator.apply(
-            configs.TalonFXSConfiguration()
-            .with_motor_output(indexer_output_config)
-            .with_commutation(motor_commutation_config)
+            configs.TalonFXConfiguration().with_motor_output(indexer_output_config)
         )
         self.feeder_motor = WPI_TalonSRX(TalonId.FEEDER)
         self.feeder_motor.setInverted(False)
