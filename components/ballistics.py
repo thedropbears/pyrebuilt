@@ -81,18 +81,16 @@ class BallisticsComponent:
         self.use_ballistics = False
 
     def execute(self) -> None:
-        current_pose = self.chassis.get_pose()
+        current_turret_pose = self.chassis.get_pose()
 
-        current_position = current_pose.translation()
-        current_rotation = current_pose.rotation()
+        current_position = current_turret_pose.translation()
+        current_rotation = current_turret_pose.rotation()
 
         distance_to_target = current_position.distance(self.target_position)
         angle_to_target = (self.target_position - current_position).angle()
 
         if self.use_ballistics:
-            target_hood_angle = 0.0
-            required_turret_angle = angle_to_target - current_rotation
-            target_turret_angle = required_turret_angle.radians()
+            self.target_turret_angle = (angle_to_target - current_rotation).radians()
             # Check if distance is within range of distance table and switch if necessary
             if not (
                 distance_to_target < self.active_table_dist.max()
@@ -105,19 +103,17 @@ class BallisticsComponent:
                     ):
                         self.active_table_dist = table_pair[0]
                         self.active_table_speed = table_pair[1]
-                        target_hood_angle = table_pair[2]
+                        self.target_hood_angle = table_pair[2]
                         self.active_table_name = table_pair[3]
+
             self.target_flywheel_speed = np.interp(
                 distance_to_target,
                 self.active_table_dist,
                 self.active_table_speed,
             )
-        else:
-            target_turret_angle = self.turret.get_current_angle()
-            target_hood_angle = self.shooter.get_hood_angle()
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(self.target_flywheel_speed)
 
-        self.shooter.pitch_to(target_hood_angle)
-        self.turret.slew_to(target_turret_angle)
+        self.shooter.pitch_to(self.target_hood_angle)
+        self.turret.slew_to(self.target_turret_angle)
