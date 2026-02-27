@@ -3,6 +3,7 @@ from math import tau
 from magicbot import feedback, tunable
 from phoenix6.configs import (
     FeedbackConfigs,
+    HardwareLimitSwitchConfigs,
     MotorOutputConfigs,
     Slot0Configs,
     SoftwareLimitSwitchConfigs,
@@ -10,7 +11,13 @@ from phoenix6.configs import (
 )
 from phoenix6.controls import PositionVoltage, VoltageOut
 from phoenix6.hardware import CANdi, TalonFX
-from phoenix6.signals import GravityTypeValue, InvertedValue, NeutralModeValue
+from phoenix6.signals import (
+    ForwardLimitSourceValue,
+    GravityTypeValue,
+    InvertedValue,
+    NeutralModeValue,
+    ReverseLimitSourceValue,
+)
 
 from ids import CandiId, TalonId
 
@@ -59,6 +66,13 @@ class ClimberComponent:
                     )
                     * ClimberComponent.FUDGE_FACTOR
                 )
+            )
+            .with_hardware_limit_switch(
+                HardwareLimitSwitchConfigs()
+                .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S2)
+                .with_forward_limit_remote_sensor_id(CandiId.CLIMBER_SENSOR)
+                .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S1)
+                .with_reverse_limit_remote_sensor_id(CandiId.CLIMBER_SENSOR)
             )
             .with_software_limit_switch(
                 SoftwareLimitSwitchConfigs()
