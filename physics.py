@@ -262,16 +262,18 @@ class ArmSim:
         motor_sim: MotorSim,
         moi: units.kilogram_square_meters,
         arm_length: units.meters,
-        encoder: wpilib.DutyCycleEncoder,
+        encoder: phoenix6.hardware.CANcoder,
         encoder_offset: float,
         min_angle: units.radians,
         max_angle: units.radians,
         starting_angle: units.radians,
     ) -> None:
         self.motor_sim = motor_sim
-        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_sim = encoder.sim_state
         self.encoder_offset = encoder_offset
-        self.encoder_sim.set(starting_angle + self.encoder_offset)
+        self.encoder_sim.set_raw_position(
+            starting_angle / math.tau + self.encoder_offset
+        )
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
@@ -289,7 +291,9 @@ class ArmSim:
             self.mech_sim.get_angular_velocity(),
             dt,
         )
-        self.encoder_sim.set(self.mech_sim.get_angular_position() + self.encoder_offset)
+        self.encoder_sim.set_raw_position(
+            self.mech_sim.get_angular_position() / math.tau + self.encoder_offset
+        )
 
 
 # class ServoEncoderSim:
