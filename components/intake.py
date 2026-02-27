@@ -4,6 +4,7 @@ from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CommutationConfigs,
     FeedbackConfigs,
+    HardwareLimitSwitchConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
@@ -13,11 +14,15 @@ from phoenix6.configs import (
 from phoenix6.controls import Follower, PositionVoltage
 from phoenix6.hardware import CANdi, TalonFX, TalonFXS
 from phoenix6.signals import (
+    ForwardLimitSourceValue,
+    ForwardLimitTypeValue,
     GravityTypeValue,
     InvertedValue,
     MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
+    ReverseLimitSourceValue,
+    ReverseLimitTypeValue,
 )
 from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d, RobotBase
 from wpimath import units
@@ -103,6 +108,16 @@ class IntakeComponent:
             .with_motion_magic_cruise_velocity(self.MAX_DEPLOYER_VELOCITY)
         )
 
+        intake_deployer_limitswitch_config = (
+            HardwareLimitSwitchConfigs()
+            .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S1)
+            .with_forward_limit_remote_sensor_id(self.deployer_sensor.device_id)
+            .with_forward_limit_type(ForwardLimitTypeValue.NORMALLY_OPEN)
+            .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S2)
+            .with_reverse_limit_remote_sensor_id(self.deployer_sensor.device_id)
+            .with_reverse_limit_type(ReverseLimitTypeValue.NORMALLY_OPEN)
+        )
+
         intake_deployer_feedback_config = (
             FeedbackConfigs().with_sensor_to_mechanism_ratio(
                 1 / (self.DEPLOYER_TO_ENCODER_GEARING)
@@ -115,6 +130,7 @@ class IntakeComponent:
             .with_slot0(intake_deployer_slot_config)
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
+            .with_hardware_limit_switch(intake_deployer_limitswitch_config)
         )
 
         self.intake_ligament = mech_root.appendLigament(
