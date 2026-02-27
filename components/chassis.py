@@ -136,6 +136,11 @@ class SwerveModule:
     def get_drive_closed_loop_error(self):
         return self.drive.get_closed_loop_error().value
 
+    def get_drive_supply_current(self) -> float:
+        """Drive motor supply current in amps."""
+        sig = self.drive.get_supply_current()
+        return float(getattr(sig, "value_as_double", sig.value))
+
     def get_angle_absolute(self) -> float:
         """Gets steer angle (rot) from absolute encoder"""
         return self.encoder.get_absolute_position().value
@@ -331,6 +336,9 @@ class ChassisComponent:
 
     def get_velocity(self) -> ChassisSpeeds:
         return self.kinematics.toChassisSpeeds(self.get_module_states())
+
+    def get_drive_current(self) -> float:
+        return max(module.get_drive_supply_current() for module in self.modules)
 
     @feedback
     def imu_rotation(self) -> Rotation2d:
