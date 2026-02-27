@@ -13,7 +13,7 @@ from phoenix6.configs import (
     TalonFXSConfiguration,
 )
 from phoenix6.controls import Follower, PositionVoltage
-from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
+from phoenix6.hardware import CANcoder, CANdi, TalonFX, TalonFXS
 from phoenix6.signals import (
     GravityTypeValue,
     InvertedValue,
@@ -24,7 +24,7 @@ from phoenix6.signals import (
 from wpilib import Color, Color8Bit, MechanismRoot2d, RobotBase
 from wpimath import units
 
-from ids import CancoderId, TalonId
+from ids import CancoderId, CandiId, TalonId
 
 
 class IntakeComponent:
@@ -55,6 +55,7 @@ class IntakeComponent:
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
         self.deployer_encoder = CANcoder(CancoderId.INTAKE)
+        self.deployer_sensor = CANdi(CandiId.INTAKE_SENSOR)
 
         intake_motor_output_config = (
             MotorOutputConfigs()
@@ -144,10 +145,12 @@ class IntakeComponent:
 
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
-        self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
+        if not self.at_deployment_hard_limit():
+            self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def retract(self) -> None:
-        self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
+        if not self.at_retraction_hard_limit():
+            self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
@@ -190,3 +193,12 @@ class IntakeComponent:
     @feedback
     def get_closed_loop_error(self) -> float:
         return self.deployer_motor_left.get_closed_loop_error().value * tau
+
+    # TODO check which s1 and s2 are
+    @feedback
+    def at_deployment_hard_limit(self) -> bool:
+        return self.deployer_sensor.get_s1_closed().value
+
+    @feedback
+    def at_retraction_hard_limit(self) -> bool:
+        return self.deployer_sensor.get_s2_closed().value
