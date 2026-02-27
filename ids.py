@@ -38,6 +38,8 @@ class CancoderId(enum.IntEnum):
     SWERVE_RR = 3
     SWERVE_FR = 4
 
+    INTAKE = 7
+
 
 @enum.unique
 class SparkId(enum.IntEnum):
@@ -54,8 +56,6 @@ class DioChannel(enum.IntEnum):
     PORT_VISION_ENCODER = 0
 
     TURRET_ENCODER = 1
-
-    INTAKE_DEPLOYER_ENCODER = 2
 
 
 @enum.unique
@@ -90,3 +90,4 @@ class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 
     CLIMBER_SENSOR = 0
+    INTAKE_SENSOR = 1
