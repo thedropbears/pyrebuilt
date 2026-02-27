@@ -110,13 +110,7 @@ class ClimberComponent:
         self.try_index()
 
         if self.has_indexed:
-            self.climber_motor.set_control(
-                PositionVoltage(
-                    self.target_pos,
-                    limit_forward_motion=self.at_extension_limit(),
-                    limit_reverse_motion=self.at_retraction_limit(),
-                )
-            )
+            self.climber_motor.set_control(PositionVoltage(self.target_pos))
         else:
             self.climber_motor.set_control(
                 VoltageOut(
