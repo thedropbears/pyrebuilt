@@ -23,7 +23,7 @@ from ids import CandiId, TalonId
 
 
 class ClimberComponent:
-    has_indexed = False
+    has_indexed = tunable(False)
 
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
@@ -135,7 +135,3 @@ class ClimberComponent:
     @feedback
     def get_position(self) -> float:
         return self.climber_motor.get_position().value
-
-    @feedback
-    def get_indexed_state(self) -> bool:
-        return self.has_indexed
