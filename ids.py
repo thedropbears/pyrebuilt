@@ -90,3 +90,4 @@ class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 
     CLIMBER_SENSOR = 0
+    INTAKE_SENSOR = 1

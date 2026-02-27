@@ -11,7 +11,7 @@ from phoenix6.configs import (
     TalonFXSConfiguration,
 )
 from phoenix6.controls import Follower, PositionVoltage
-from phoenix6.hardware import TalonFX, TalonFXS
+from phoenix6.hardware import CANdi, TalonFX, TalonFXS
 from phoenix6.signals import (
     GravityTypeValue,
     InvertedValue,
@@ -22,7 +22,7 @@ from phoenix6.signals import (
 from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d, RobotBase
 from wpimath import units
 
-from ids import DioChannel, TalonId
+from ids import CandiId, DioChannel, TalonId
 
 
 class IntakeComponent:
@@ -55,6 +55,7 @@ class IntakeComponent:
         self.deployer_encoder = DutyCycleEncoder(
             DioChannel.INTAKE_DEPLOYER_ENCODER, tau, 0
         )
+        self.deployer_sensor = CANdi(CandiId.INTAKE_SENSOR)
 
         intake_motor_output_config = (
             MotorOutputConfigs()
@@ -188,3 +189,11 @@ class IntakeComponent:
     @feedback
     def get_closed_loop_error(self) -> float:
         return self.deployer_motor_left.get_closed_loop_error().value * tau
+
+    @feedback
+    def at_retracted_hard_limit(self) -> bool:
+        return self.deployer_sensor.get_s1_closed().value
+
+    @feedback
+    def at_deployed_hard_limit(self) -> bool:
+        return self.deployer_sensor.get_s2_closed().value
