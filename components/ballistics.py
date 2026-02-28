@@ -68,25 +68,21 @@ class BallisticsComponent:
         return self.active_table.name
 
     @feedback
-    def get_flywheel_speed(self) -> rotations_per_second:
-        return self.shooter.target_shooter_rps
+    def get_flywheel_setpoint(self) -> units.turns_per_second:
+        return self.shooter.get_flywheel_setpoint()
 
     @feedback
-    def get_hood_angle(self) -> units.degrees:
-        return self.shooter.target_hood_angle * (180 / math.pi)
+    def get_hood_setpoint(self) -> units.degrees:
+        return self.shooter.get_hood_setpoint() * (180 / math.pi)
 
     @feedback
     def get_turret_angle(self) -> units.degrees:
         return self.turret.desired_angle * (180 / math.pi)
 
     def energise_flywheels(self) -> None:
-        # assuming that we dont want to have the flywheel spun up all the time,
-        # but the hood and turret should always run
         self.should_energise_flywheels = True
 
     def solve_for(self, target_position: Translation2d) -> None:
-        # like components with hardware attached we dont want to perform the
-        # calculation here. Just set the required vars and wait for execute.
         self.target_position = target_position
 
     def force_solution(
