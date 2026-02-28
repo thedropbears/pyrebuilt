@@ -72,13 +72,6 @@ class ClimberComponent:
             )
         )
 
-        climber_motor_soft_limit_configs = (
-            SoftwareLimitSwitchConfigs()
-            .with_forward_soft_limit_threshold(self.MAX_EXTENSION_LIMIT)
-            .with_forward_soft_limit_enable(True)
-            .with_reverse_soft_limit_threshold(self.MAX_RETRACTION_LIMIT)
-            .with_reverse_soft_limit_enable(True)
-        )
         climber_motor_hard_limit_configs = (
             HardwareLimitSwitchConfigs()
             .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S1)
@@ -86,6 +79,15 @@ class ClimberComponent:
             .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S2)
             .with_reverse_limit_remote_sensor_id(self.climber_sensor.device_id)
         )
+
+        climber_motor_soft_limit_configs = (
+            SoftwareLimitSwitchConfigs()
+            .with_forward_soft_limit_threshold(self.MAX_EXTENSION_LIMIT)
+            .with_forward_soft_limit_enable(True)
+            .with_reverse_soft_limit_threshold(self.MAX_RETRACTION_LIMIT)
+            .with_reverse_soft_limit_enable(True)
+        )
+
         climber_motor_slot0_configs = (
             Slot0Configs()
             .with_k_p(594.12)
