@@ -12,10 +12,12 @@ from phoenix6.configs import (
 from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import (
     ForwardLimitSourceValue,
+    ForwardLimitTypeValue,
     GravityTypeValue,
     InvertedValue,
     NeutralModeValue,
     ReverseLimitSourceValue,
+    ReverseLimitTypeValue,
 )
 from wpilib import DigitalInput
 
@@ -47,51 +49,59 @@ class ClimberComponent:
 
         self.breakbeam_sensor = DigitalInput(DioChannel.CLIMBER_BREAKBEAM_SENSOR)
 
+        climber_motor_output_configs = (
+            MotorOutputConfigs()
+            .with_neutral_mode(NeutralModeValue.BRAKE)
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+        )
+        climber_motor_feedback_configs = (
+            FeedbackConfigs().with_sensor_to_mechanism_ratio(
+                (
+                    1
+                    / (
+                        ClimberComponent.GEAR_RATIO
+                        * ClimberComponent.SHAFT_RADIUS
+                        * tau
+                    )
+                )
+                * ClimberComponent.FUDGE_FACTOR
+            )
+        )
+
+        climber_motor_soft_limit_configs = (
+            SoftwareLimitSwitchConfigs()
+            .with_forward_soft_limit_threshold(self.MAX_EXTENSION_LIMIT)
+            .with_forward_soft_limit_enable(True)
+            .with_reverse_soft_limit_threshold(self.MAX_RETRACTION_LIMIT)
+            .with_reverse_soft_limit_enable(True)
+        )
+        climber_motor_hard_limit_configs = (
+            HardwareLimitSwitchConfigs()
+            .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S1)
+            .with_forward_limit_remote_sensor_id(self.climber_sensor.device_id)
+            .with_forward_limit_type(ForwardLimitTypeValue.NORMALLY_OPEN)
+            .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S2)
+            .with_reverse_limit_remote_sensor_id(self.climber_sensor.device_id)
+            .with_reverse_limit_type(ReverseLimitTypeValue.NORMALLY_OPEN)
+        )
+        climber_motor_slot0_configs = (
+            Slot0Configs()
+            .with_k_p(594.12)
+            .with_k_i(0)
+            .with_k_d(230.65)
+            .with_k_s(0.0030436)
+            .with_k_v(72.04)
+            .with_k_a(1.11881)
+            .with_k_g(0.16926)
+            .with_gravity_type(GravityTypeValue.ELEVATOR_STATIC)
+        )
         self.climber_motor.configurator.apply(
             TalonFXConfiguration()
-            .with_motor_output(
-                MotorOutputConfigs()
-                .with_neutral_mode(NeutralModeValue.BRAKE)
-                .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
-            )
-            .with_feedback(
-                FeedbackConfigs().with_sensor_to_mechanism_ratio(
-                    (
-                        1
-                        / (
-                            ClimberComponent.GEAR_RATIO
-                            * ClimberComponent.SHAFT_RADIUS
-                            * tau
-                        )
-                    )
-                    * ClimberComponent.FUDGE_FACTOR
-                )
-            )
-            .with_hardware_limit_switch(
-                HardwareLimitSwitchConfigs()
-                .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S2)
-                .with_forward_limit_remote_sensor_id(CandiId.CLIMBER_SENSOR)
-                .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S1)
-                .with_reverse_limit_remote_sensor_id(CandiId.CLIMBER_SENSOR)
-            )
-            .with_software_limit_switch(
-                SoftwareLimitSwitchConfigs()
-                .with_forward_soft_limit_threshold(self.MAX_EXTENSION_LIMIT)
-                .with_forward_soft_limit_enable(True)
-                .with_reverse_soft_limit_threshold(self.MAX_RETRACTION_LIMIT)
-                .with_reverse_soft_limit_enable(True)
-            )
-            .with_slot0(
-                Slot0Configs()
-                .with_k_p(594.12)
-                .with_k_i(0)
-                .with_k_d(230.65)
-                .with_k_s(0.0030436)
-                .with_k_v(72.04)
-                .with_k_a(1.11881)
-                .with_k_g(0.16926)
-                .with_gravity_type(GravityTypeValue.ELEVATOR_STATIC)
-            )
+            .with_motor_output(climber_motor_output_configs)
+            .with_feedback(climber_motor_feedback_configs)
+            .with_slot0(climber_motor_slot0_configs)
+            .with_software_limit_switch(climber_motor_soft_limit_configs)
+            .with_hardware_limit_switch(climber_motor_hard_limit_configs)
         )
 
     def deploy(self):
