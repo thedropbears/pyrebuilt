@@ -152,8 +152,8 @@ class ClimberComponent:
 
     @feedback
     def at_tower_front_hook(self) -> bool:
-        return self.front_breakbeam_sensor.get()
+        return not self.front_breakbeam_sensor.get()
 
     @feedback
     def at_tower_back_hook(self) -> bool:
-        return self.back_breakbeam_sensor.get()
+        return not self.back_breakbeam_sensor.get()
