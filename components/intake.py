@@ -32,9 +32,7 @@ class IntakeComponent:
     RETRACTED_INTAKE_ANGLE = radians(90)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
-    target_deployer_angle = tunable(
-        DEPLOYED_INTAKE_ANGLE
-    )  # for testing only, untunable it before merging
+    target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
     MAX_DEPLOYER_ACCEL = 5
     MAX_DEPLOYER_VELOCITY = 5
