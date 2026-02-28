@@ -106,8 +106,8 @@ class BallisticsComponent:
                 self.active_table.speed,
             )
         else:
-            target_turret_angle = self.turret.get_current_angle()
-            target_hood_angle = self.shooter.get_hood_angle()
+            target_turret_angle = self.target_turret_angle
+            target_hood_angle = self.target_hood_angle
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(self.target_flywheel_speed)
