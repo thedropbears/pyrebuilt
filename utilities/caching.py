@@ -1,6 +1,6 @@
 import functools
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any
 
 
 class HasPerLoopCache:
@@ -9,11 +9,7 @@ class HasPerLoopCache:
         self._per_loop_cache: dict[Callable, Any] = {}
 
 
-S = TypeVar("S", bound=HasPerLoopCache)
-T = TypeVar("T")
-
-
-def cache_per_loop(method: Callable[[S], T]) -> Callable[[S], T]:
+def cache_per_loop[S: HasPerLoopCache, T](method: Callable[[S], T]) -> Callable[[S], T]:
     """
     Cache a getter method on a component until the cache is cleared.
 
