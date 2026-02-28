@@ -12,12 +12,10 @@ from phoenix6.configs import (
 from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import (
     ForwardLimitSourceValue,
-    ForwardLimitTypeValue,
     GravityTypeValue,
     InvertedValue,
     NeutralModeValue,
     ReverseLimitSourceValue,
-    ReverseLimitTypeValue,
 )
 from wpilib import DigitalInput
 
@@ -85,10 +83,8 @@ class ClimberComponent:
             HardwareLimitSwitchConfigs()
             .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S1)
             .with_forward_limit_remote_sensor_id(self.climber_sensor.device_id)
-            .with_forward_limit_type(ForwardLimitTypeValue.NORMALLY_OPEN)
             .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S2)
             .with_reverse_limit_remote_sensor_id(self.climber_sensor.device_id)
-            .with_reverse_limit_type(ReverseLimitTypeValue.NORMALLY_OPEN)
         )
         climber_motor_slot0_configs = (
             Slot0Configs()
