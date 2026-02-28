@@ -48,7 +48,7 @@ class BallisticsComponent:
         # i.e. they will be overwritten before reaching the component methods
         self.target_flywheel_speed = 0.0
         self.target_hood_angle = 0.0
-        self.target_turret_angle = 0.0
+        self.target_turret_bearing = Rotation2d()
 
         self.tables = (
             LookupTable(
@@ -69,15 +69,15 @@ class BallisticsComponent:
 
     @feedback
     def get_flywheel_speed(self):
-        return self.target_flywheel_speed
+        return self.shooter.target_shooter_rps
 
     @feedback
     def get_hood_angle(self):
-        return self.target_hood_angle
+        return self.shooter.target_hood_angle * (180 / math.pi)
 
     @feedback
     def get_turret_angle(self):
-        return self.target_turret_angle
+        return self.turret.desired_angle * (180 / math.pi)
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
