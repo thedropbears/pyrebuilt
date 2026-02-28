@@ -2,6 +2,7 @@ from math import tau
 
 from magicbot import feedback, tunable
 from phoenix6.configs import (
+    CANdiConfiguration,
     FeedbackConfigs,
     HardwareLimitSwitchConfigs,
     MotorOutputConfigs,
@@ -16,6 +17,8 @@ from phoenix6.signals import (
     InvertedValue,
     NeutralModeValue,
     ReverseLimitSourceValue,
+    S1CloseStateValue,
+    S2CloseStateValue,
 )
 from wpilib import DigitalInput
 
@@ -52,6 +55,15 @@ class ClimberComponent:
         self.back_breakbeam_sensor = DigitalInput(
             DioChannel.CLIMBER_BREAKBEAM_SENSOR_BACK
         )
+
+        climber_sensor_configs = CANdiConfiguration()
+        climber_sensor_configs.digital_inputs.s1_close_state = (
+            S1CloseStateValue.CLOSE_WHEN_FLOATING
+        )
+        climber_sensor_configs.digital_inputs.s2_close_state = (
+            S2CloseStateValue.CLOSE_WHEN_FLOATING
+        )
+        self.climber_sensor.configurator.apply(climber_sensor_configs)
 
         climber_motor_output_configs = (
             MotorOutputConfigs()
@@ -133,16 +145,24 @@ class ClimberComponent:
             )"""
 
     @feedback
+    def get_extension_limit_switch_state(self) -> bool:
+        return self.climber_sensor.get_s2_closed().value
+
+    @feedback
     def at_extension_limit(self) -> bool:
         return (
-            self.climber_sensor.get_s2_closed().value
+            self.get_extension_limit_switch_state()
             or self.climber_motor.get_fault_forward_soft_limit().value
         )
 
     @feedback
+    def get_retraction_limit_switch_state(self) -> bool:
+        return self.climber_sensor.get_s1_closed().value
+
+    @feedback
     def at_retraction_limit(self) -> bool:
         return (
-            self.climber_sensor.get_s1_closed().value
+            self.get_retraction_limit_switch_state()
             or self.climber_motor.get_fault_reverse_soft_limit().value
         )
 
