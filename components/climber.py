@@ -9,7 +9,6 @@ from phoenix6.configs import (
     SoftwareLimitSwitchConfigs,
     TalonFXConfiguration,
 )
-from phoenix6.controls import PositionVoltage, VoltageOut
 from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import (
     ForwardLimitSourceValue,
@@ -107,7 +106,7 @@ class ClimberComponent:
             self.target_pos = self.RETRACTED_POS
 
     def execute(self):
-        self.try_index()
+        """self.try_index()
 
         if self.has_indexed:
             self.climber_motor.set_control(PositionVoltage(self.target_pos))
@@ -116,7 +115,7 @@ class ClimberComponent:
                 VoltageOut(
                     ClimberComponent.INDEX_SEARCH_VOLTAGE, ignore_software_limits=True
                 )
-            )
+            )"""
 
     @feedback
     def at_extension_limit(self) -> bool:
