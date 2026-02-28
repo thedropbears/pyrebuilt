@@ -1,11 +1,13 @@
 import math
 
-from magicbot import feedback
+from magicbot import feedback, tunable
 from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
 from wpimath import units
+from wpimath.geometry import Rotation2d
 
 from ids import DioChannel, SparkId
+from utilities.functions import constrain_angle
 from utilities.rev import (
     configure_spark_reset_and_persist,
     configure_through_bore_encoder,
@@ -24,8 +26,12 @@ class TurretComponent:
     MAX_VELOCITY = 24.0
     MAX_ACCELERATION = 50.0
 
+    desired_angle = tunable(0.0).with_properties(unit="radians")
+
     MAX_TURRET_ROTATION = math.radians(200)
+    NEGATIVE_OVERLAP_START = constrain_angle(MAX_TURRET_ROTATION)
     MIN_TURRET_ROTATION = math.radians(-200)
+    POSITIVE_OVERLAP_START = constrain_angle(MIN_TURRET_ROTATION)
     TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
 
     def __init__(self) -> None:
@@ -63,8 +69,6 @@ class TurretComponent:
         configure_through_bore_encoder(self.absolute_encoder)
         self.absolute_encoder.setInverted(True)
 
-        self.desired_angle = 0.0
-
         mech = Mechanism2d(2, 2)
         SmartDashboard.putData("Turret", mech)
         mech_root = mech.getRoot("Turret", 1, 1)
@@ -74,11 +78,11 @@ class TurretComponent:
 
     def setup(self) -> None:
         self._sync_encoder()
-        self.slew_to(self.get_current_angle())
+        self.slew_to(self.get_current_bearing())
 
     def on_enable(self) -> None:
         self._sync_encoder()
-        self.slew_to(self.get_current_angle())
+        self.slew_to(self.get_current_bearing())
 
     def wrap_range(self, target_angle: units.radians) -> units.radians:
         if target_angle < self.MIN_TURRET_ROTATION:
@@ -102,6 +106,9 @@ class TurretComponent:
     def _sync_encoder(self) -> None:
         self.relative_encoder.setPosition(self._get_absolute_encoder_position())
 
+    def get_current_bearing(self) -> Rotation2d:
+        return Rotation2d(self.get_current_angle())
+
     def get_current_angle(self) -> units.radians:
         return self.relative_encoder.getPosition()
 
@@ -124,10 +131,22 @@ class TurretComponent:
         return math.degrees(self.get_error())
 
     def slew_relative(self, angle: units.radians) -> None:
-        self.slew_to(self.get_current_angle() + angle)
+        self.desired_angle = self.wrap_range(self.get_current_angle() + angle)
 
-    def slew_to(self, angle: units.radians) -> None:
-        self.desired_angle = self.wrap_range(angle)
+    def slew_to(self, bearing: Rotation2d) -> None:
+        desired_angle = bearing.radians()
+        current_angle = self.get_current_angle()
+        error = abs(desired_angle - current_angle)
+        if desired_angle >= self.POSITIVE_OVERLAP_START:
+            wraparound_angle = desired_angle - math.tau
+            if abs(wraparound_angle - current_angle) < error:
+                desired_angle = wraparound_angle
+        elif desired_angle <= self.NEGATIVE_OVERLAP_START:
+            wraparound_angle = desired_angle + math.tau
+            if abs(wraparound_angle - current_angle) < error:
+                desired_angle = wraparound_angle
+
+        self.desired_angle = desired_angle
 
     def execute(self) -> None:
         self.controller.setSetpoint(
