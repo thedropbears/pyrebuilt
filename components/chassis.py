@@ -138,8 +138,7 @@ class SwerveModule:
 
     def get_drive_supply_current(self) -> float:
         """Drive motor supply current in amps."""
-        sig = self.drive.get_supply_current()
-        return float(getattr(sig, "value_as_double", sig.value))
+        return self.drive.get_supply_current().value
 
     def get_angle_absolute(self) -> float:
         """Gets steer angle (rot) from absolute encoder"""
