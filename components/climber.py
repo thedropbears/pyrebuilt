@@ -47,7 +47,13 @@ class ClimberComponent:
         self.climber_motor = TalonFX(TalonId.CLIMBER)
         self.climber_sensor = CANdi(CandiId.CLIMBER_SENSOR)
 
-        self.breakbeam_sensor = DigitalInput(DioChannel.CLIMBER_BREAKBEAM_SENSOR)
+        # Defined as driving with intake forward
+        self.front_breakbeam_sensor = DigitalInput(
+            DioChannel.CLIMBER_BREAKBEAM_SENSOR_FRONT
+        )
+        self.back_breakbeam_sensor = DigitalInput(
+            DioChannel.CLIMBER_BREAKBEAM_SENSOR_BACK
+        )
 
         climber_motor_output_configs = (
             MotorOutputConfigs()
@@ -151,5 +157,9 @@ class ClimberComponent:
         return self.has_indexed
 
     @feedback
-    def at_tower(self) -> bool:
-        return self.breakbeam_sensor.get()
+    def at_tower_front_hook(self) -> bool:
+        return self.front_breakbeam_sensor.get()
+
+    @feedback
+    def at_tower_back_hook(self) -> bool:
+        return self.back_breakbeam_sensor.get()
