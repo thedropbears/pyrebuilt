@@ -57,6 +57,9 @@ class DioChannel(enum.IntEnum):
 
     INTAKE_DEPLOYER_ENCODER = 7
 
+    CLIMBER_BREAKBEAM_SENSOR_FRONT = 2
+    CLIMBER_BREAKBEAM_SENSOR_BACK = 4
+
 
 @enum.unique
 class PwmChannel(enum.IntEnum):
@@ -89,4 +92,4 @@ class CandleId(enum.IntEnum):
 class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 
-    CLIMBER_SENSOR = 0
+    CLIMBER_SENSOR = 2
