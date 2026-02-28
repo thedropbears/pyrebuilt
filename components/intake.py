@@ -39,7 +39,7 @@ class IntakeComponent:
 
     DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
 
-    ENCODER_ZERO_OFFSET = 2.3969
+    ENCODER_ZERO_OFFSET = 2.390786
 
     # Sim
     ARM_LENGTH = 0.38  # meters
