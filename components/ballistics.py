@@ -93,14 +93,12 @@ class BallisticsComponent:
             target_turret_angle = required_turret_angle.radians()
             # Check if distance is within range of distance table and switch if necessary
             if not (
-                distance_to_target < self.active_table.dist.max()
-                and distance_to_target > self.active_table.dist.min()
+                self.active_table.dist.min()
+                < distance_to_target
+                < self.active_table.dist.max()
             ):
                 for table_pair in self.tables:
-                    if (
-                        distance_to_target < table_pair[0].max()
-                        and distance_to_target > table_pair[0].min()
-                    ):
+                    if table_pair[0].min() < distance_to_target < table_pair[0].max():
                         self.active_table = table_pair
                         target_hood_angle = table_pair[2]
             self.target_flywheel_speed = np.interp(
