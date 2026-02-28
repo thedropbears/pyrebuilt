@@ -238,6 +238,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.intake.intake()
 
+        if self.gamepad.getYButton():
+            self.intake.retract()
+
         # if self.gamepad.getAButton():
         #     self.climber.deploy()
 
@@ -296,3 +299,4 @@ class MyRobot(magicbot.MagicRobot):
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
         self.turret.periodic()
+        self.intake.periodic()

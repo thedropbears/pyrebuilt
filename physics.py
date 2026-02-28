@@ -174,6 +174,43 @@ class SimpleMechanism(MechanismSim):
         return self.mech_sim.getAngularVelocity()
 
 
+class ArmMechanism(MechanismSim):
+    def __init__(
+        self,
+        gearbox: DCMotor,
+        moi: units.kilogram_square_meters,
+        gearing: float,
+        arm_length: units.meters,
+        min_angle: units.radians,
+        max_angle: units.radians,
+        starting_angle: units.radians,
+    ) -> None:
+        self.plant_arm = LinearSystemId.singleJointedArmSystem(gearbox, moi, gearing)
+        self.mech_sim = SingleJointedArmSim(
+            self.plant_arm,
+            gearbox,
+            gearing,
+            arm_length,
+            min_angle,
+            max_angle,
+            True,
+            starting_angle,
+        )
+
+    @override
+    def update(self, motor_voltage: float, dt: float) -> None:
+        self.mech_sim.setInputVoltage(motor_voltage)
+        self.mech_sim.update(dt)
+
+    @override
+    def get_angular_position(self) -> units.radians:
+        return self.mech_sim.getAngle()
+
+    @override
+    def get_angular_velocity(self) -> units.radians_per_second:
+        return self.mech_sim.getVelocity()
+
+
 class SteerModuleSim:
     def __init__(
         self,
@@ -209,7 +246,7 @@ class TurretSim:
         self.encoder_sim = DutyCycleEncoderSim(encoder)
         self.encoder_offset = encoder_offset
 
-    def update(self, dt: units.seconds):
+    def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
         self.motor_sim.update_from_mechanism(
             self.mech_sim.get_angular_position(),
@@ -219,18 +256,40 @@ class TurretSim:
         self.encoder_sim.set(self.mech_sim.get_angular_position() + self.encoder_offset)
 
 
-class SparkArmSim:
-    def __init__(self, mech_sim: SingleJointedArmSim, motor_sim: rev.SparkSim) -> None:
-        self.mech_sim = mech_sim
+class ArmSim:
+    def __init__(
+        self,
+        motor_sim: MotorSim,
+        moi: units.kilogram_square_meters,
+        arm_length: units.meters,
+        encoder: wpilib.DutyCycleEncoder,
+        encoder_offset: float,
+        min_angle: units.radians,
+        max_angle: units.radians,
+        starting_angle: units.radians,
+    ) -> None:
         self.motor_sim = motor_sim
-        self.motor_encoder_sim = self.motor_sim.getRelativeEncoderSim()
+        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_offset = encoder_offset
+        self.encoder_sim.set(starting_angle + self.encoder_offset)
+        self.mech_sim = ArmMechanism(
+            self.motor_sim.gearbox,
+            moi,
+            self.motor_sim.gearing,
+            arm_length,
+            min_angle,
+            max_angle,
+            starting_angle,
+        )
 
     def update(self, dt: units.seconds) -> None:
-        vbus = self.motor_sim.getBusVoltage()
-        self.mech_sim.setInputVoltage(self.motor_sim.getAppliedOutput() * vbus)
-        self.mech_sim.update(dt)
-        self.motor_sim.iterate(self.mech_sim.getVelocity(), vbus, dt)
-        self.motor_encoder_sim.iterate(self.mech_sim.getVelocity(), dt)
+        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
+        self.motor_sim.update_from_mechanism(
+            self.mech_sim.get_angular_position(),
+            self.mech_sim.get_angular_velocity(),
+            dt,
+        )
+        self.encoder_sim.set(self.mech_sim.get_angular_position() + self.encoder_offset)
 
 
 # class ServoEncoderSim:
@@ -303,6 +362,22 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
+        self.intake_arm_sim = ArmSim(
+            TalonFXMotorSim(
+                DCMotor.falcon500,
+                robot.intake.deployer_motor_left,
+                robot.intake.deployer_motor_right,
+                gearing=1 / robot.intake.DEPLOYER_TO_ENCODER_GEARING,
+            ),
+            robot.intake.ARM_MOI,
+            robot.intake.ARM_LENGTH,
+            robot.intake.deployer_encoder,
+            robot.intake.ENCODER_ZERO_OFFSET,
+            robot.intake.DEPLOYED_INTAKE_ANGLE,
+            robot.intake.RETRACTED_INTAKE_ANGLE,
+            robot.intake.DEPLOYED_INTAKE_ANGLE,
+        )
+
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
             wheel.update(tm_diff)
@@ -320,6 +395,7 @@ class PhysicsEngine:
 
         self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
 
+        self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
         self.port_vision_encoder_sim.set(

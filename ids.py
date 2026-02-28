@@ -25,6 +25,9 @@ class TalonId(enum.IntEnum):
     INDEXER = 14
     INTAKE = 15
 
+    INTAKE_DEPLOYER_LEFT = 17
+    INTAKE_DEPLOYER_RIGHT = 18
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
@@ -51,6 +54,8 @@ class DioChannel(enum.IntEnum):
     PORT_VISION_ENCODER = 0
 
     TURRET_ENCODER = 1
+
+    INTAKE_DEPLOYER_ENCODER = 7
 
 
 @enum.unique
