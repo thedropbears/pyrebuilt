@@ -8,7 +8,7 @@ from wpimath import units
 from wpimath.geometry import Rotation2d, Translation2d
 
 from components.chassis import ChassisComponent
-from components.shooter import ShooterComponent, rotations_per_second
+from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 
 # TODO: Tune lookup tables for use
@@ -73,7 +73,7 @@ class BallisticsComponent:
 
     def force_solution(
         self,
-        desired_flywheel_speed: rotations_per_second,
+        desired_flywheel_speed: units.turns_per_second,
         desired_turret_bearing: Rotation2d,
         desired_hood_angle: units.radians,
     ) -> None:
