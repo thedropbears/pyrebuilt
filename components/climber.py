@@ -74,9 +74,9 @@ class ClimberComponent:
 
         climber_motor_hard_limit_configs = (
             HardwareLimitSwitchConfigs()
-            .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S1)
+            .with_forward_limit_source(ForwardLimitSourceValue.REMOTE_CANDI_S2)
             .with_forward_limit_remote_sensor_id(self.climber_sensor.device_id)
-            .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S2)
+            .with_reverse_limit_source(ReverseLimitSourceValue.REMOTE_CANDI_S1)
             .with_reverse_limit_remote_sensor_id(self.climber_sensor.device_id)
         )
 
