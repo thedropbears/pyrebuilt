@@ -43,7 +43,13 @@ class BallisticsComponent:
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
+
+        # It is safe to setup these values as 0, as there is no way for the components to be set to these default values
+        # i.e. they will be overwritten before reaching the component methods
         self.target_flywheel_speed = 0.0
+        self.target_hood_angle = 0.0
+        self.target_turret_angle = 0.0
+
         self.tables = (
             LookupTable(
                 DISTANCE_LOOKUP_30, SPEED_LOOKUP_30, math.radians(30), "30 degree table"
@@ -60,6 +66,18 @@ class BallisticsComponent:
     @feedback
     def get_active_table(self) -> str:
         return self.active_table.name
+
+    @feedback
+    def get_flywheel_speed(self):
+        return self.target_flywheel_speed
+
+    @feedback
+    def get_hood_angle(self):
+        return self.target_hood_angle
+
+    @feedback
+    def get_turret_angle(self):
+        return self.target_turret_angle
 
     def energise_flywheels(self) -> None:
         # assuming that we dont want to have the flywheel spun up all the time,
