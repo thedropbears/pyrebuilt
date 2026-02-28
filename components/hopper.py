@@ -33,8 +33,10 @@ class HopperComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
-        feeder_motor_commutation_config = configs.CommutationConfigs().with_motor_arrangement(
-            MotorArrangementValue.BRUSHED_DC
+        feeder_motor_commutation_config = (
+            configs.CommutationConfigs().with_motor_arrangement(
+                MotorArrangementValue.BRUSHED_DC
+            )
         )
 
         self.feeder_motor.configurator.apply(
