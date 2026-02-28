@@ -27,18 +27,20 @@ class HopperComponent:
         self.feeder_motor = TalonFXS(TalonId.FEEDER)
 
         feeder_motor_config = configs.TalonFXSConfiguration()
-        feeder_motor_config.motor_output.with_inverted(
-            InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-        ).with_neutral_mode(NeutralModeValue.COAST)
+        feeder_motor_output_config = (
+            configs.MotorOutputConfigs()
+            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_neutral_mode(NeutralModeValue.COAST)
+        )
 
-        motor_commutation_config = configs.CommutationConfigs().with_motor_arrangement(
+        feeder_motor_commutation_config = configs.CommutationConfigs().with_motor_arrangement(
             MotorArrangementValue.BRUSHED_DC
         )
 
         self.feeder_motor.configurator.apply(
-            configs.TalonFXSConfiguration()
-            .with_motor_output(feeder_motor_config.motor_output)
-            .with_commutation(motor_commutation_config)
+            feeder_motor_config.with_motor_output(
+                feeder_motor_output_config
+            ).with_commutation(feeder_motor_commutation_config)
         )
 
     def feed(self) -> None:
