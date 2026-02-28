@@ -153,10 +153,6 @@ class ClimberComponent:
         return self.climber_motor.get_position().value
 
     @feedback
-    def get_indexed_state(self) -> bool:
-        return self.has_indexed
-
-    @feedback
     def at_tower_front_hook(self) -> bool:
         return self.front_breakbeam_sensor.get()
 
