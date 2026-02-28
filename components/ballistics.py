@@ -28,11 +28,12 @@ class BallisticsComponent:
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
+
+    def setup(self) -> None:
         self.target_flywheel_speed = 0.0
         self.target_hood_angle = self.shooter.get_hood_angle()
         self.target_turret_angle = self.turret.get_current_angle()
 
-    def setup(self) -> None:
         self.active_table_dist = self.DISTANCE_LOOKUP_30
         self.active_table_speed = self.SPEED_LOOKUP_30
         self.active_table_name = "30 degree table"
