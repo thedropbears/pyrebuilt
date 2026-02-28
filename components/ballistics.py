@@ -119,7 +119,7 @@ class BallisticsComponent:
                     if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
             target_hood_angle = self.active_table.hood_angle
-            target_flywheel_speed = np.interp(
+            target_flywheel_speed: float = np.interp(
                 distance_to_target,
                 self.active_table.dist,
                 self.active_table.speed,
