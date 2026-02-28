@@ -29,7 +29,7 @@ class HopperComponent:
         feeder_motor_config = configs.TalonFXSConfiguration()
         feeder_motor_output_config = (
             configs.MotorOutputConfigs()
-            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
