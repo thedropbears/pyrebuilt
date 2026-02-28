@@ -68,15 +68,15 @@ class BallisticsComponent:
         return self.active_table.name
 
     @feedback
-    def get_flywheel_speed(self):
+    def get_flywheel_speed(self) -> rotations_per_second:
         return self.shooter.target_shooter_rps
 
     @feedback
-    def get_hood_angle(self):
+    def get_hood_angle(self) -> units.degrees:
         return self.shooter.target_hood_angle * (180 / math.pi)
 
     @feedback
-    def get_turret_angle(self):
+    def get_turret_angle(self) -> units.degrees:
         return self.turret.desired_angle * (180 / math.pi)
 
     def energise_flywheels(self) -> None:
