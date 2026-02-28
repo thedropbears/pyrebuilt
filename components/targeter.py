@@ -7,6 +7,7 @@ from utilities.game import (
     alliance_hub_pos,
     alliance_shoot_anchor_pos,
     alliance_shoot_line,
+    alliance_trench_shoot_pos,
     behind_alliance_hub_pos,
     is_in_alliance_zone,
     is_in_neutral_zone,
@@ -61,7 +62,15 @@ class Targeter:
     def get_optimal_target_from_enemy_zone(
         self,
     ) -> Translation2d:
-        return self.get_optimal_target_from_neutral_zone()
+        robot_pos = self.chassis.get_pose().translation()
+        shot_positions = alliance_trench_shoot_pos(is_red())
+        close_pos = (
+            shot_positions[0]
+            if robot_pos.distance(shot_positions[0])
+            <= robot_pos.distance(shot_positions[1])
+            else shot_positions[1]
+        )
+        return close_pos
 
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
