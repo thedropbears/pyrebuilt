@@ -39,11 +39,12 @@ class HopperComponent:
             )
         )
 
-        self.feeder_motor.configurator.apply(
-            feeder_motor_config.with_motor_output(
-                feeder_motor_output_config
-            ).with_commutation(feeder_motor_commutation_config)
+        feeder_motor_config = (
+            configs.TalonFXSConfiguration()
+            .with_motor_output(feeder_motor_output_config)
+            .with_commutation(feeder_motor_commutation_config)
         )
+        self.feeder_motor.configurator.apply(feeder_motor_config)
 
     def feed(self) -> None:
         self.target_indexer_dutycycle = self.desired_indexer_dutycycle
