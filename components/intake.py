@@ -10,10 +10,12 @@ from phoenix6.configs import (
     TalonFXConfiguration,
     TalonFXSConfiguration,
 )
+from phoenix6.controls import Follower, MotionMagicVoltage
 from phoenix6.hardware import TalonFX, TalonFXS
 from phoenix6.signals import (
     GravityTypeValue,
     InvertedValue,
+    MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
 )
@@ -37,7 +39,7 @@ class IntakeComponent:
 
     DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
 
-    ENCODER_ZERO_OFFSET = 2.390786
+    ENCODER_ZERO_OFFSET = 2.3969
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -140,15 +142,15 @@ class IntakeComponent:
         self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
 
     def execute(self) -> None:
-        # self.deployer_motor_left.set_control(
-        # PositionVoltage(self.target_deployer_angle / tau)
-        # )
-        # self.deployer_motor_right.set_control(
-        #     Follower(
-        #         TalonId.INTAKE_DEPLOYER_LEFT,
-        #         MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
-        #     )
-        # )
+        self.deployer_motor_left.set_control(
+            MotionMagicVoltage(self.target_deployer_angle / tau)
+        )
+        self.deployer_motor_right.set_control(
+            Follower(
+                TalonId.INTAKE_DEPLOYER_LEFT,
+                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
+            )
+        )
         self.intake_motor.set(self.target_intake_output)
 
     def periodic(self) -> None:
