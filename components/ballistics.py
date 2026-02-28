@@ -101,10 +101,12 @@ class BallisticsComponent:
         self.use_ballistics = False
 
     def execute(self) -> None:
-        current_pose = self.chassis.get_pose()
+        current_turret_pose = self.chassis.get_pose().transformBy(
+            self.turret.TURRET_OFFSET_FROM_CENTER
+        )
 
-        current_position = current_pose.translation()
-        current_rotation = current_pose.rotation()
+        current_position = current_turret_pose.translation()
+        current_rotation = current_turret_pose.rotation()
 
         distance_to_target = current_position.distance(self.target_position)
         angle_to_target = (self.target_position - current_position).angle()
