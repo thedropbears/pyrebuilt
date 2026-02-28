@@ -170,19 +170,3 @@ class IntakeComponent:
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
         return degrees(self.get_deployer_position())
-
-    @feedback
-    def get_ff_term(self) -> float:
-        return self.deployer_motor_left.get_closed_loop_feed_forward().value
-
-    @feedback
-    def get_total_control_effort(self) -> float:
-        return self.deployer_motor_left.get_closed_loop_output().value
-
-    @feedback
-    def get_closed_loop_target(self) -> float:
-        return self.deployer_motor_left.get_closed_loop_reference().value * tau
-
-    @feedback
-    def get_closed_loop_error(self) -> float:
-        return self.deployer_motor_left.get_closed_loop_error().value * tau
