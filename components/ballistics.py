@@ -1,5 +1,5 @@
 import math
-from typing import NamedTuple
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
@@ -20,7 +20,8 @@ DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
 SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
 
 
-class LookupTable(NamedTuple):
+@dataclass
+class LookupTable:
     dist: npt.NDArray[np.float64]
     """The distance (m) interpolation table."""
     speed: npt.NDArray[np.float64]
@@ -99,7 +100,7 @@ class BallisticsComponent:
                 for table_pair in self.tables:
                     if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
-                        target_hood_angle = table_pair[2]
+                        target_hood_angle = table_pair.hood_angle
             self.target_flywheel_speed = np.interp(
                 distance_to_target,
                 self.active_table.dist,
