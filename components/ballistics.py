@@ -28,6 +28,9 @@ class LookupTable(NamedTuple):
     hood_angle: units.radians
     name: str
 
+    def is_within_range(self, distance: units.meters) -> bool:
+        return self.dist.min() < distance < self.dist.max()
+
 
 class BallisticsComponent:
     chassis: ChassisComponent
@@ -92,13 +95,9 @@ class BallisticsComponent:
             required_turret_angle = angle_to_target - current_rotation
             target_turret_angle = required_turret_angle.radians()
             # Check if distance is within range of distance table and switch if necessary
-            if not (
-                self.active_table.dist.min()
-                < distance_to_target
-                < self.active_table.dist.max()
-            ):
+            if not self.active_table.is_within_range(distance_to_target):
                 for table_pair in self.tables:
-                    if table_pair[0].min() < distance_to_target < table_pair[0].max():
+                    if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
                         target_hood_angle = table_pair[2]
             self.target_flywheel_speed = np.interp(
