@@ -117,7 +117,7 @@ class BallisticsComponent:
                     if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
             target_hood_angle = self.active_table.hood_angle
-            self.target_flywheel_speed = np.interp(
+            target_flywheel_speed = np.interp(
                 distance_to_target,
                 self.active_table.dist,
                 self.active_table.speed,
@@ -125,9 +125,10 @@ class BallisticsComponent:
         else:
             target_turret_bearing = self.target_turret_bearing
             target_hood_angle = self.target_hood_angle
+            target_flywheel_speed = self.target_flywheel_speed
 
         if self.should_energise_flywheels:
-            self.shooter.set_flywheel(self.target_flywheel_speed)
+            self.shooter.set_flywheel(target_flywheel_speed)
 
         self.shooter.pitch_to(target_hood_angle)
         self.turret.slew_to(target_turret_bearing)
