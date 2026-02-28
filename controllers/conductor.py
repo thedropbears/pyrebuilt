@@ -28,7 +28,12 @@ class Conductor(StateMachine):
     def shooting(self) -> None:
         self.hopper.feed()
         self.intake.intake()
-        self.ballistics.solve_for(self.targeter.get_target())
+        #self.ballistics.solve_for(self.targeter.get_target())
+        self.ballistics.force_solution( 
+            desired_flywheel_speed=20,
+            desired_turret_angle=0,
+            desired_hood_angle=0,
+        )
         self.ballistics.energise_flywheels()
 
     def done(self) -> None:
