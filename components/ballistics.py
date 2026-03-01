@@ -8,7 +8,7 @@ from wpimath import units
 from wpimath.geometry import Rotation2d, Translation2d
 
 from components.chassis import ChassisComponent
-from components.shooter import ShooterComponent, rotations_per_second
+from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 
 # TODO: Tune lookup tables for use
@@ -18,6 +18,8 @@ DISTANCE_LOOKUP_45 = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
 SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
 DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
 SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
+
+type ForcedSolution = tuple[units.turns_per_second, Rotation2d, units.radians]
 
 
 @dataclass
@@ -38,7 +40,7 @@ class BallisticsComponent:
     shooter: ShooterComponent
     turret: TurretComponent
 
-    use_ballistics = will_reset_to(True)
+    forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
 
     def __init__(self) -> None:
@@ -87,14 +89,15 @@ class BallisticsComponent:
 
     def force_solution(
         self,
-        desired_flywheel_speed: rotations_per_second,
+        desired_flywheel_speed: units.turns_per_second,
         desired_turret_bearing: Rotation2d,
         desired_hood_angle: units.radians,
     ) -> None:
-        self.target_flywheel_speed = desired_flywheel_speed
-        self.target_turret_bearing = desired_turret_bearing
-        self.target_hood_angle = desired_hood_angle
-        self.use_ballistics = False
+        self.forced_solution = (
+            desired_flywheel_speed,
+            desired_turret_bearing,
+            desired_hood_angle,
+        )
 
     def execute(self) -> None:
         current_turret_pose = self.chassis.get_pose().transformBy(
@@ -107,7 +110,7 @@ class BallisticsComponent:
         distance_to_target = current_position.distance(self.target_position)
         angle_to_target = (self.target_position - current_position).angle()
 
-        if self.use_ballistics:
+        if self.forced_solution is None:
             target_turret_bearing = angle_to_target - current_rotation
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(distance_to_target):
@@ -115,15 +118,15 @@ class BallisticsComponent:
                     if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
             target_hood_angle = self.active_table.hood_angle
-            target_flywheel_speed: float = np.interp(
+            target_flywheel_speed: units.turns_per_second = np.interp(
                 distance_to_target,
                 self.active_table.dist,
                 self.active_table.speed,
             )
         else:
-            target_turret_bearing = self.target_turret_bearing
-            target_hood_angle = self.target_hood_angle
-            target_flywheel_speed = self.target_flywheel_speed
+            target_flywheel_speed, target_turret_bearing, target_hood_angle = (
+                self.forced_solution
+            )
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)

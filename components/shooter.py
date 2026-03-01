@@ -10,8 +10,6 @@ from ids import SparkId, TalonId
 from utilities.functions import clamp
 from utilities.rev import configure_spark_reset_and_persist
 
-rotations_per_second = float
-
 
 class ShooterComponent:
     target_shooter_rps = will_reset_to(0.0)
@@ -84,7 +82,7 @@ class ShooterComponent:
         )
 
     @feedback
-    def get_flywheel_error(self) -> rotations_per_second:
+    def get_flywheel_error(self) -> units.turns_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
 
     @feedback
@@ -97,7 +95,7 @@ class ShooterComponent:
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = angle
 
-    def set_flywheel(self, speed: rotations_per_second):
+    def set_flywheel(self, speed: units.turns_per_second):
         self.target_shooter_rps = speed
 
     def execute(self) -> None:
