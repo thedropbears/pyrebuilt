@@ -34,7 +34,7 @@ class IntakeComponent:
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
-    MAX_DEPLOYER_ACCEL = 7
+    MAX_DEPLOYER_ACCEL = 8
     MAX_DEPLOYER_VELOCITY = 5
 
     DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
@@ -74,10 +74,10 @@ class IntakeComponent:
         # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(13.942)
+            .with_k_p(80.942)
             .with_k_i(0.00)
-            .with_k_d(2.8429)
-            .with_k_s(0.019908)
+            .with_k_d(0.8028)
+            .with_k_s(0.029908)
             .with_k_v(1.1757)
             .with_k_a(0.4537)
             .with_k_g(0.67797)
