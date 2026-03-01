@@ -42,6 +42,8 @@ class CancoderId(enum.IntEnum):
 
     TURRET = 6
 
+    HOOD = 7
+
     INTAKE = 8
 
 
