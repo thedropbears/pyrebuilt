@@ -128,6 +128,8 @@ RED_TRENCH_SHOOT_POS_2 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_2)
 
 RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
 
+FIELD_CENTRE_POS = Translation2d(FIELD_WIDTH / 2, FIELD_LENGTH / 2)
+
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
     if is_red():
@@ -159,6 +161,27 @@ def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
         < robot_pos.x
         < (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
     )
+
+
+def get_tower_heading(robot_pos: Translation2d) -> float:
+    if is_in_upper_field_half(robot_pos):
+        return -90
+    else:
+        return 90
+
+
+def get_movement_to_tower(robot_pos: Translation2d) -> tuple:
+    y_direction = -1 if is_in_upper_field_half(robot_pos) else 1
+    x_direction = -1 if is_red() else 1
+
+    return (x_direction, y_direction)
+
+
+def alliance_tower_pos(is_red: bool) -> Translation2d:
+    if is_red:
+        return get_fiducial_pose(15).translation().toTranslation2d()
+    else:
+        return get_fiducial_pose(31).translation().toTranslation2d()
 
 
 def alliance_hub_pos(is_red: bool) -> Translation2d:
@@ -248,3 +271,7 @@ def is_alliance_hub_active() -> bool:
 # This will default to the blue alliance if a proper link to the driver station has not yet been established
 def is_red() -> bool:
     return wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed
+
+
+def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
+    return robot_pos.X() < FIELD_CENTRE_POS.X()

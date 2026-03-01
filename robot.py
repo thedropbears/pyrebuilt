@@ -19,6 +19,7 @@ from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
+from controllers.autoclimber import AutoClimber
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
 from ids import DioChannel, PwmChannel, RioSerialNumber
@@ -35,6 +36,8 @@ class MyRobot(magicbot.MagicRobot):
     # Controllers
     conductor: Conductor
     gobbler: Gobbler
+    shooter_state_machine: Conductor
+    climber_state_machine: AutoClimber
 
     # Components
     hopper: HopperComponent
@@ -172,6 +175,7 @@ class MyRobot(magicbot.MagicRobot):
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
         self.chassis.set_coast_in_neutral(False)
+        self.climber_state_machine.retract()
 
     def teleopPeriodic(self) -> None:
         self.leds.set_teleop_lights()
