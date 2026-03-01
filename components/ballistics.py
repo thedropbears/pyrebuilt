@@ -45,7 +45,6 @@ class BallisticsComponent:
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
-        self.target_flywheel_speed = 0.0
         self.tables = (
             LookupTable(
                 DISTANCE_LOOKUP_30, SPEED_LOOKUP_30, math.radians(30), "30 degree table"
