@@ -92,9 +92,12 @@ class ShooterComponent:
         self.target_shooter_rps = speed
 
     def execute(self) -> None:
-        self.flywheel_motor.set_control(
-            controls.VelocityVoltage(self.target_shooter_rps)
-        )
+        if self.target_shooter_rps != 0.0:
+            self.flywheel_motor.set_control(
+                controls.VelocityVoltage(self.target_shooter_rps)
+            )
+        else:
+            self.flywheel_motor.set_control(controls.CoastOut())
 
         self.target_hood_angle = clamp(
             self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
