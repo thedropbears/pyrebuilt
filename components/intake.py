@@ -29,7 +29,7 @@ class IntakeComponent:
     target_intake_output = will_reset_to(0.0)
     desired_intake_output = tunable(0.5)
 
-    RETRACTED_INTAKE_ANGLE = radians(90)
+    RETRACTED_INTAKE_ANGLE = radians(115)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
