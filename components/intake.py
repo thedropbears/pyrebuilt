@@ -19,7 +19,7 @@ from phoenix6.signals import (
     MotorArrangementValue,
     NeutralModeValue,
 )
-from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d, RobotBase
+from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
 from wpimath import units
 
 from ids import DioChannel, TalonId
@@ -29,12 +29,12 @@ class IntakeComponent:
     target_intake_output = will_reset_to(0.0)
     desired_intake_output = tunable(0.5)
 
-    RETRACTED_INTAKE_ANGLE = radians(90)
+    RETRACTED_INTAKE_ANGLE = radians(115)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
-    MAX_DEPLOYER_ACCEL = 5
+    MAX_DEPLOYER_ACCEL = 7
     MAX_DEPLOYER_VELOCITY = 5
 
     DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
@@ -74,23 +74,19 @@ class IntakeComponent:
         # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(5.51)
-            .with_k_i(0)
-            .with_k_d(2.73)
-            .with_k_s(0)
-            .with_k_v(1.09)
-            .with_k_a(0.26)
-            .with_k_g(1.60)
+            .with_k_p(13.942)
+            .with_k_i(0.00)
+            .with_k_d(2.8429)
+            .with_k_s(0.019908)
+            .with_k_v(1.1757)
+            .with_k_a(0.4537)
+            .with_k_g(0.67797)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
         intake_deployer_output_config = (
             MotorOutputConfigs()
-            .with_inverted(
-                InvertedValue.CLOCKWISE_POSITIVE
-                if not RobotBase.isSimulation()
-                else InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-            )
+            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
@@ -106,13 +102,16 @@ class IntakeComponent:
             )
         )
 
-        self.deployer_motor_left.configurator.apply(
+        deployer_config = (
             TalonFXConfiguration()
             .with_motor_output(intake_deployer_output_config)
             .with_slot0(intake_deployer_slot_config)
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
         )
+
+        self.deployer_motor_left.configurator.apply(deployer_config)
+        self.deployer_motor_right.configurator.apply(deployer_config)
 
         self.intake_ligament = mech_root.appendLigament(
             "intake",
