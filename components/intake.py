@@ -102,7 +102,7 @@ class IntakeComponent:
             )
         )
 
-        self.deployer_motor_left.configurator.apply(
+        deployer_config = (
             TalonFXConfiguration()
             .with_motor_output(intake_deployer_output_config)
             .with_slot0(intake_deployer_slot_config)
@@ -110,13 +110,8 @@ class IntakeComponent:
             .with_motion_magic(intake_deployer_magic_config)
         )
 
-        self.deployer_motor_right.configurator.apply(
-            TalonFXConfiguration()
-            .with_motor_output(intake_deployer_output_config)
-            .with_slot0(intake_deployer_slot_config)
-            .with_feedback(intake_deployer_feedback_config)
-            .with_motion_magic(intake_deployer_magic_config)
-        )
+        self.deployer_motor_left.configurator.apply(deployer_config)
+        self.deployer_motor_right.configurator.apply(deployer_config)
 
         self.intake_ligament = mech_root.appendLigament(
             "intake",
