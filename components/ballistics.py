@@ -45,13 +45,6 @@ class BallisticsComponent:
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
-
-        # It is safe to setup these values as 0, as there is no way for the components to be set to these default values
-        # i.e. they will be overwritten before reaching the component methods
-        self.target_flywheel_speed = 0.0
-        self.target_hood_angle = 0.0
-        self.target_turret_bearing = Rotation2d()
-
         self.tables = (
             LookupTable(
                 DISTANCE_LOOKUP_30, SPEED_LOOKUP_30, math.radians(30), "30 degree table"
@@ -69,22 +62,14 @@ class BallisticsComponent:
     def get_active_table(self) -> str:
         return self.active_table.name
 
-    @feedback
-    def get_flywheel_setpoint(self) -> units.turns_per_second:
-        return self.shooter.get_flywheel_setpoint()
-
-    @feedback
-    def get_hood_setpoint(self) -> units.degrees:
-        return self.shooter.get_hood_setpoint() * (180 / math.pi)
-
-    @feedback
-    def get_turret_angle(self) -> units.degrees:
-        return self.turret.desired_angle * (180 / math.pi)
-
     def energise_flywheels(self) -> None:
+        # assuming that we dont want to have the flywheel spun up all the time,
+        # but the hood and turret should always run
         self.should_energise_flywheels = True
 
     def solve_for(self, target_position: Translation2d) -> None:
+        # like components with hardware attached we dont want to perform the
+        # calculation here. Just set the required vars and wait for execute.
         self.target_position = target_position
 
     def force_solution(
@@ -100,12 +85,10 @@ class BallisticsComponent:
         )
 
     def execute(self) -> None:
-        current_turret_pose = self.chassis.get_pose().transformBy(
-            self.turret.TURRET_OFFSET_FROM_CENTER
-        )
+        current_pose = self.chassis.get_pose()
 
-        current_position = current_turret_pose.translation()
-        current_rotation = current_turret_pose.rotation()
+        current_position = current_pose.translation()
+        current_rotation = current_pose.rotation()
 
         distance_to_target = current_position.distance(self.target_position)
         angle_to_target = (self.target_position - current_position).angle()

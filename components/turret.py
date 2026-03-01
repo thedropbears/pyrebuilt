@@ -4,7 +4,7 @@ from magicbot import feedback, tunable
 from rev import FeedbackSensor, SparkMax, SparkMaxConfig
 from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
 from wpimath import units
-from wpimath.geometry import Rotation2d, Transform2d
+from wpimath.geometry import Rotation2d
 
 from ids import DioChannel, SparkId
 from utilities.functions import constrain_angle
@@ -15,8 +15,6 @@ from utilities.rev import (
 
 
 class TurretComponent:
-    TURRET_OFFSET_FROM_CENTER = Transform2d(-0.15, 0.15, 0.0)
-
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (25 / 145)
     TURRET_TO_ENCODER_GEARING = (145 / 40) * (16 / 70)
 
