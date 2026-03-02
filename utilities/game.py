@@ -163,7 +163,7 @@ def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
     )
 
 
-def get_tower_heading(robot_pos: Translation2d) -> float:
+def get_tower_heading(robot_pos: Translation2d) -> float:  # heading in degrees
     if is_in_upper_field_half(robot_pos):
         return -90
     else:
@@ -274,4 +274,4 @@ def is_red() -> bool:
 
 
 def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
-    return robot_pos.X() < FIELD_CENTRE_POS.X()
+    return robot_pos.Y() < FIELD_CENTRE_POS.Y()

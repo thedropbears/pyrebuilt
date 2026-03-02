@@ -1,5 +1,3 @@
-from time import monotonic
-
 from magicbot import StateMachine, state
 
 from components.chassis import ChassisComponent
@@ -52,9 +50,9 @@ class AutoClimber(StateMachine):
             return
 
     @state
-    def driving_into_tower(self, initial_call: bool):
+    def driving_into_tower(self, initial_call: bool, state_tm):
         if initial_call:
-            self.old_time = monotonic()
+            self.old_time = state_tm
 
         direction = get_movement_to_tower(self.chassis.get_pose().translation())
 
@@ -62,7 +60,7 @@ class AutoClimber(StateMachine):
             direction[0] * self.DRIVE_SPEED, direction[1] * self.DRIVE_SPEED, 0
         )
 
-        if monotonic() >= self.old_time + self.DRIVE_INTO_TOWER_TIME:
+        if state_tm >= self.old_time + self.DRIVE_INTO_TOWER_TIME:
             self.next_state(self.climbing)
             return
 
