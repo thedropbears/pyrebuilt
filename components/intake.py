@@ -2,8 +2,10 @@ from math import degrees, radians, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
+    CANcoderConfiguration,
     CommutationConfigs,
     FeedbackConfigs,
+    MagnetSensorConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
@@ -11,18 +13,20 @@ from phoenix6.configs import (
     TalonFXSConfiguration,
 )
 from phoenix6.controls import Follower, MotionMagicVoltage
-from phoenix6.hardware import TalonFX, TalonFXS
+from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
 from phoenix6.signals import (
+    FeedbackSensorSourceValue,
     GravityTypeValue,
     InvertedValue,
     MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
+    SensorDirectionValue,
 )
-from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
+from wpilib import Color, Color8Bit, MechanismRoot2d
 from wpimath import units
 
-from ids import DioChannel, TalonId
+from ids import CancoderId, TalonId
 
 
 class IntakeComponent:
@@ -34,12 +38,13 @@ class IntakeComponent:
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
-    MAX_DEPLOYER_ACCEL = 8
-    MAX_DEPLOYER_VELOCITY = 5
+    MAX_DEPLOYER_ACCEL = 5
+    MAX_DEPLOYER_VELOCITY = 8
 
-    DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
+    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
+    CANCODER_TO_MECHANISM_GEARING = 1
 
-    ENCODER_ZERO_OFFSET = 2.390786
+    ENCODER_ZERO_OFFSET = 0.147705  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -50,9 +55,7 @@ class IntakeComponent:
         self.intake_motor = TalonFXS(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
-        self.deployer_encoder = DutyCycleEncoder(
-            DioChannel.INTAKE_DEPLOYER_ENCODER, tau, 0
-        )
+        self.deployer_encoder = CANcoder(CancoderId.INTAKE)
 
         intake_motor_output_config = (
             MotorOutputConfigs()
@@ -70,17 +73,17 @@ class IntakeComponent:
             .with_commutation(intake_motor_commutation_config)
         )
 
-        # TODO verify on the bot:
-        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A100%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
+        # TODO tune for real robot:
+        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A117%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(80.942)
+            .with_k_p(10.92)
             .with_k_i(0.00)
-            .with_k_d(0.8028)
+            .with_k_d(3.17)
             .with_k_s(0.029908)
-            .with_k_v(1.1757)
-            .with_k_a(0.4537)
-            .with_k_g(0.67797)
+            .with_k_v(1.09)
+            .with_k_a(0.26)
+            .with_k_g(1.6)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
@@ -97,9 +100,11 @@ class IntakeComponent:
         )
 
         intake_deployer_feedback_config = (
-            FeedbackConfigs().with_sensor_to_mechanism_ratio(
-                1 / (self.DEPLOYER_TO_ENCODER_GEARING)
-            )
+            FeedbackConfigs()
+            .with_rotor_to_sensor_ratio(1 / (self.DEPLOYER_TO_CANCODER_GEARING))
+            .with_sensor_to_mechanism_ratio(1 / self.CANCODER_TO_MECHANISM_GEARING)
+            .with_feedback_sensor_source(FeedbackSensorSourceValue.REMOTE_CANCODER)
+            .with_feedback_remote_sensor_id(self.deployer_encoder.device_id)
         )
 
         deployer_config = (
@@ -113,6 +118,14 @@ class IntakeComponent:
         self.deployer_motor_left.configurator.apply(deployer_config)
         self.deployer_motor_right.configurator.apply(deployer_config)
 
+        self.deployer_encoder.configurator.apply(
+            CANcoderConfiguration().with_magnet_sensor(
+                MagnetSensorConfigs()
+                .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
+                .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+            )
+        )
+
         self.intake_ligament = mech_root.appendLigament(
             "intake",
             length=0.8,
@@ -120,15 +133,6 @@ class IntakeComponent:
             lineWidth=3,
             color=Color8Bit(Color.kGreen),
         )
-
-    def _sync_encoders(self) -> None:
-        self.deployer_motor_left.set_position(
-            self.get_absolute_deployer_position() / tau
-        )
-        self.intake_ligament.setAngle(self.get_deployer_position_degrees())
-
-    def on_disable(self) -> None:
-        self._sync_encoders()
 
     def on_enable(self) -> None:
         self.retract()
@@ -155,16 +159,9 @@ class IntakeComponent:
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
-    def get_absolute_deployer_position(self) -> units.radians:
-        return self._get_raw_absolute_deployer_position() - self.ENCODER_ZERO_OFFSET
-
-    @feedback
-    def _get_raw_absolute_deployer_position(self) -> units.radians:
-        return self.deployer_encoder.get()
-
     @feedback
     def get_deployer_position(self) -> units.radians:
-        return self.deployer_motor_left.get_position().value * tau
+        return self.deployer_encoder.get_position().value * tau
 
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
