@@ -42,7 +42,7 @@ class IntakeComponent:
 
     DEPLOYER_TO_ENCODER_GEARING = (1 / 5) * (26 / 50)
 
-    ENCODER_ZERO_OFFSET = 2.390786
+    ENCODER_ZERO_OFFSET = 0.38050540977
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -101,7 +101,7 @@ class IntakeComponent:
             FeedbackConfigs()
             .with_sensor_to_mechanism_ratio(1 / (self.DEPLOYER_TO_ENCODER_GEARING))
             .with_feedback_sensor_source(FeedbackSensorSourceValue.REMOTE_CANCODER)
-            .with_feedback_remote_sensor_id(CancoderId.INTAKE)
+            .with_feedback_remote_sensor_id(self.deployer_encoder.device_id)
         )
 
         deployer_config = (
@@ -150,7 +150,7 @@ class IntakeComponent:
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
-            MotionMagicVoltage(self.target_deployer_angle * tau)
+            MotionMagicVoltage(self.target_deployer_angle / tau)
         )
         self.deployer_motor_right.set_control(
             Follower(
@@ -163,6 +163,7 @@ class IntakeComponent:
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
+    @feedback
     def get_absolute_deployer_position(self) -> units.radians:
         return self.deployer_encoder.get_absolute_position().value * tau
 
