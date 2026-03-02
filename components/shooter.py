@@ -118,6 +118,12 @@ class ShooterComponent:
 
     def set_flywheel(self, speed: units.turns_per_second):
         self.target_shooter_rps = speed
+    def set_hood(self,target_hood_angle):
+        self.target_hood_angle = target_hood_angle 
+        #Filler values until we get the actual hood values 
+        self.prefer_long = ShooterComponent(math.radians(60))
+        self.prefer_short = ShooterComponent(math.radians(40))
+        self.fully_retract = ShooterComponent(math.radians(30))
 
     def execute(self) -> None:
         if self.target_shooter_rps != 0.0:
