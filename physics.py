@@ -263,15 +263,17 @@ class ArmSim:
         moi: units.kilogram_square_meters,
         arm_length: units.meters,
         encoder: phoenix6.hardware.CANcoder,
-        encoder_offset: float,
+        encoder_offset: units.turns,
         min_angle: units.radians,
         max_angle: units.radians,
         starting_angle: units.radians,
     ) -> None:
         self.motor_sim = motor_sim
         self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
-        self.encoder_sim.set_raw_position(starting_angle / math.tau)
+        self.encoder_offset = encoder_offset
+        self.encoder_sim.set_raw_position(
+            starting_angle / math.tau - self.encoder_offset
+        )
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
@@ -284,14 +286,16 @@ class ArmSim:
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
+
         self.motor_sim.update_from_mechanism(
             self.mech_sim.get_angular_position(),
             self.mech_sim.get_angular_velocity(),
             dt,
         )
         self.encoder_sim.set_raw_position(
-            self.mech_sim.get_angular_position() / math.tau
+            self.mech_sim.get_angular_position() / math.tau - self.encoder_offset
         )
+        self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
 
 # class ServoEncoderSim:
@@ -369,7 +373,7 @@ class PhysicsEngine:
                 DCMotor.falcon500,
                 robot.intake.deployer_motor_left,
                 robot.intake.deployer_motor_right,
-                gearing=1 / robot.intake.DEPLOYER_TO_ENCODER_GEARING,
+                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
             ),
             robot.intake.ARM_MOI,
             robot.intake.ARM_LENGTH,
