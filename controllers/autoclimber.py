@@ -1,4 +1,6 @@
 from magicbot import StateMachine, state
+from wpimath.controller import PIDController
+from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
 from components.climber import ClimberComponent
@@ -20,6 +22,8 @@ class AutoClimber(StateMachine):
     ALLOWABLE_DISTANCE_FROM_TOWER = 0.75
     DRIVE_INTO_TOWER_TIME = 1
 
+    pid_controller = PIDController(2.0, 0.0, 0.0)
+
     def start(self):
         self.engage()
 
@@ -39,11 +43,19 @@ class AutoClimber(StateMachine):
 
     @state
     def moving_to_tower(self):
-        direction = get_movement_to_tower(self.chassis.get_pose().translation())
+        pose = self.chassis.get_pose()
+        tower_pos = alliance_tower_pos(is_red())
+        tower_heading = get_tower_heading(pose.translation())
 
-        self.chassis.drive_field(
-            direction[0] * self.DRIVE_SPEED, direction[1] * self.DRIVE_SPEED, 0
+        speeds = ChassisSpeeds(
+            self.pid_controller.calculate(pose.X(), tower_pos.X()),
+            self.pid_controller.calculate(pose.Y(), tower_pos.Y()),
+            self.chassis.heading_controller.calculate(
+                pose.rotation().radians(), tower_heading
+            ),
         )
+
+        self.chassis.drive_field(speeds.vx, speeds.vy, speeds.omega)
 
         if self.climber.at_tower_either_hook():
             self.next_state(self.driving_into_tower)

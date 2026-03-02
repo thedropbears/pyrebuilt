@@ -117,7 +117,6 @@ BLUE_TRENCH_SHOOT_POS_2 = Translation2d(
 
 BLUE_SHOOT_LINE = get_fiducial_pose(26).x - SHOOT_POINT_OFFSET
 
-
 RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
 
 RED_SHOOT_ANCHOR_1 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_1)
