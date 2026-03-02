@@ -2,8 +2,10 @@ from math import degrees, radians, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
+    CANcoderConfiguration,
     CommutationConfigs,
     FeedbackConfigs,
+    MagnetSensorConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
@@ -11,18 +13,19 @@ from phoenix6.configs import (
     TalonFXSConfiguration,
 )
 from phoenix6.controls import Follower, MotionMagicVoltage
-from phoenix6.hardware import TalonFX, TalonFXS
+from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
 from phoenix6.signals import (
+    FeedbackSensorSourceValue,
     GravityTypeValue,
     InvertedValue,
     MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
 )
-from wpilib import Color, Color8Bit, DutyCycleEncoder, MechanismRoot2d
+from wpilib import Color, Color8Bit, MechanismRoot2d
 from wpimath import units
 
-from ids import DioChannel, TalonId
+from ids import CancoderId, TalonId
 
 
 class IntakeComponent:
@@ -50,9 +53,7 @@ class IntakeComponent:
         self.intake_motor = TalonFXS(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
-        self.deployer_encoder = DutyCycleEncoder(
-            DioChannel.INTAKE_DEPLOYER_ENCODER, tau, 0
-        )
+        self.deployer_encoder = CANcoder(CancoderId.INTAKE)
 
         intake_motor_output_config = (
             MotorOutputConfigs()
@@ -97,9 +98,10 @@ class IntakeComponent:
         )
 
         intake_deployer_feedback_config = (
-            FeedbackConfigs().with_sensor_to_mechanism_ratio(
-                1 / (self.DEPLOYER_TO_ENCODER_GEARING)
-            )
+            FeedbackConfigs()
+            .with_sensor_to_mechanism_ratio(1 / (self.DEPLOYER_TO_ENCODER_GEARING))
+            .with_feedback_sensor_source(FeedbackSensorSourceValue.REMOTE_CANCODER)
+            .with_feedback_remote_sensor_id(CancoderId.INTAKE)
         )
 
         deployer_config = (
@@ -112,6 +114,12 @@ class IntakeComponent:
 
         self.deployer_motor_left.configurator.apply(deployer_config)
         self.deployer_motor_right.configurator.apply(deployer_config)
+
+        self.deployer_encoder.configurator.apply(
+            CANcoderConfiguration().with_magnet_sensor(
+                MagnetSensorConfigs().with_magnet_offset(self.ENCODER_ZERO_OFFSET)
+            )
+        )
 
         self.intake_ligament = mech_root.appendLigament(
             "intake",
@@ -142,7 +150,7 @@ class IntakeComponent:
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
-            MotionMagicVoltage(self.target_deployer_angle / tau)
+            MotionMagicVoltage(self.target_deployer_angle * tau)
         )
         self.deployer_motor_right.set_control(
             Follower(
@@ -156,11 +164,7 @@ class IntakeComponent:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
     def get_absolute_deployer_position(self) -> units.radians:
-        return self._get_raw_absolute_deployer_position() - self.ENCODER_ZERO_OFFSET
-
-    @feedback
-    def _get_raw_absolute_deployer_position(self) -> units.radians:
-        return self.deployer_encoder.get()
+        return self.deployer_encoder.get_absolute_position().value * tau
 
     @feedback
     def get_deployer_position(self) -> units.radians:
