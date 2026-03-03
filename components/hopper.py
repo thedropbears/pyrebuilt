@@ -39,7 +39,7 @@ class HopperComponent:
 
     def feed(self) -> None:
         self.target_indexer_dutycycle = self.desired_indexer_dutycycle
-        self.target_injector_dutycycle = self.target_injector_dutycycle
+        self.target_injector_dutycycle = self.desired_injector_dutycycle
 
     def execute(self) -> None:
         self.indexer_motor.set(self.target_indexer_dutycycle)
