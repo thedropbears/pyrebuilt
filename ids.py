@@ -18,12 +18,12 @@ class TalonId(enum.IntEnum):
     STEER_FR = 8
 
     FLYWHEEL = 9
-    FEEDER = 11
 
     CLIMBER = 12
 
-    INDEXER = 14
     INTAKE = 15
+    INDEXER = 14
+    INJECTOR = 18
 
     INTAKE_DEPLOYER_LEFT = 16
     INTAKE_DEPLOYER_RIGHT = 17
