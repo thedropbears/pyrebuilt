@@ -182,7 +182,7 @@ def get_movement_to_tower(robot_pos: Translation2d) -> Rotation2d:
     x_direction = -1 if is_red() else 1
 
     return Rotation2d(
-        -x_direction, -y_direction
+        x_direction, y_direction
     )  # Negative because coordinate system on field is inversed i.e. top right is (0, 0)
 
 
