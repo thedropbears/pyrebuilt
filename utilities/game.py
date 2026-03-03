@@ -117,6 +117,10 @@ BLUE_TRENCH_SHOOT_POS_2 = Translation2d(
 
 BLUE_SHOOT_LINE = get_fiducial_pose(26).x - SHOOT_POINT_OFFSET
 
+BLUE_TOWER_CLIMB_POLE = Translation2d(
+    get_fiducial_pose(31).x + 1.055624, get_fiducial_pose(31).y
+)
+
 RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
 
 RED_SHOOT_ANCHOR_1 = field_flip_translation2d(BLUE_SHOOT_ANCHOR_1)
@@ -126,6 +130,8 @@ RED_TRENCH_SHOOT_POS_1 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_1)
 RED_TRENCH_SHOOT_POS_2 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_2)
 
 RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
+
+RED_TOWER_CLIMB_POLE = field_flip_translation2d(BLUE_TOWER_CLIMB_POLE)
 
 FIELD_CENTRE_POS = Translation2d(FIELD_WIDTH / 2, FIELD_LENGTH / 2)
 
@@ -167,6 +173,13 @@ def get_tower_heading(robot_pos: Translation2d) -> float:  # heading in degrees
         return -90
     else:
         return 90
+
+
+def is_close_to_tower(robot_pos: Translation2d) -> bool:
+    return (
+        robot_pos.distance(BLUE_TOWER_CLIMB_POLE) <= 1.5
+        or robot_pos.distance(RED_TOWER_CLIMB_POLE) <= 1.5
+    )
 
 
 def get_movement_to_tower(robot_pos: Translation2d) -> Rotation2d:

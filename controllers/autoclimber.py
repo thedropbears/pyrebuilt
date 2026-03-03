@@ -1,4 +1,4 @@
-from magicbot import StateMachine, state, timed_state
+from magicbot import StateMachine, state, timed_state, tunable
 from wpimath.controller import PIDController
 from wpimath.kinematics import ChassisSpeeds
 
@@ -8,6 +8,7 @@ from utilities.game import (
     alliance_tower_pos,
     get_movement_to_tower,
     get_tower_heading,
+    is_close_to_tower,
     is_red,
 )
 
@@ -17,6 +18,7 @@ class AutoClimber(StateMachine):
     climber: ClimberComponent
 
     has_breakbeam_triggered = False
+    force_autoclimb = tunable(False)
 
     DRIVE_SPEED = 0.1
     ALLOWABLE_DISTANCE_FROM_TOWER = 0.75
@@ -24,7 +26,12 @@ class AutoClimber(StateMachine):
 
     pid_controller = PIDController(2.0, 0.0, 0.0)
 
-    def start(self):
+    def should_autoclimb(self) -> bool:
+        return self.force_autoclimb or is_close_to_tower(
+            self.chassis.get_pose().translation()
+        )
+
+    def autoclimb(self):
         self.engage()
 
     def ground(self):
