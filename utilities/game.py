@@ -135,6 +135,8 @@ RED_TOWER_CLIMB_POLE = field_flip_translation2d(BLUE_TOWER_CLIMB_POLE)
 
 FIELD_CENTRE_POS = Translation2d(FIELD_WIDTH / 2, FIELD_LENGTH / 2)
 
+ALLOWABLE_DISTANCE_FROM_TOWER = 1
+
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
     if is_red():
@@ -177,8 +179,8 @@ def get_tower_heading(robot_pos: Translation2d) -> float:  # heading in degrees
 
 def is_close_to_tower(robot_pos: Translation2d) -> bool:
     return (
-        robot_pos.distance(BLUE_TOWER_CLIMB_POLE) <= 1.5
-        or robot_pos.distance(RED_TOWER_CLIMB_POLE) <= 1.5
+        robot_pos.distance(BLUE_TOWER_CLIMB_POLE) <= ALLOWABLE_DISTANCE_FROM_TOWER
+        or robot_pos.distance(RED_TOWER_CLIMB_POLE) <= ALLOWABLE_DISTANCE_FROM_TOWER
     )
 
 

@@ -21,7 +21,6 @@ class AutoClimber(StateMachine):
     force_autoclimb = tunable(False)
 
     DRIVE_SPEED = 0.1
-    ALLOWABLE_DISTANCE_FROM_TOWER = 0.75
     DRIVE_INTO_TOWER_TIME = 1
 
     pid_controller = PIDController(2.0, 0.0, 0.0)
@@ -90,10 +89,7 @@ class AutoClimber(StateMachine):
 
     @state(must_finish=True)
     def safing(self):
-        if (
-            self.chassis.get_pose().translation().distance(alliance_tower_pos(is_red()))
-            > self.ALLOWABLE_DISTANCE_FROM_TOWER
-        ):
+        if not is_close_to_tower(self.chassis.get_pose().translation()):
             self.done()
 
     def done(self):
