@@ -29,7 +29,7 @@ class HopperComponent:
 
         injector_output_config = (
             MotorOutputConfigs()
-            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
+            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
