@@ -1,4 +1,4 @@
-from magicbot import StateMachine, state
+from magicbot import StateMachine, state, timed_state
 from wpimath.controller import PIDController
 from wpimath.kinematics import ChassisSpeeds
 
@@ -61,20 +61,13 @@ class AutoClimber(StateMachine):
             self.next_state(self.driving_into_tower)
             return
 
-    @state
+    @timed_state(duration=DRIVE_INTO_TOWER_TIME, next_state="climbing")
     def driving_into_tower(self, initial_call: bool, state_tm):
-        if initial_call:
-            self.old_time = state_tm
-
         direction = get_movement_to_tower(self.chassis.get_pose().translation())
 
         self.chassis.drive_field(
-            direction[0] * self.DRIVE_SPEED, direction[1] * self.DRIVE_SPEED, 0
+            direction.cos() * self.DRIVE_SPEED, direction.sin() * self.DRIVE_SPEED, 0
         )
-
-        if state_tm >= self.old_time + self.DRIVE_INTO_TOWER_TIME:
-            self.next_state(self.climbing)
-            return
 
     @state
     def climbing(self):

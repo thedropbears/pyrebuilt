@@ -169,11 +169,13 @@ def get_tower_heading(robot_pos: Translation2d) -> float:  # heading in degrees
         return 90
 
 
-def get_movement_to_tower(robot_pos: Translation2d) -> tuple:
+def get_movement_to_tower(robot_pos: Translation2d) -> Rotation2d:
     y_direction = -1 if is_in_upper_field_half(robot_pos) else 1
     x_direction = -1 if is_red() else 1
 
-    return (x_direction, y_direction)
+    return Rotation2d(
+        -x_direction, -y_direction
+    )  # Negative because coordinate system on field is inversed i.e. top right is (0, 0)
 
 
 def alliance_tower_pos(is_red: bool) -> Translation2d:
