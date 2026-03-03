@@ -33,18 +33,18 @@ class IntakeComponent:
     target_intake_output = will_reset_to(0.0)
     desired_intake_output = tunable(0.5)
 
-    RETRACTED_INTAKE_ANGLE = radians(115)
+    RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
-    MAX_DEPLOYER_ACCEL = 5
-    MAX_DEPLOYER_VELOCITY = 8
+    MAX_DEPLOYER_ACCEL = 9
+    MAX_DEPLOYER_VELOCITY = 9
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
 
-    ENCODER_ZERO_OFFSET = 0.147705  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = 0.141846  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -73,17 +73,17 @@ class IntakeComponent:
             .with_commutation(intake_motor_commutation_config)
         )
 
-        # TODO tune for real robot:
-        # https://www.reca.lc/arm?armMass=%7B%22s%22%3A4.894%2C%22u%22%3A%22kg%22%7D&comLength=%7B%22s%22%3A0.25%2C%22u%22%3A%22m%22%7D&currentLimit=%7B%22s%22%3A40%2C%22u%22%3A%22A%22%7D&efficiency=100&endAngle=%7B%22s%22%3A117%2C%22u%22%3A%22deg%22%7D&iterationLimit=10000&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22Falcon%20500%22%7D&ratio=%7B%22magnitude%22%3A9.61538461538%2C%22ratioType%22%3A%22Reduction%22%7D&startAngle=%7B%22s%22%3A0%2C%22u%22%3A%22deg%22%7D
+        # siq hand tuned gains
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(10.92)
-            .with_k_i(0.00)
-            .with_k_d(3.17)
-            .with_k_s(0.029908)
+            .with_k_p(80.63)
+            .with_k_i(60.00)
+            .with_k_d(5.05)
+            .with_k_s(0.2220703125)
             .with_k_v(1.09)
             .with_k_a(0.26)
             .with_k_g(1.6)
+            .with_gravity_arm_position_offset(0.00)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
