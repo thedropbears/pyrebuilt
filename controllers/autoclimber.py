@@ -27,8 +27,8 @@ class AutoClimber(StateMachine):
     def start(self):
         self.engage()
 
-    def retract(self):
-        self.engage(self.retracting, True)
+    def ground(self):
+        self.engage(self.grounding, True)
 
     @state(first=True)
     def aligning(self):
@@ -82,7 +82,7 @@ class AutoClimber(StateMachine):
         self.chassis.stop_snapping()
 
     @state(must_finish=True)
-    def retracting(self):
+    def grounding(self):
         self.climber.deploy()
         if self.climber.at_extension_limit():
             self.next_state(self.safing)

@@ -175,7 +175,7 @@ class MyRobot(magicbot.MagicRobot):
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
         self.chassis.set_coast_in_neutral(False)
-        self.climber_state_machine.retract()
+        self.climber_state_machine.ground()
 
     def teleopPeriodic(self) -> None:
         self.leds.set_teleop_lights()
