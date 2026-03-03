@@ -170,13 +170,6 @@ def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
     )
 
 
-def get_tower_heading(robot_pos: Translation2d) -> float:  # heading in degrees
-    if is_in_upper_field_half(robot_pos):
-        return -90
-    else:
-        return 90
-
-
 def is_close_to_tower(robot_pos: Translation2d) -> bool:
     return (
         robot_pos.distance(BLUE_TOWER_CLIMB_POLE) <= ALLOWABLE_DISTANCE_FROM_TOWER
@@ -290,4 +283,4 @@ def is_red() -> bool:
 
 
 def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
-    return robot_pos.Y() < FIELD_CENTRE_POS.Y()
+    return robot_pos.y < FIELD_CENTRE_POS.y

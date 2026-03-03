@@ -1,3 +1,5 @@
+import math
+
 from magicbot import StateMachine, state, timed_state, tunable
 from wpimath.controller import PIDController
 from wpimath.kinematics import ChassisSpeeds
@@ -7,8 +9,8 @@ from components.climber import ClimberComponent
 from utilities.game import (
     alliance_tower_pos,
     get_movement_to_tower,
-    get_tower_heading,
     is_close_to_tower,
+    is_in_upper_field_half,
     is_red,
 )
 
@@ -17,7 +19,6 @@ class AutoClimber(StateMachine):
     chassis: ChassisComponent
     climber: ClimberComponent
 
-    has_breakbeam_triggered = False
     force_autoclimb = tunable(False)
 
     DRIVE_SPEED = 0.1
@@ -30,6 +31,12 @@ class AutoClimber(StateMachine):
             self.chassis.get_pose().translation()
         )
 
+    def get_snap_heading(self) -> float:  # heading in degrees
+        if is_in_upper_field_half(self.chassis.get_pose().translation()):
+            return math.radians(-90)
+        else:
+            return math.radians(90)
+
     def autoclimb(self):
         self.engage()
 
@@ -39,9 +46,7 @@ class AutoClimber(StateMachine):
     @state(first=True)
     def aligning(self):
         self.climber.deploy()
-        self.chassis.snap_to_heading(
-            get_tower_heading(self.chassis.get_pose().translation())
-        )
+        self.chassis.snap_to_heading(self.get_snap_heading())
 
         if self.chassis.at_desired_heading():
             self.next_state(self.moving_to_tower)
@@ -51,11 +56,13 @@ class AutoClimber(StateMachine):
     def moving_to_tower(self):
         pose = self.chassis.get_pose()
         tower_pos = alliance_tower_pos(is_red())
-        tower_heading = get_tower_heading(pose.translation())
+        tower_heading = (
+            self.get_snap_heading()
+        )  # TODO Remove if confirmed that snap_heading already does this
 
         speeds = ChassisSpeeds(
-            self.pid_controller.calculate(pose.X(), tower_pos.X()),
-            self.pid_controller.calculate(pose.Y(), tower_pos.Y()),
+            self.pid_controller.calculate(pose.x, tower_pos.x),
+            self.pid_controller.calculate(pose.y, tower_pos.y),
             self.chassis.heading_controller.calculate(
                 pose.rotation().radians(), tower_heading
             ),
@@ -68,7 +75,7 @@ class AutoClimber(StateMachine):
             return
 
     @timed_state(duration=DRIVE_INTO_TOWER_TIME, next_state="climbing")
-    def driving_into_tower(self, initial_call: bool, state_tm):
+    def driving_into_tower(self):
         direction = get_movement_to_tower(self.chassis.get_pose().translation())
 
         self.chassis.drive_field(
