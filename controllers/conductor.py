@@ -1,4 +1,5 @@
 from magicbot import StateMachine, default_state, state
+from wpimath.geometry import Rotation2d
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
@@ -31,7 +32,7 @@ class Conductor(StateMachine):
         # self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.force_solution(
             desired_flywheel_speed=20,
-            desired_turret_angle=0,
+            desired_turret_bearing=Rotation2d(0),
             desired_hood_angle=0,
         )
         self.ballistics.energise_flywheels()
