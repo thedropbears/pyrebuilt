@@ -11,7 +11,7 @@ from phoenix6.configs import (
     Slot0Configs,
     TalonFXSConfiguration,
 )
-from phoenix6.controls import PositionVoltage
+from phoenix6.controls import MotionMagicVoltage
 from phoenix6.hardware import CANcoder, TalonFXS
 from phoenix6.signals import (
     ExternalFeedbackSensorSourceValue,
@@ -36,8 +36,8 @@ class TurretComponent:
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
-    MAX_VELOCITY = 24.0
-    MAX_ACCELERATION = 50.0
+    MAX_VELOCITY = 4.0
+    MAX_ACCELERATION = 8.0
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
@@ -63,12 +63,12 @@ class TurretComponent:
         # Motor gains
         motor_gains_config = (
             Slot0Configs()
-            .with_k_p(2.4883)
+            .with_k_p(3.8238)
             .with_k_i(0.0)
-            .with_k_d(0.16793)
-            .with_k_s(0.08682)
-            .with_k_v(0.37558)
-            .with_k_a(0.0086723)
+            .with_k_d(0.023241)
+            .with_k_s(0.079256)
+            .with_k_v(2.3677)
+            .with_k_a(0.214941)
         )
 
         motor_output_config = (
@@ -179,7 +179,7 @@ class TurretComponent:
         self.desired_angle = desired_angle
 
     def execute(self) -> None:
-        self.motor.set_control(PositionVoltage(self.desired_angle / math.tau))
+        self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
