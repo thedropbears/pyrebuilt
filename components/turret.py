@@ -41,9 +41,9 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    MAX_TURRET_ROTATION = math.radians(200)
+    MAX_TURRET_ROTATION = math.radians(140)
     NEGATIVE_OVERLAP_START = constrain_angle(MAX_TURRET_ROTATION)
-    MIN_TURRET_ROTATION = math.radians(-200)
+    MIN_TURRET_ROTATION = math.radians(-140)
     POSITIVE_OVERLAP_START = constrain_angle(MIN_TURRET_ROTATION)
     TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
 
