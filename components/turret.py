@@ -2,33 +2,37 @@ import math
 
 from magicbot import feedback, tunable
 from phoenix6.configs import (
+    CANcoderConfiguration,
     CommutationConfigs,
     ExternalFeedbackConfigs,
+    MagnetSensorConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
     TalonFXSConfiguration,
 )
 from phoenix6.controls import PositionVoltage
-from phoenix6.hardware import TalonFXS
-from phoenix6.signals import InvertedValue, MotorArrangementValue, NeutralModeValue
-from wpilib import DutyCycleEncoder, Mechanism2d, SmartDashboard
+from phoenix6.hardware import CANcoder, TalonFXS
+from phoenix6.signals import (
+    ExternalFeedbackSensorSourceValue,
+    InvertedValue,
+    MotorArrangementValue,
+    NeutralModeValue,
+    SensorDirectionValue,
+)
+from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
 from wpimath.geometry import Rotation2d
 
-from ids import DioChannel, TalonId
+from ids import CancoderId, TalonId
 from utilities.functions import constrain_angle
-from utilities.rev import (
-    configure_through_bore_encoder,
-)
 
 
 class TurretComponent:
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
-    _ENCODER_OFFSET_DUTY_CYCLE = 0.359977
-    ENCODER_OFFSET = _ENCODER_OFFSET_DUTY_CYCLE * math.tau / TURRET_TO_ENCODER_GEARING
+    ENCODER_OFFSET = -0.435059
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
@@ -45,13 +49,15 @@ class TurretComponent:
 
     def __init__(self) -> None:
         # Initialise Encoder
-        self.absolute_encoder = DutyCycleEncoder(
-            DioChannel.TURRET_ENCODER,
-            math.tau / TurretComponent.TURRET_TO_ENCODER_GEARING,
-            0.0,
+        self.absolute_encoder = CANcoder(CancoderId.TURRET)
+
+        self.absolute_encoder.configurator.apply(
+            CANcoderConfiguration().with_magnet_sensor(
+                MagnetSensorConfigs()
+                .with_magnet_offset(self.ENCODER_OFFSET)
+                .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+            )
         )
-        configure_through_bore_encoder(self.absolute_encoder)
-        self.absolute_encoder.setInverted(True)
 
         self.motor = TalonFXS(TalonId.TURRET)
         # Motor gains
@@ -67,14 +73,26 @@ class TurretComponent:
 
         motor_output_config = (
             MotorOutputConfigs()
-            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
         motor_feedback_config = (
-            ExternalFeedbackConfigs().with_sensor_to_mechanism_ratio(
-                1 / (self.MOTOR_TO_TURRET_GEARING * math.tau)
+            ExternalFeedbackConfigs()
+            .with_sensor_to_mechanism_ratio(
+                1 / (TurretComponent.TURRET_TO_ENCODER_GEARING)
             )
+            .with_rotor_to_sensor_ratio(
+                1
+                / (
+                    TurretComponent.MOTOR_TO_TURRET_GEARING
+                    * TurretComponent.TURRET_TO_ENCODER_GEARING
+                )
+            )
+            .with_external_feedback_sensor_source(
+                ExternalFeedbackSensorSourceValue.REMOTE_CANCODER
+            )
+            .with_feedback_remote_sensor_id(CancoderId.TURRET)
         )
 
         motor_motion_magic_config = (
@@ -104,11 +122,9 @@ class TurretComponent:
         )
 
     def setup(self) -> None:
-        self._sync_encoder()
         self.slew_to(self.get_current_bearing())
 
     def on_enable(self) -> None:
-        self._sync_encoder()
         self.slew_to(self.get_current_bearing())
 
     def wrap_range(self, target_angle: units.radians) -> units.radians:
@@ -119,49 +135,30 @@ class TurretComponent:
 
         return target_angle
 
-    @feedback
-    def get_raw_absolute_encoder_duty(self) -> float:
-        # This needs to have the inverse transform manually applied if we want to be able to recalibrate it
-        return (
-            self.absolute_encoder.get()
-            * TurretComponent.TURRET_TO_ENCODER_GEARING
-            / math.tau
-        )
-
-    def _get_absolute_encoder_position(self) -> units.radians:
-        return self.absolute_encoder.get() - TurretComponent.ENCODER_OFFSET
-
-    @feedback
-    def _get_absolute_encoder_position_degrees(self) -> units.degrees:
-        return math.degrees(self._get_absolute_encoder_position())
-
-    def _sync_encoder(self) -> None:
-        self.motor.set_position(self._get_absolute_encoder_position())
-
     def get_current_bearing(self) -> Rotation2d:
         return Rotation2d(self.get_current_angle())
 
     def get_current_angle(self) -> units.radians:
-        return self.motor.get_position().value
+        return self.motor.get_position().value * math.tau
 
     @feedback
     def get_current_angle_degrees(self) -> units.degrees:
         return math.degrees(self.get_current_angle())
 
     def get_current_velocity(self) -> units.radians_per_second:
-        return self.motor.get_velocity().value
+        return self.motor.get_velocity().value * math.tau
 
     @feedback
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
         return math.degrees(self.get_current_velocity())
 
     @feedback
-    def get_error(self) -> units.radians:
+    def get_error(self) -> units.turns:
         return self.motor.get_closed_loop_error().value
 
     @feedback
     def get_error_degrees(self) -> units.degrees:
-        return math.degrees(self.get_error())
+        return self.get_error() * 360.0
 
     def slew_relative(self, angle: units.radians) -> None:
         self.desired_angle = self.wrap_range(self.get_current_angle() + angle)
@@ -182,7 +179,7 @@ class TurretComponent:
         self.desired_angle = desired_angle
 
     def execute(self) -> None:
-        self.motor.set_control(PositionVoltage(self.desired_angle))
+        self.motor.set_control(PositionVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
