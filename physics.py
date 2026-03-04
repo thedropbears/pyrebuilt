@@ -236,14 +236,14 @@ class TurretSim:
         self,
         motor_sim: MotorSim,
         moi: units.kilogram_square_meters,
-        encoder: wpilib.DutyCycleEncoder,
+        encoder: phoenix6.hardware.CANcoder,
         encoder_offset: float,
     ):
         self.motor_sim = motor_sim
         self.mech_sim = SimpleMechanism(
             self.motor_sim.gearbox, moi, self.motor_sim.gearing
         )
-        self.encoder_sim = DutyCycleEncoderSim(encoder)
+        self.encoder_sim = encoder.sim_state
         self.encoder_offset = encoder_offset
 
     def update(self, dt: units.seconds) -> None:
@@ -253,7 +253,10 @@ class TurretSim:
             self.mech_sim.get_angular_velocity(),
             dt,
         )
-        self.encoder_sim.set(self.mech_sim.get_angular_position() + self.encoder_offset)
+        self.encoder_sim.set_raw_position(
+            self.mech_sim.get_angular_position() / math.tau - self.encoder_offset
+        )
+        self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
 
 class ArmSim:
@@ -339,10 +342,10 @@ class PhysicsEngine:
         ]
 
         self.turret_sim = TurretSim(
-            SparkMotorSim(
-                DCMotor.NEO,
+            TalonFXMotorSim(
+                DCMotor.minion,
                 robot.turret.motor,
-                gearing=robot.turret.MOTOR_TO_TURRET_GEARING,
+                gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
             ),
             0.02890532995,
             robot.turret.absolute_encoder,

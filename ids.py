@@ -28,6 +28,8 @@ class TalonId(enum.IntEnum):
     INTAKE_DEPLOYER_LEFT = 16
     INTAKE_DEPLOYER_RIGHT = 17
 
+    TURRET = 20
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):
@@ -37,6 +39,8 @@ class CancoderId(enum.IntEnum):
     SWERVE_RL = 2
     SWERVE_RR = 3
     SWERVE_FR = 4
+
+    TURRET = 6
 
     INTAKE = 8
 
@@ -54,8 +58,6 @@ class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
 
     PORT_VISION_ENCODER = 0
-
-    TURRET_ENCODER = 1
 
     INTAKE_DEPLOYER_ENCODER = 7
 
