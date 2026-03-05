@@ -13,7 +13,7 @@ class Conductor(StateMachine):
     chassis: ChassisComponent
     targeter: Targeter
     hopper: HopperComponent
-
+    
     def shoot(self) -> None:
         self.engage()
 
