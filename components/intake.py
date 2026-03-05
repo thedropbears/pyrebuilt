@@ -31,7 +31,7 @@ from ids import CancoderId, TalonId
 
 class IntakeComponent:
     target_intake_output = will_reset_to(0.0)
-    desired_intake_output = tunable(0.6)
+    desired_intake_output = tunable(0.7)
 
     RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
