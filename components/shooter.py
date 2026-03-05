@@ -2,7 +2,7 @@ import math
 
 import rev
 from magicbot import feedback, will_reset_to
-from phoenix6 import configs, controls
+from phoenix6 import configs, controls, signals
 from phoenix6.hardware import TalonFX
 from wpimath import units
 
@@ -28,6 +28,12 @@ class ShooterComponent:
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
 
+        motor_output_config = (
+            configs.MotorOutputConfigs()
+            .with_inverted(signals.InvertedValue.CLOCKWISE_POSITIVE)
+            .with_neutral_mode(signals.NeutralModeValue.COAST)
+        )
+
         flywheel_gains_cfg = (
             configs.Slot0Configs()
             .with_k_s(0.16635)
@@ -41,6 +47,7 @@ class ShooterComponent:
             configs.TalonFXConfiguration()
             .with_slot0(flywheel_gains_cfg)
             .with_feedback(feedback_config)
+            .with_motor_output(motor_output_config)
         )
 
         self.hood_motor = rev.SparkMax(SparkId.HOOD, rev.SparkMax.MotorType.kBrushless)

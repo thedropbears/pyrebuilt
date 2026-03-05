@@ -7,7 +7,7 @@ from ids import TalonId
 
 
 class HopperComponent:
-    desired_indexer_dutycycle = tunable(0.5)
+    desired_indexer_dutycycle = tunable(0.4)
     target_indexer_dutycycle = will_reset_to(0.0)
 
     desired_injector_dutycycle = tunable(0.5)
