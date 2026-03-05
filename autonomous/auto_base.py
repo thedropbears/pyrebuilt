@@ -21,7 +21,7 @@ wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
 class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
-    autoclimber: AutoClimber
+    climber_state_machine: AutoClimber
 
     def __init__(self, trajectory_names: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
@@ -116,8 +116,8 @@ class AutoBase(AutonomousStateMachine):
 
     def done(self):
         super().done()
-        if self.autoclimber.should_autoclimb():
-            self.autoclimber.autoclimb()
+        if self.climber_state_machine.should_autoclimb():
+            self.climber_state_machine.autoclimb()
 
     def follow_trajectory(self, sample: SwerveSample):
         # track path
