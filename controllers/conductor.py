@@ -1,4 +1,4 @@
-from magicbot import StateMachine, default_state, state
+from magicbot import StateMachine, default_state, state, tunable
 from wpimath.geometry import Rotation2d
 
 from components.ballistics import BallisticsComponent
@@ -14,6 +14,9 @@ class Conductor(StateMachine):
     chassis: ChassisComponent
     targeter: Targeter
     hopper: HopperComponent
+
+    flywheel_shoot_speed = tunable(20)
+    hood_angle = tunable(30)
 
     def shoot(self) -> None:
         self.engage()
@@ -31,9 +34,9 @@ class Conductor(StateMachine):
         self.intake.intake()
         # self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.force_solution(
-            desired_flywheel_speed=20,
+            desired_flywheel_speed=self.flywheel_shoot_speed,
             desired_turret_bearing=Rotation2d(0),
-            desired_hood_angle=0,
+            desired_hood_angle=self.hood_angle,
         )
         self.ballistics.energise_flywheels()
 
