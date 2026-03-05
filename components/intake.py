@@ -31,15 +31,15 @@ from ids import CancoderId, TalonId
 
 class IntakeComponent:
     target_intake_output = will_reset_to(0.0)
-    desired_intake_output = tunable(0.5)
+    desired_intake_output = tunable(0.7)
 
     RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
     target_deployer_angle = DEPLOYED_INTAKE_ANGLE
 
-    MAX_DEPLOYER_ACCEL = 9
-    MAX_DEPLOYER_VELOCITY = 9
+    MAX_DEPLOYER_ACCEL = 8
+    MAX_DEPLOYER_VELOCITY = 4
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
