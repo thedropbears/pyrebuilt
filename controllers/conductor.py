@@ -33,4 +33,3 @@ class Conductor(StateMachine):
 
     def done(self) -> None:
         super().done()
-        self.intake.retract()

@@ -36,7 +36,7 @@ class IntakeComponent:
     RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
 
-    target_deployer_angle = DEPLOYED_INTAKE_ANGLE
+    target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
     MAX_DEPLOYER_ACCEL = 8
     MAX_DEPLOYER_VELOCITY = 4
@@ -134,15 +134,12 @@ class IntakeComponent:
             color=Color8Bit(Color.kGreen),
         )
 
-    def on_enable(self) -> None:
-        self.retract()
-
     def intake(self) -> None:
         self.target_intake_output = self.desired_intake_output
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
-    def retract(self) -> None:
-        self.target_deployer_angle = self.RETRACTED_INTAKE_ANGLE
+    def backdrive(self) -> None:
+        self.target_intake_output = -self.desired_intake_output
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
