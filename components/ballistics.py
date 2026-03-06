@@ -58,6 +58,10 @@ class BallisticsComponent:
 
     LEAD_SHOT_ITERATIONS = 2
 
+    TURRET_OFFSET = Translation2d(
+        -0.170, -0.137
+    )  # assuming intake is front... verify before merge
+
     def __init__(self) -> None:
         self.target_position = Translation2d()
         self.tables = (
@@ -135,8 +139,11 @@ class BallisticsComponent:
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
 
-        current_position = current_pose.translation()
         current_rotation = current_pose.rotation()
+        current_position = (
+            current_pose.translation()
+            + BallisticsComponent.TURRET_OFFSET.rotateBy(current_rotation)
+        )
         field_speeds = ChassisSpeeds.fromRobotRelativeSpeeds(
             self.chassis.get_velocity(), current_rotation
         )
