@@ -153,6 +153,12 @@ class IntakeComponent:
         )
         self.intake_motor.set(self.target_intake_output)
 
+    def is_retracting(self) -> bool:
+        return (
+            self.target_deployer_angle != self.RETRACTED_INTAKE_ANGLE
+            and self.get_deployer_position_degrees() > 10
+        )
+
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
