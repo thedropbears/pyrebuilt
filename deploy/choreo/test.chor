@@ -14,8 +14,8 @@
    "precise_speed":{
     "dimension":"LinVel",
     "var":{
-     "exp":"0.75 m / s",
-     "val":0.75
+     "exp":"1 m / s",
+     "val":1.0
     }
    },
    "slower_traverse_speed":{
