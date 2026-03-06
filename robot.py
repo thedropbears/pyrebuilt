@@ -203,7 +203,7 @@ class MyRobot(magicbot.MagicRobot):
             self.shooter_state_machine.shoot()
 
         if self.gamepad.getRightBumperButtonPressed():
-            self.shooter_state_machine.caged_shooting()
+            self.shooter_state_machine.cage_shoot()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.shooter_state_machine.stop_shooting()
