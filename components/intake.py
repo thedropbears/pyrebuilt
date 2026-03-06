@@ -6,6 +6,7 @@ from phoenix6.configs import (
     CommutationConfigs,
     ExternalFeedbackConfigs,
     FeedbackConfigs,
+    HardwareLimitSwitchConfigs,
     MagnetSensorConfigs,
     MotionMagicConfigs,
     MotorOutputConfigs,
@@ -128,12 +129,19 @@ class IntakeComponent:
             .with_feedback_remote_sensor_id(self.deployer_encoder.device_id)
         )
 
+        intake_deployer_hardlimit_config = (
+            HardwareLimitSwitchConfigs()
+            .with_forward_limit_enable(True)
+            .with_reverse_limit_enable(True)
+        )
+
         deployer_config = (
             TalonFXConfiguration()
             .with_motor_output(intake_deployer_output_config)
             .with_slot0(intake_deployer_slot_config)
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
+            .with_hardware_limit_switch(intake_deployer_hardlimit_config)
         )
 
         self.deployer_motor_left.configurator.apply(deployer_config)
