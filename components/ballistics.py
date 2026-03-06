@@ -58,6 +58,8 @@ class BallisticsComponent:
 
     LEAD_SHOT_ITERATIONS = 2
 
+    MINIMUM_LEAD_DISTANCE = 2.0
+
     TURRET_OFFSET = Translation2d(
         -0.170, -0.137
     )  # assuming intake is front... verify before merge
@@ -125,6 +127,9 @@ class BallisticsComponent:
 
         for _ in range(BallisticsComponent.LEAD_SHOT_ITERATIONS):
             distance = predicted_translation.distance(self.target_position)
+
+            if distance < BallisticsComponent.MINIMUM_LEAD_DISTANCE:
+                break
 
             flight_time = np.interp(
                 distance,
