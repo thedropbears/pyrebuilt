@@ -155,8 +155,8 @@ class IntakeComponent:
 
     def is_retracting(self) -> bool:
         return (
-            self.target_deployer_angle != self.RETRACTED_INTAKE_ANGLE
-            and self.get_deployer_position_degrees() > 10
+            self.target_deployer_angle == self.RETRACTED_INTAKE_ANGLE
+            and self.deployer_motor_left.get_closed_loop_error().value > radians(10)
         )
 
     def periodic(self) -> None:
