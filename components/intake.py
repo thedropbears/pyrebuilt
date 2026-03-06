@@ -4,6 +4,7 @@ from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
     CommutationConfigs,
+    ExternalFeedbackConfigs,
     FeedbackConfigs,
     MagnetSensorConfigs,
     MotionMagicConfigs,
@@ -31,7 +32,7 @@ from ids import CancoderId, TalonId
 
 class IntakeComponent:
     target_intake_rps = will_reset_to(0.0)
-    desired_intake_rps = tunable(100)  # TODO set to sensible amount
+    desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
     RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
@@ -43,6 +44,8 @@ class IntakeComponent:
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
+
+    MOTOR_TO_INTAKE_GEARING = (1 / 3) * (36 / 26)
 
     ENCODER_ZERO_OFFSET = 0.141846  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
@@ -63,8 +66,21 @@ class IntakeComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
-        # TODO tune these
-        intake_gains_config = Slot0Configs().with_k_p(0).with_k_i(0).with_k_d(0)
+        intake_motor_feedback_config = (
+            ExternalFeedbackConfigs().with_sensor_to_mechanism_ratio(
+                1 / self.MOTOR_TO_INTAKE_GEARING
+            )
+        )
+
+        intake_gains_config = (
+            Slot0Configs()
+            .with_k_p(0.00067723)
+            .with_k_i(0)
+            .with_k_d(0)
+            .with_k_s(0.36827)
+            .with_k_v(0.21305)
+            .with_k_a(0.0046032)
+        )
 
         intake_motor_commutation_config = CommutationConfigs().with_motor_arrangement(
             MotorArrangementValue.MINION_JST
@@ -75,6 +91,7 @@ class IntakeComponent:
             .with_motor_output(intake_motor_output_config)
             .with_commutation(intake_motor_commutation_config)
             .with_slot0(intake_gains_config)
+            .with_external_feedback(intake_motor_feedback_config)
         )
 
         # siq hand tuned gains
