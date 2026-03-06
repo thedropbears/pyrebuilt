@@ -18,11 +18,13 @@ from phoenix6.controls import Follower, MotionMagicVoltage, VelocityVoltage
 from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
 from phoenix6.signals import (
     FeedbackSensorSourceValue,
+    ForwardLimitTypeValue,
     GravityTypeValue,
     InvertedValue,
     MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
+    ReverseLimitTypeValue,
     SensorDirectionValue,
 )
 from wpilib import Color, Color8Bit, MechanismRoot2d
@@ -55,7 +57,6 @@ class IntakeComponent:
     ARM_MOI = 0.398668741
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
-
         self.intake_motor = TalonFXS(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
@@ -133,6 +134,8 @@ class IntakeComponent:
             HardwareLimitSwitchConfigs()
             .with_forward_limit_enable(True)
             .with_reverse_limit_enable(True)
+            .with_forward_limit_type(ForwardLimitTypeValue.NORMALLY_OPEN)
+            .with_reverse_limit_type(ReverseLimitTypeValue.NORMALLY_OPEN)
         )
 
         deployer_config = (
