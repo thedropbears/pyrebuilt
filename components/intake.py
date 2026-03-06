@@ -1,4 +1,4 @@
-from math import degrees, radians, tau
+from math import degrees, isclose, radians, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
@@ -152,6 +152,11 @@ class IntakeComponent:
             )
         )
         self.intake_motor.set(self.target_intake_output)
+
+    def is_retracting(self) -> bool:
+        return isclose(
+            self.target_deployer_angle, self.RETRACTED_INTAKE_ANGLE, abs_tol=0.01
+        ) and self.deployer_motor_left.get_closed_loop_error().value * tau > radians(10)
 
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
