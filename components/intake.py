@@ -12,7 +12,7 @@ from phoenix6.configs import (
     TalonFXConfiguration,
     TalonFXSConfiguration,
 )
-from phoenix6.controls import Follower, MotionMagicVoltage
+from phoenix6.controls import Follower, MotionMagicVoltage, VelocityVoltage
 from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
 from phoenix6.signals import (
     FeedbackSensorSourceValue,
@@ -30,8 +30,8 @@ from ids import CancoderId, TalonId
 
 
 class IntakeComponent:
-    target_intake_output = will_reset_to(0.0)
-    desired_intake_output = tunable(0.7)
+    target_intake_rps = will_reset_to(0.0)
+    desired_intake_rps = tunable(100)  # TODO set to sensible amount
 
     RETRACTED_INTAKE_ANGLE = radians(119)
     DEPLOYED_INTAKE_ANGLE = radians(0)
@@ -63,6 +63,9 @@ class IntakeComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
+        # TODO tune these
+        intake_gains_config = Slot0Configs().with_k_p(0).with_k_i(0).with_k_d(0)
+
         intake_motor_commutation_config = CommutationConfigs().with_motor_arrangement(
             MotorArrangementValue.MINION_JST
         )
@@ -71,6 +74,7 @@ class IntakeComponent:
             TalonFXSConfiguration()
             .with_motor_output(intake_motor_output_config)
             .with_commutation(intake_motor_commutation_config)
+            .with_slot0(intake_gains_config)
         )
 
         # siq hand tuned gains
@@ -135,11 +139,11 @@ class IntakeComponent:
         )
 
     def intake(self) -> None:
-        self.target_intake_output = self.desired_intake_output
+        self.target_intake_rps = self.desired_intake_rps
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def backdrive(self) -> None:
-        self.target_intake_output = -self.desired_intake_output
+        self.target_intake_rps = -self.desired_intake_rps
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
@@ -151,7 +155,7 @@ class IntakeComponent:
                 MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
             )
         )
-        self.intake_motor.set(self.target_intake_output)
+        self.intake_motor.set_control(VelocityVoltage(self.target_intake_rps))
 
     def is_retracting(self) -> bool:
         return isclose(
