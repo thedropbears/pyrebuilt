@@ -17,8 +17,6 @@ DISTANCE_LOOKUP_30 = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
 SPEED_LOOKUP_30 = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
 DISTANCE_LOOKUP_45 = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
 SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
-DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
-SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
 
 type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
 
@@ -52,9 +50,6 @@ class BallisticsComponent:
             ),
             LookupTable(
                 DISTANCE_LOOKUP_45, SPEED_LOOKUP_45, math.radians(45), "45 degree table"
-            ),
-            LookupTable(
-                DISTANCE_LOOKUP_60, SPEED_LOOKUP_60, math.radians(60), "60 degree table"
             ),
         )
         self.active_table = self.tables[0]
