@@ -197,3 +197,11 @@ class IntakeComponent:
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
         return degrees(self.get_deployer_position())
+
+    @feedback
+    def at_retracted_hard_limit(self) -> bool:
+        return self.deployer_motor_left.get_fault_forward_hard_limit().value
+
+    @feedback
+    def at_deployed_hard_limit(self) -> bool:
+        return self.deployer_motor_left.get_fault_reverse_hard_limit().value
