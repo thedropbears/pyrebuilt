@@ -138,7 +138,10 @@ class IntakeComponent:
         self.target_intake_output = self.desired_intake_output
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
-    def backdrive(self) -> None:
+    def drive_rollers(self) -> None:
+        self.target_intake_output = self.desired_intake_output
+
+    def backdrive_rollers(self) -> None:
         self.target_intake_output = -self.desired_intake_output
 
     def execute(self) -> None:

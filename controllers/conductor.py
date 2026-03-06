@@ -31,5 +31,12 @@ class Conductor(StateMachine):
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
 
+    @state(must_finish=True)
+    def caged_shooting(self) -> None:
+        self.hopper.feed()
+        self.intake.drive_rollers()
+        self.ballistics.solve_for(self.targeter.get_target())
+        self.ballistics.energise_flywheels()
+
     def done(self) -> None:
         super().done()
