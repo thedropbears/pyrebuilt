@@ -3,9 +3,10 @@ from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
-from magicbot import feedback, will_reset_to
+from magicbot import feedback, tunable, will_reset_to
 from wpimath import units
 from wpimath.geometry import Translation2d
+from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent
@@ -15,8 +16,10 @@ from utilities.game import is_in_transition_zone
 # TODO: Tune lookup tables for use
 DISTANCE_LOOKUP_30 = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
 SPEED_LOOKUP_30 = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
+TIME_LOOKUP_30 = np.array([0.5, 0.7, 0.9, 1.1, 1.2], dtype=float)
 DISTANCE_LOOKUP_45 = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
 SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
+TIME_LOOKUP_45 = np.array([0.5, 0.7, 0.9, 1.1, 1.2], dtype=float)
 
 type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
 
@@ -27,6 +30,15 @@ class LookupTable:
     """The distance (m) interpolation table."""
     speed: npt.NDArray[np.float64]
     """The target flywheel speed (turn/s) interpolation table."""
+    flight_time: npt.NDArray[np.float64]
+    """The time the ball is in flight ie before it reaches its target.
+    Keep in mind that the long and short shots have a different target
+    so are not swappable without some redesign. we are commited to the
+    "goal shot" and "pass shot" paradigm
+
+    The time stamp for a goal shot should be once its inside the goal
+    The flight time for a "pass shot" should be once its hit the ground
+    """
     hood_angle: units.radians
     name: str
 
@@ -42,14 +54,26 @@ class BallisticsComponent:
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
 
+    lead_shots = tunable(False)
+
+    LEAD_SHOT_ITERATIONS = 2
+
     def __init__(self) -> None:
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
-                DISTANCE_LOOKUP_30, SPEED_LOOKUP_30, math.radians(30), "30 degree table"
+                DISTANCE_LOOKUP_30,
+                SPEED_LOOKUP_30,
+                TIME_LOOKUP_30,
+                math.radians(30),
+                "30 degree table",
             ),
             LookupTable(
-                DISTANCE_LOOKUP_45, SPEED_LOOKUP_45, math.radians(45), "45 degree table"
+                DISTANCE_LOOKUP_45,
+                SPEED_LOOKUP_45,
+                TIME_LOOKUP_45,
+                math.radians(45),
+                "45 degree table",
             ),
         )
         self.active_table = self.tables[0]
@@ -80,14 +104,48 @@ class BallisticsComponent:
             desired_hood_angle,
         )
 
+    def solve_moving_shot(
+        self, current_position: Translation2d, current_velocity: Translation2d
+    ):
+        """pretty how you going but we do what we can. This worked well enough
+        for us in Rapid React. We are basically iterating N times assuming
+        constant velocity to determine where the equivilent static shot would
+        be from"""
+
+        predicted_translation = current_position
+
+        if not self.lead_shots:
+            return predicted_translation
+
+        flight_time = 0.0
+
+        for _ in range(BallisticsComponent.LEAD_SHOT_ITERATIONS):
+            distance = predicted_translation.distance(self.target_position)
+
+            flight_time = np.interp(
+                distance,
+                self.active_table.dist,
+                self.active_table.flight_time,
+            )
+
+            predicted_translation = current_position + current_velocity * flight_time
+
+        return predicted_translation
+
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
 
         current_position = current_pose.translation()
         current_rotation = current_pose.rotation()
+        field_speeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            self.chassis.get_velocity(), current_rotation
+        )
+        current_velocity = Translation2d(field_speeds.vx, field_speeds.vy)
 
-        distance_to_target = current_position.distance(self.target_position)
-        angle_to_target = (self.target_position - current_position).angle()
+        predicted_position = self.solve_moving_shot(current_position, current_velocity)
+
+        distance_to_target = predicted_position.distance(self.target_position)
+        angle_to_target = (self.target_position - predicted_position).angle()
 
         if self.forced_solution is None:
             target_turret_angle = (angle_to_target - current_rotation).radians()
