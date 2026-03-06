@@ -237,9 +237,6 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.intake.intake()
 
-        if self.gamepad.getYButton():
-            self.intake.retract()
-
         if self.gamepad.getAButton():
             self.climber.deploy()
 
