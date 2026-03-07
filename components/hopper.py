@@ -17,10 +17,12 @@ from ids import TalonId
 
 class HopperComponent:
     desired_hopper_surface_speed = tunable(10)  # meters / sec
-    target_hopper_surface_speed = will_reset_to(0.0)
 
     INJECTOR_WHEEL_DIAMETER = units.meters(0.05)  # meters
     INDEXER_WHEEL_DIAMETER = units.meters(0.137)  # meters
+
+    target_indexer_rps = will_reset_to(0.0)
+    target_injector_rps = will_reset_to(0.0)
 
     MOTOR_TO_INDEXER_RATIO = 1
     MOTOR_TO_INJECTOR_RATIO = 1
@@ -83,9 +85,6 @@ class HopperComponent:
             .with_slot0(injector_gains_config)
         )
 
-        self.target_indexer_rps = 0.0
-        self.target_injector_rps = 0.0
-
     @feedback
     def get_target_indexer_rps(self) -> float:
         return self.target_indexer_rps
@@ -105,12 +104,11 @@ class HopperComponent:
         )
 
     def feed(self) -> None:
-        self.target_hopper_surface_speed = self.desired_hopper_surface_speed
 
-        self.target_indexer_rps = self.target_hopper_surface_speed / (
+        self.target_indexer_rps = self.desired_hopper_surface_speed / (
             pi * self.INDEXER_WHEEL_DIAMETER
         )
-        self.target_injector_rps = self.target_hopper_surface_speed / (
+        self.target_injector_rps = self.desired_hopper_surface_speed / (
             pi * self.INJECTOR_WHEEL_DIAMETER
         )
 
