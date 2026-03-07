@@ -158,11 +158,14 @@ class IntakeComponent:
         )
 
     def intake(self) -> None:
-        self.target_intake_rps = self.desired_intake_rps
+        self.drive()
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def backdrive(self) -> None:
         self.target_intake_rps = -self.desired_intake_rps
+
+    def drive(self) -> None:
+        self.target_intake_rps = self.desired_intake_rps
 
     def execute(self) -> None:
         self.deployer_motor_left.set_control(
