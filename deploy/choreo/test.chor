@@ -14,8 +14,8 @@
    "precise_speed":{
     "dimension":"LinVel",
     "var":{
-     "exp":"1 m / s",
-     "val":1.0
+     "exp":"0.75 m / s",
+     "val":0.75
     }
    },
    "slower_traverse_speed":{
@@ -51,8 +51,8 @@
      "val":4.8
     },
     "heading":{
-     "exp":"0 deg",
-     "val":0.0
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
    "depot_start":{
@@ -79,8 +79,8 @@
      "val":2.7
     },
     "heading":{
-     "exp":"180 deg",
-     "val":3.141592653589793
+     "exp":"0 deg",
+     "val":0.0
     }
    },
    "non_depot_start":{
