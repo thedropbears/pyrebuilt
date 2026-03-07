@@ -20,7 +20,7 @@ from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
-from controllers.intake_state import Intake
+from controllers.gobbler import Gobbler
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import is_red
 from utilities.scalers import rescale_js
@@ -31,15 +31,15 @@ class MyRobot(magicbot.MagicRobot):
     targeter: Targeter
 
     # Controllers
-    shooter_state_machine: Conductor
-    intake_state_machine: Intake
+    conductor: Conductor
+    gobbler: Gobbler
 
     # Components
     hopper: HopperComponent
     ballistics: BallisticsComponent
     shooter: ShooterComponent
     climber: ClimberComponent
-    intake_component: IntakeComponent
+    intake: IntakeComponent
     turret: TurretComponent
     leds: LEDComponent
     port_vision: VisualLocalizer
@@ -80,7 +80,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.mech = wpilib.Mechanism2d(2, 2)
         wpilib.SmartDashboard.putData("Mech2d", self.mech)
-        self.intake_component_mech_root = self.mech.getRoot("Intake", 1.5, 0.1)
+        self.intake_mech_root = self.mech.getRoot("Intake", 1.5, 0.1)
         self.frame_mech_root = self.mech.getRoot("A-Frame", 1, 0)
         self.frame_member = self.frame_mech_root.appendLigament(
             "upright", length=1, angle=90, lineWidth=3
@@ -202,10 +202,10 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis.stop_snapping()
 
         if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.shooter_state_machine.shoot()
+            self.conductor.shoot()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.shooter_state_machine.stop_shooting()
+            self.conductor.stop_shooting()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
@@ -237,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis.stop()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.intake_state_machine.intake()
+            self.gobbler.gobble()
 
         if self.gamepad.getAButton():
             self.climber.deploy()
@@ -267,10 +267,10 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.execute()
 
         self.chassis.execute()
+        self.gobbler.execute()
         self.shooter.execute()
         self.climber.execute()
-        self.intake_state_machine.execute()
-        self.intake_component.execute()
+        self.intake.execute()
         self.leds.execute()
         self.turret.execute()
         self.hopper.execute()
@@ -303,4 +303,4 @@ class MyRobot(magicbot.MagicRobot):
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
         self.turret.periodic()
-        self.intake_component.periodic()
+        self.intake.periodic()
