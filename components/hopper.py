@@ -1,3 +1,5 @@
+from math import pi
+
 from magicbot import tunable, will_reset_to
 from phoenix6.configs import (
     FeedbackConfigs,
@@ -8,16 +10,17 @@ from phoenix6.configs import (
 from phoenix6.controls import VelocityVoltage
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
+from wpimath import units
 
 from ids import TalonId
 
 
 class HopperComponent:
-    desired_indexer_rps = tunable(0.4)
-    target_indexer_rps = will_reset_to(0.0)
+    desired_hopper_surface_speed = tunable(20)  # Meters/sec
+    target_hopper_surface_speed = will_reset_to(0.0)
 
-    desired_injector_rps = tunable(0.5)
-    target_injector_rps = will_reset_to(0.0)
+    INJECTOR_WHEEL_DIAMETER = units.meters(0.137)  # Metres
+    FEEDER_WHEEL_DIAMETER = units.meters(0.05)  # Metres
 
     MOTOR_TO_INDEXER_RATIO = 1
     MOTOR_TO_INJECTOR_RATIO = 1
@@ -81,9 +84,13 @@ class HopperComponent:
         )
 
     def feed(self) -> None:
-        self.target_indexer_rps = self.desired_indexer_rps
-        self.target_injector_rps = self.desired_injector_rps
+        self.target_feeder_rps = self.desired_hopper_surface_speed / (
+            pi * self.FEEDER_WHEEL_DIAMETER
+        )
+        self.target_injector_rps = self.desired_hopper_surface_speed / (
+            pi * self.INJECTOR_WHEEL_DIAMETER
+        )
 
     def execute(self) -> None:
-        self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
-        self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
+        self.indexer_motor.set_control(VelocityVoltage(self.target_feeder_rps))
+        self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
