@@ -1,6 +1,6 @@
 from math import pi
 
-from magicbot import tunable, will_reset_to
+from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
     FeedbackConfigs,
     MotorOutputConfigs,
@@ -18,6 +18,9 @@ from ids import TalonId
 class HopperComponent:
     desired_hopper_surface_speed = tunable(20)  # Meters/sec
     target_hopper_surface_speed = will_reset_to(0.0)
+
+    target_feeder_rps = 0.0
+    target_injector_rps = 0.0
 
     INJECTOR_WHEEL_DIAMETER = units.meters(0.137)  # Metres
     FEEDER_WHEEL_DIAMETER = units.meters(0.05)  # Metres
@@ -83,11 +86,21 @@ class HopperComponent:
             .with_slot0(injector_gains_config)
         )
 
+    @feedback
+    def get_target_feeder_rps(self) -> float:
+        return self.target_feeder_rps
+
+    @feedback
+    def get_target_injector_rps(self) -> float:
+        return self.target_injector_rps
+
     def feed(self) -> None:
-        self.target_feeder_rps = self.desired_hopper_surface_speed / (
+        self.target_hopper_surface_speed = self.desired_hopper_surface_speed
+
+        self.target_feeder_rps = self.target_hopper_surface_speed / (
             pi * self.FEEDER_WHEEL_DIAMETER
         )
-        self.target_injector_rps = self.desired_hopper_surface_speed / (
+        self.target_injector_rps = self.target_hopper_surface_speed / (
             pi * self.INJECTOR_WHEEL_DIAMETER
         )
 
