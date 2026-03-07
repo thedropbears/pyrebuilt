@@ -60,3 +60,13 @@ def clamp_2d(val: tuple[float, float], radius: float) -> tuple[float, float]:
         return (0, 0)
     new_mag = min(mag, radius)
     return new_mag * val[0] / mag, new_mag * val[1] / mag
+
+
+def sign(x: float) -> float:
+    """Compute the sign of a scalr value and return it"""
+    if x > 0.0:
+        return 1.0
+    elif x < 0.0:
+        return -1.0
+    else:
+        return 0.0
