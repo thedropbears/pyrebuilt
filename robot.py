@@ -20,6 +20,7 @@ from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
+from controllers.intake_state import Intake
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import is_red
 from utilities.scalers import rescale_js
@@ -31,13 +32,14 @@ class MyRobot(magicbot.MagicRobot):
 
     # Controllers
     shooter_state_machine: Conductor
+    intake_state_machine: Intake
 
     # Components
     hopper: HopperComponent
     ballistics: BallisticsComponent
     shooter: ShooterComponent
     climber: ClimberComponent
-    intake: IntakeComponent
+    intake_component: IntakeComponent
     turret: TurretComponent
     leds: LEDComponent
     port_vision: VisualLocalizer
@@ -78,7 +80,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.mech = wpilib.Mechanism2d(2, 2)
         wpilib.SmartDashboard.putData("Mech2d", self.mech)
-        self.intake_mech_root = self.mech.getRoot("Intake", 1.5, 0.1)
+        self.intake_component_mech_root = self.mech.getRoot("Intake", 1.5, 0.1)
         self.frame_mech_root = self.mech.getRoot("A-Frame", 1, 0)
         self.frame_member = self.frame_mech_root.appendLigament(
             "upright", length=1, angle=90, lineWidth=3
@@ -235,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis.stop()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.intake.intake()
+            self.intake_state_machine.intake()
 
         if self.gamepad.getAButton():
             self.climber.deploy()
@@ -267,7 +269,8 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.execute()
         self.shooter.execute()
         self.climber.execute()
-        self.intake.execute()
+        self.intake_state_machine.execute()
+        self.intake_component.execute()
         self.leds.execute()
         self.turret.execute()
         self.hopper.execute()
@@ -300,4 +303,4 @@ class MyRobot(magicbot.MagicRobot):
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
         self.turret.periodic()
-        self.intake.periodic()
+        self.intake_component.periodic()

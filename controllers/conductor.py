@@ -3,13 +3,13 @@ from magicbot import StateMachine, default_state, state
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
-from components.intake import IntakeComponent
 from components.targeter import Targeter
+from controllers.intake_state import Intake
 
 
 class Conductor(StateMachine):
     ballistics: BallisticsComponent
-    intake: IntakeComponent
+    intake_state_machine: Intake
     chassis: ChassisComponent
     targeter: Targeter
     hopper: HopperComponent
@@ -27,7 +27,7 @@ class Conductor(StateMachine):
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
         self.hopper.feed()
-        self.intake.intake()
+        self.intake_state_machine.intake()
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
 

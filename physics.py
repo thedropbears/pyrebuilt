@@ -372,17 +372,17 @@ class PhysicsEngine:
         self.intake_arm_sim = ArmSim(
             TalonFXMotorSim(
                 DCMotor.falcon500,
-                robot.intake.deployer_motor_left,
-                robot.intake.deployer_motor_right,
-                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
+                robot.intake_component.deployer_motor_left,
+                robot.intake_component.deployer_motor_right,
+                gearing=1 / robot.intake_component.DEPLOYER_TO_CANCODER_GEARING,
             ),
-            robot.intake.ARM_MOI,
-            robot.intake.ARM_LENGTH,
-            robot.intake.deployer_encoder,
-            robot.intake.ENCODER_ZERO_OFFSET,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
+            robot.intake_component.ARM_MOI,
+            robot.intake_component.ARM_LENGTH,
+            robot.intake_component.deployer_encoder,
+            robot.intake_component.ENCODER_ZERO_OFFSET,
+            robot.intake_component.DEPLOYED_INTAKE_ANGLE,
+            robot.intake_component.RETRACTED_INTAKE_ANGLE,
+            robot.intake_component.DEPLOYED_INTAKE_ANGLE,
         )
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
