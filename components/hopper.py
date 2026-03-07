@@ -16,14 +16,11 @@ from ids import TalonId
 
 
 class HopperComponent:
-    desired_hopper_surface_speed = tunable(20)  # Meters/sec
+    desired_hopper_surface_speed = tunable(10)  # meters / sec
     target_hopper_surface_speed = will_reset_to(0.0)
 
-    target_feeder_rps = 0.0
-    target_injector_rps = 0.0
-
-    INJECTOR_WHEEL_DIAMETER = units.meters(0.137)  # Metres
-    FEEDER_WHEEL_DIAMETER = units.meters(0.05)  # Metres
+    INJECTOR_WHEEL_DIAMETER = units.meters(0.05)  # meters
+    INDEXER_WHEEL_DIAMETER = units.meters(0.137)  # meters
 
     MOTOR_TO_INDEXER_RATIO = 1
     MOTOR_TO_INJECTOR_RATIO = 1
@@ -44,12 +41,12 @@ class HopperComponent:
 
         indexer_gains_config = (
             Slot0Configs()
-            .with_k_p(0)
-            .with_k_i(0)
+            .with_k_p(0.14972)
+            .with_k_i(0.0)
             .with_k_d(0)
-            .with_k_s(0)
-            .with_k_v(0)
-            .with_k_a(0)
+            .with_k_s(0.0050824)
+            .with_k_v(0.11395)
+            .with_k_a(0.01833)
         )
 
         self.indexer_motor.configurator.apply(
@@ -71,12 +68,12 @@ class HopperComponent:
 
         injector_gains_config = (
             Slot0Configs()
-            .with_k_p(0)
+            .with_k_p(0.016508)
             .with_k_i(0)
             .with_k_d(0)
-            .with_k_s(0)
-            .with_k_v(0)
-            .with_k_a(0)
+            .with_k_s(0.074635)
+            .with_k_v(0.11359)
+            .with_k_a(0.0019126)
         )
 
         self.injector_motor.configurator.apply(
@@ -86,24 +83,37 @@ class HopperComponent:
             .with_slot0(injector_gains_config)
         )
 
+        self.target_indexer_rps = 0.0
+        self.target_injector_rps = 0.0
+
     @feedback
-    def get_target_feeder_rps(self) -> float:
-        return self.target_feeder_rps
+    def get_target_indexer_rps(self) -> float:
+        return self.target_indexer_rps
 
     @feedback
     def get_target_injector_rps(self) -> float:
         return self.target_injector_rps
 
+    def get_indexer_surface_speed(self) -> units.meters_per_second:
+        return (
+            self.indexer_motor.get_velocity().value * pi * self.INDEXER_WHEEL_DIAMETER
+        )
+
+    def get_injector_surface_speed(self) -> units.meters_per_second:
+        return (
+            self.injector_motor.get_velocity().value * pi * self.INJECTOR_WHEEL_DIAMETER
+        )
+
     def feed(self) -> None:
         self.target_hopper_surface_speed = self.desired_hopper_surface_speed
 
-        self.target_feeder_rps = self.target_hopper_surface_speed / (
-            pi * self.FEEDER_WHEEL_DIAMETER
+        self.target_indexer_rps = self.target_hopper_surface_speed / (
+            pi * self.INDEXER_WHEEL_DIAMETER
         )
         self.target_injector_rps = self.target_hopper_surface_speed / (
             pi * self.INJECTOR_WHEEL_DIAMETER
         )
 
     def execute(self) -> None:
-        self.indexer_motor.set_control(VelocityVoltage(self.target_feeder_rps))
+        self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
         self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
