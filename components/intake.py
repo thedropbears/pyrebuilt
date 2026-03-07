@@ -34,20 +34,21 @@ class IntakeComponent:
     target_intake_rps = will_reset_to(0.0)
     desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(119)
-    DEPLOYED_INTAKE_ANGLE = radians(0)
+    RETRACTED_INTAKE_ANGLE = radians(109.0)
+    DEPLOYED_INTAKE_ANGLE = radians(-10.0)
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
-    MAX_DEPLOYER_ACCEL = 8
     MAX_DEPLOYER_VELOCITY = 4
+    MAX_DEPLOYER_ACCEL = 20
+    MAX_DEPLOYER_JERK = 120
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
 
     MOTOR_TO_INTAKE_GEARING = (1 / 3) * (36 / 26)
 
-    ENCODER_ZERO_OFFSET = 0.141846  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = 0.115967  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -98,12 +99,12 @@ class IntakeComponent:
         intake_deployer_slot_config = (
             Slot0Configs()
             .with_k_p(80.63)
-            .with_k_i(60.00)
+            .with_k_i(0.00)
             .with_k_d(5.05)
             .with_k_s(0.2220703125)
             .with_k_v(1.09)
             .with_k_a(0.26)
-            .with_k_g(1.6)
+            .with_k_g(0.6)
             .with_gravity_arm_position_offset(0.00)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
@@ -118,6 +119,7 @@ class IntakeComponent:
             MotionMagicConfigs()
             .with_motion_magic_acceleration(self.MAX_DEPLOYER_ACCEL)
             .with_motion_magic_cruise_velocity(self.MAX_DEPLOYER_VELOCITY)
+            .with_motion_magic_jerk(self.MAX_DEPLOYER_JERK)
         )
 
         intake_deployer_feedback_config = (
