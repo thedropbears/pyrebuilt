@@ -120,13 +120,13 @@ class ShooterComponent:
         self.target_shooter_rps = speed
 
     def prefer_long(self):
-        self.target_hood_angle = self.MIN_HOOD_ANGLE
+        self.pitch_to(self.MIN_HOOD_ANGLE)
 
     def prefer_short(self):
-        self.target_hood_angle = self.MAX_HOOD_ANGLE - 2 / self.MIN_HOOD_ANGLE
+        self.pitch_to(self.MAX_HOOD_ANGLE - 2 / self.MIN_HOOD_ANGLE)
 
     def fully_retract(self):
-        self.target_hood_angle = self.MAX_HOOD_ANGLE
+        self.pitch_to(self.MAX_HOOD_ANGLE)
 
     def execute(self) -> None:
         if self.target_shooter_rps != 0.0:
