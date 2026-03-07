@@ -123,7 +123,9 @@ class ShooterComponent:
         self.pitch_to(self.MIN_HOOD_ANGLE)
 
     def prefer_short(self):
-        self.pitch_to(self.MAX_HOOD_ANGLE - 2 / self.MIN_HOOD_ANGLE)
+        self.pitch_to(
+            (self.MAX_HOOD_ANGLE - self.MIN_HOOD_ANGLE) / 2 + self.MIN_HOOD_ANGLE
+        )
 
     def fully_retract(self):
         self.pitch_to(self.MAX_HOOD_ANGLE)
