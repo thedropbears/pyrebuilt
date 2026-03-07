@@ -29,6 +29,7 @@ class ShooterComponent:
     MAX_HOOD_ANGLE: units.turns = 52.0 / 360.0
 
     ENCODER_ZERO_OFFSET = -0.168045
+    FLYWHEEL_GATING_TOLERANCE = 5
 
     HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
         55.0 / 60.0
@@ -99,6 +100,10 @@ class ShooterComponent:
     @feedback
     def get_flywheel_error(self) -> units.turns_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
+
+    @feedback
+    def is_at_speed(self) -> bool:
+        return self.get_flywheel_error() <= self.FLYWHEEL_GATING_TOLERANCE
 
     @feedback
     def get_flywheel_target(self) -> units.turns_per_second:

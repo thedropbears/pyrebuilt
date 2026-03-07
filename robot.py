@@ -213,6 +213,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
 
+        if not self.conductor.is_purged():
+            self.conductor.purge()
+
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
 
