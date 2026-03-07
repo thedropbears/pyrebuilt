@@ -21,8 +21,8 @@
    "slower_traverse_speed":{
     "dimension":"LinVel",
     "var":{
-     "exp":"3 m / s",
-     "val":3.0
+     "exp":"2 m / s",
+     "val":2.0
     }
    },
    "spin_speed":{
@@ -35,8 +35,8 @@
    "traverse_speed":{
     "dimension":"LinVel",
     "var":{
-     "exp":"4 m / s",
-     "val":4.0
+     "exp":"3 m / s",
+     "val":3.0
     }
    }
   },
