@@ -21,7 +21,7 @@ wpilib.SmartDashboard.putData("Hood PID", hood_controller)
 class ShooterComponent:
     target_shooter_rps = will_reset_to(0.0)
 
-    hood_error_tolerance = math.radians(1.0)
+    hood_error_tolerance = 1.0 / 360.0
     # 0 deg   = shooting straight up
     # 90 deg  = shooting horizontal
     # mechanical range is currently 23 - 50 deg in this frame
@@ -114,7 +114,7 @@ class ShooterComponent:
         return self.flywheel_motor.get_closed_loop_error().value
 
     def pitch_relative(self, angle: units.radians):
-        self.pitch_to(self.target_hood_angle + angle)
+        self.pitch_to(self.target_hood_angle + angle / math.tau)
 
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = clamp(
