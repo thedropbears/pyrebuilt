@@ -21,7 +21,7 @@ wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
 class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
-    conductor: Conductor
+    shooter_state_machine: Conductor
 
     def __init__(self, trajectory_names: list[str], actions: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
@@ -109,7 +109,7 @@ class AutoBase(AutonomousStateMachine):
 
         action = self.actions[self.current_leg]
         if action == "shoot":
-            self.conductor.shoot()
+            self.shooter_state_machine.shoot()
         elif action == "cage":
             # self.conductor.cage() # We need the cage method for this
             pass
