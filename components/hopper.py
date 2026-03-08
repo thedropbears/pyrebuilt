@@ -16,7 +16,7 @@ from ids import TalonId
 
 
 class HopperComponent:
-    desired_hopper_surface_speed = tunable(10.0)  # meters / sec
+    desired_hopper_surface_speed = tunable(12.0)  # meters / sec
 
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
     INDEXER_WHEEL_DIAMETER: units.meters = 0.137
