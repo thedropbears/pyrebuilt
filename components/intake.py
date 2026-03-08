@@ -34,8 +34,8 @@ class IntakeComponent:
     target_intake_rps = will_reset_to(0.0)
     desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(109.0)
-    DEPLOYED_INTAKE_ANGLE = radians(-10.0)
+    RETRACTED_INTAKE_ANGLE = radians(107.0)
+    DEPLOYED_INTAKE_ANGLE = radians(-8.0)
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
