@@ -25,8 +25,8 @@ class ShooterComponent:
     # 0 deg   = shooting straight up
     # 90 deg  = shooting horizontal
     # mechanical range is currently 23 - 50 deg in this frame
-    MIN_HOOD_ANGLE = math.radians(23.0)
-    MAX_HOOD_ANGLE = math.radians(50.0)
+    MIN_HOOD_ANGLE = math.radians(25.0)
+    MAX_HOOD_ANGLE = math.radians(52.0)
 
     ENCODER_ZERO_OFFSET = -0.168045
 
