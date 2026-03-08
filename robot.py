@@ -50,7 +50,7 @@ class MyRobot(magicbot.MagicRobot):
 
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
-    test_hood_angle = tunable(0.0)  # degrees
+    test_hood_angle = tunable(45.0)  # degrees
 
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
@@ -245,6 +245,9 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed()
+
+        if self.gamepad.getYButton():
+            self.shooter.pitch_to(math.radians(self.test_hood_angle))
 
         self.targeter.execute()
 
