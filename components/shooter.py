@@ -114,7 +114,11 @@ class ShooterComponent:
         return self.flywheel_motor.get_closed_loop_error().value
 
     def pitch_relative(self, angle: units.radians):
-        self.pitch_to(self.target_hood_angle + angle / math.tau)
+        self.target_hood_angle = clamp(
+            self.target_hood_angle + angle / math.tau,
+            self.MIN_HOOD_ANGLE,
+            self.MAX_HOOD_ANGLE,
+        )
 
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = clamp(
