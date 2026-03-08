@@ -31,7 +31,7 @@ class AutoClimber(StateMachine):
             self.chassis.get_pose().translation()
         )
 
-    def get_snap_heading(self) -> float:  # heading in degrees
+    def get_snap_heading(self) -> float:  # heading in radians
         if is_in_upper_field_half(self.chassis.get_pose().translation()):
             return math.radians(-90)
         else:
