@@ -13,13 +13,21 @@ from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
 
+# fmt: off
 # TODO: Tune lookup tables for use
-DISTANCE_LOOKUP_GOAL = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
-SPEED_LOOKUP_GOAL = np.array([22.0, 33.0, 44.0, 55.0, 66.0], dtype=float)
-TIME_LOOKUP_GOAL = np.array([0.5, 0.7, 0.9, 1.1, 1.2], dtype=float)
+DISTANCE_LOOKUP_30 = np.array([1.5, 2.0, 2.5,   3.0,   3.5,   4.0,   4.5,   5.0,   5.5], dtype=float)
+SPEED_LOOKUP_30 =    np.array([1.5, 2.0, 80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
+TIME_LOOKUP_30 =     np.array([1.5, 2.0, 0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
+
+DISTANCE_LOOKUP_45 = np.array([4.0,   4.5,   5.0,   5.5,   6.0,   6.5,   7.0], dtype=float)
+SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
+TIME_LOOKUP_45 =     np.array([0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
+
+# TODO: Tune lookup tables for use
 DISTANCE_LOOKUP_PASS = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
 SPEED_LOOKUP_PASS = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
 TIME_LOOKUP_PASS = np.array([0.5, 0.7, 0.9, 1.1, 1.2], dtype=float)
+# fmt: on
 
 type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
 
@@ -68,17 +76,24 @@ class BallisticsComponent:
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
-                DISTANCE_LOOKUP_GOAL,
-                SPEED_LOOKUP_GOAL,
-                TIME_LOOKUP_GOAL,
-                math.radians(30),
-                "Goal Table",
+                DISTANCE_LOOKUP_30,
+                SPEED_LOOKUP_30,
+                TIME_LOOKUP_30,
+                math.radians(25),
+                "Score Table 30",
+            ),
+            LookupTable(
+                DISTANCE_LOOKUP_45,
+                SPEED_LOOKUP_45,
+                TIME_LOOKUP_45,
+                math.radians(45),
+                "Score Table 45",
             ),
             LookupTable(
                 DISTANCE_LOOKUP_PASS,
                 SPEED_LOOKUP_PASS,
                 TIME_LOOKUP_PASS,
-                math.radians(45),
+                math.radians(54),
                 "Pass Table",
             ),
         )
