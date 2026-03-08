@@ -23,7 +23,7 @@ class Conductor(StateMachine):
         self.engage()
 
     def stop_shooting(self) -> None:
-        self.done()
+        self.purging()
 
     @default_state
     def tracking(self) -> None:
@@ -37,6 +37,15 @@ class Conductor(StateMachine):
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
         self.leds.conducter_state_machine_active()
+
+    @state(must_finish=True)
+    def purging(self) -> None:
+        self.hopper.feed()
+        self.ballistics.solve_for(self.targeter.get_target())
+        self.ballistics.energise_flywheels()
+
+        if self.intake.is_retracted():
+            self.done()
 
     def done(self) -> None:
         super().done()
