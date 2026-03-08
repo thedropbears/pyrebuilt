@@ -78,7 +78,7 @@ class ShooterComponent:
 
         self.target_hood_angle = self.get_hood_angle_rotations()
 
-        self.hood_velocity = 0.0
+        self.hood_output = 0.0
 
     def on_enable(self) -> None:
         self.target_hood_angle = self.get_hood_angle_rotations()
@@ -95,7 +95,7 @@ class ShooterComponent:
 
     @feedback
     def get_hood_output(self) -> units.turns_per_second:
-        return self.hood_velocity
+        return self.hood_output
 
     @feedback
     def get_hood_error(self) -> units.turns:
@@ -134,7 +134,7 @@ class ShooterComponent:
         else:
             self.flywheel_motor.set_control(controls.CoastOut())
 
-        self.hood_velocity = (
+        self.hood_output = (
             clamp(
                 hood_controller.calculate(
                     self.get_hood_angle_rotations(), self.target_hood_angle
@@ -144,4 +144,4 @@ class ShooterComponent:
             )
             / ShooterComponent.HOOD_SERVO_MAX_SPEED
         )
-        self.hood_servo.setSpeed(self.hood_velocity)
+        self.hood_servo.setSpeed(self.hood_output)
