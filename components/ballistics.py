@@ -115,7 +115,7 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        if is_in_transition_zone(self.chassis.get_pose().translation()):
+        if is_in_transition_zone(current_position):
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
         else:
             self.shooter.pitch_to(target_hood_angle)
