@@ -24,9 +24,9 @@ SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0],
 TIME_LOOKUP_45 =     np.array([0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
 
 # TODO: Tune lookup tables for use
-DISTANCE_LOOKUP_PASS = np.array([2.5, 3.0, 3.5, 4.0, 4.5], dtype=float)
-SPEED_LOOKUP_PASS = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
-TIME_LOOKUP_PASS = np.array([0.5, 0.7, 0.9, 1.1, 1.2], dtype=float)
+DISTANCE_LOOKUP_PASS = np.array([6.0,  7.0,  8.0], dtype=float)
+SPEED_LOOKUP_PASS =    np.array([79.0, 90.0, 101], dtype=float)
+TIME_LOOKUP_PASS =     np.array([0,    0,    0], dtype=float)
 # fmt: on
 
 type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
