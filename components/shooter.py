@@ -76,12 +76,12 @@ class ShooterComponent:
             )
         )
 
-        self.target_hood_angle = self.get_hood_angle()
+        self.target_hood_angle = self.get_hood_angle_rotations()
 
         self.hood_velocity = 0.0
 
     def on_enable(self) -> None:
-        self.target_hood_angle = self.get_hood_angle()
+        self.target_hood_angle = self.get_hood_angle_rotations()
 
     @feedback
     def get_hood_angle_degrees(self) -> units.degrees:
@@ -99,12 +99,12 @@ class ShooterComponent:
 
     @feedback
     def get_hood_error(self) -> units.turns:
-        return self.target_hood_angle - self.get_hood_angle()
+        return self.target_hood_angle - self.get_hood_angle_rotations()
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
         return math.isclose(
-            self.get_hood_angle(),
+            self.get_hood_angle_rotations(),
             self.target_hood_angle,
             abs_tol=self.hood_error_tolerance,
         )
