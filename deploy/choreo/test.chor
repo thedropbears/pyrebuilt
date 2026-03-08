@@ -41,7 +41,7 @@
    }
   },
   "poses":{
-   "depot_climb":{
+   "dp_climb":{
     "x":{
      "exp":"1.4 m",
      "val":1.4
@@ -55,21 +55,91 @@
      "val":3.141592653589793
     }
    },
-   "depot_start":{
+   "dp_pickup_done":{
+    "x":{
+     "exp":"0.5 m",
+     "val":0.5
+    },
+    "y":{
+     "exp":"5.8 m",
+     "val":5.8
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "dp_pickup_rdy":{
+    "x":{
+     "exp":"0.9 m",
+     "val":0.9
+    },
+    "y":{
+     "exp":"7.4 m",
+     "val":7.4
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "dp_start":{
     "x":{
      "exp":"3.6 m",
      "val":3.6
     },
     "y":{
-     "exp":"7.7 m",
-     "val":7.7
+     "exp":"7.65 m",
+     "val":7.65
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "mid_cage_done":{
+    "x":{
+     "exp":"2 m",
+     "val":2.0
+    },
+    "y":{
+     "exp":"5 m",
+     "val":5.0
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "mid_dp_pickup_rdy":{
+    "x":{
+     "exp":"0.5 m",
+     "val":0.5
+    },
+    "y":{
+     "exp":"5 m",
+     "val":5.0
     },
     "heading":{
      "exp":"270 deg",
      "val":4.71238898038469
     }
    },
-   "non_depot_climb":{
+   "mid_start":{
+    "x":{
+     "exp":"3.45 m",
+     "val":3.45
+    },
+    "y":{
+     "exp":"4 m",
+     "val":4.0
+    },
+    "heading":{
+     "exp":"225 deg",
+     "val":3.9269908169872414
+    }
+   },
+   "ndp_climb":{
     "x":{
      "exp":"1.4 m",
      "val":1.4
@@ -83,7 +153,7 @@
      "val":0.0
     }
    },
-   "non_depot_start":{
+   "ndp_start":{
     "x":{
      "exp":"3.6 m",
      "val":3.6
@@ -93,8 +163,8 @@
      "val":0.4
     },
     "heading":{
-     "exp":"90 deg",
-     "val":1.5707963267948966
+     "exp":"270 deg",
+     "val":4.71238898038469
     }
    }
   }

@@ -21,13 +21,14 @@ class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
 
-    def __init__(self, trajectory_names: list[str]) -> None:
+    def __init__(self, trajectory_names: list[str], actions: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
         super().__init__()
 
         self.current_leg = -1
         self.starting_pose = None
         self.trajectories: list[SwerveTrajectory] = []
+        self.actions = actions
         for trajectory_name in trajectory_names:
             try:
                 self.trajectories.append(choreo.load_swerve_trajectory(trajectory_name))
