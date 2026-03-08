@@ -1,6 +1,6 @@
 from math import degrees, isclose, radians, tau
 
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import MagicRobot, feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
     CommutationConfigs,
@@ -34,8 +34,8 @@ class IntakeComponent:
     target_intake_rps = will_reset_to(0.0)
     desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(109.0)
-    DEPLOYED_INTAKE_ANGLE = radians(-10.0)
+    RETRACTED_INTAKE_ANGLE = radians(107.0)
+    DEPLOYED_INTAKE_ANGLE = radians(-8.0)
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
@@ -48,7 +48,7 @@ class IntakeComponent:
 
     MOTOR_TO_INTAKE_GEARING = (1 / 3) * (36 / 26)
 
-    ENCODER_ZERO_OFFSET = 0.115967  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -98,7 +98,7 @@ class IntakeComponent:
         # siq hand tuned gains
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(80.63)
+            .with_k_p(35.63)
             .with_k_i(0.00)
             .with_k_d(5.05)
             .with_k_s(0.2220703125)
@@ -145,7 +145,11 @@ class IntakeComponent:
             CANcoderConfiguration().with_magnet_sensor(
                 MagnetSensorConfigs()
                 .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
-                .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+                .with_sensor_direction(
+                    SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE
+                    if MagicRobot.isSimulation()
+                    else SensorDirectionValue.CLOCKWISE_POSITIVE
+                )
             )
         )
 
