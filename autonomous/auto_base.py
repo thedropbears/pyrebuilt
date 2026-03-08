@@ -8,6 +8,7 @@ from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
+from controllers.conductor import Conductor
 from utilities import game
 
 x_controller = PIDController(2.0, 0.0, 0.0)
@@ -20,6 +21,7 @@ wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
 class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
+    conductor: Conductor
 
     def __init__(self, trajectory_names: list[str], actions: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
@@ -104,6 +106,13 @@ class AutoBase(AutonomousStateMachine):
         if final_pose is None:
             self.done()
             return
+
+        action = self.actions[self.current_leg]
+        if action == "shoot":
+            self.conductor.shoot()
+        elif action == "cage":
+            # self.conductor.cage() # We need the cage method for this
+            pass
 
         sample = self.trajectories[self.current_leg].sample_at(state_tm, game.is_red())
         if sample is not None:
