@@ -111,7 +111,8 @@ class AutoBase(AutonomousStateMachine):
         if action == "shoot":
             self.shooter_state_machine.shoot()
         elif action == "cage":
-            # self.conductor.cage() # We need the cage method for this
+            self.shooter_state_machine.shoot()
+            # self.gobbler.cage() # We need the cage method for this from the gobbler
             pass
 
         sample = self.trajectories[self.current_leg].sample_at(state_tm, game.is_red())
