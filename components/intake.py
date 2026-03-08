@@ -48,7 +48,7 @@ class IntakeComponent:
 
     MOTOR_TO_INTAKE_GEARING = (1 / 3) * (36 / 26)
 
-    ENCODER_ZERO_OFFSET = 0.115967  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.38  # meters
@@ -145,7 +145,7 @@ class IntakeComponent:
             CANcoderConfiguration().with_magnet_sensor(
                 MagnetSensorConfigs()
                 .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
-                .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
+                .with_sensor_direction(SensorDirectionValue.CLOCKWISE_POSITIVE)
             )
         )
 
