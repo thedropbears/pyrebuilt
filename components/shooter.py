@@ -117,10 +117,8 @@ class ShooterComponent:
         self.pitch_to(self.target_hood_angle + angle)
 
     def pitch_to(self, angle: units.radians):
-        self.target_hood_angle = angle
-
         self.target_hood_angle = clamp(
-            self.target_hood_angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+            angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
         )
 
     def set_flywheel(self, speed: units.turns_per_second):
