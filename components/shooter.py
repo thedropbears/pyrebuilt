@@ -13,7 +13,7 @@ from wpimath.controller import PIDController
 from ids import CancoderId, PwmChannel, TalonId
 from utilities.functions import clamp
 
-hood_controller = PIDController(2.0, 0.0, 0.0)
+hood_controller = PIDController(100.0, 0.0, 0.0)
 
 wpilib.SmartDashboard.putData("Hood PID", hood_controller)
 
@@ -25,14 +25,14 @@ class ShooterComponent:
     # 0 deg   = shooting straight up
     # 90 deg  = shooting horizontal
     # mechanical range is currently 23 - 50 deg in this frame
-    MIN_HOOD_ANGLE = math.radians(25.0)
-    MAX_HOOD_ANGLE = math.radians(52.0)
+    MIN_HOOD_ANGLE: units.turns = 25.0 / 360.0
+    MAX_HOOD_ANGLE: units.turns = 52.0 / 360.0
 
     ENCODER_ZERO_OFFSET = -0.168045
 
-    HOOD_SERVO_MAX_SPEED = (
-        55.0 * math.tau / 60.0
-    )  # rad/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
+    HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
+        55.0 / 60.0
+    )  # rot/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
@@ -63,12 +63,8 @@ class ShooterComponent:
         )
 
         self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
-        self.hood_servo.setBounds(
-            2000, 1550, 1500, 1450, 1000
-        )  # TODO Update these with new servo
-        self.hood_servo.setPeriodMultiplier(
-            PWM.PeriodMultiplier.kPeriodMultiplier_4X
-        )  # TODO Update these with new servo
+        self.hood_servo.setBounds(2000, 1550, 1500, 1450, 1000)
+        self.hood_servo.setPeriodMultiplier(PWM.PeriodMultiplier.kPeriodMultiplier_1X)
 
         self.hood_encoder = CANcoder(CancoderId.HOOD)
         self.hood_encoder.configurator.apply(
@@ -90,13 +86,10 @@ class ShooterComponent:
         return math.degrees(self.get_hood_angle())
 
     def get_hood_angle(self) -> units.radians:
-        return self.hood_encoder.get_absolute_position().value * math.tau
+        return self.get_hood_angle_rotations() * math.tau
 
-    def get_hood_angle_rotations(self):
-        return self.hood_encoder.get_absolute_position().value
-
-    def _get_hood_absolute_encoder(self) -> units.radians:
-        return self.hood_encoder.get_absolute_position().value
+    def get_hood_angle_rotations(self) -> units.turns:
+        return self.hood_encoder.get_position().value
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
@@ -116,6 +109,10 @@ class ShooterComponent:
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = angle
 
+        self.target_hood_angle = clamp(
+            self.target_hood_angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
+        )
+
     def set_flywheel(self, speed: units.turns_per_second):
         self.target_shooter_rps = speed
 
@@ -127,18 +124,14 @@ class ShooterComponent:
         else:
             self.flywheel_motor.set_control(controls.CoastOut())
 
-        self.target_hood_angle = clamp(
-            self.target_hood_angle, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
-        )
-
-        hood_velocity = (
+        self.hood_velocity = (
             clamp(
                 hood_controller.calculate(
-                    self.get_hood_angle(), self.target_hood_angle
+                    self.get_hood_angle_rotations(), self.target_hood_angle
                 ),
                 -ShooterComponent.HOOD_SERVO_MAX_SPEED,
                 ShooterComponent.HOOD_SERVO_MAX_SPEED,
             )
             / ShooterComponent.HOOD_SERVO_MAX_SPEED
         )
-        self.hood_servo.setSpeed(hood_velocity)
+        self.hood_servo.setSpeed(self.hood_velocity)
