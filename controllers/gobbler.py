@@ -7,10 +7,10 @@ class Gobbler(StateMachine):
     intake: IntakeComponent
 
     def gobble(self) -> None:
-        self.engage(self.intaking)
+        self.engage(self.intaking, force=True)
 
     def cage(self) -> None:
-        self.engage(self.caging)
+        self.engage(self.caging, force=True)
 
     @state(first=True, must_finish=True)
     def intaking(self) -> None:
