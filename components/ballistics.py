@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Pose2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
@@ -125,15 +125,13 @@ class BallisticsComponent:
             desired_hood_angle,
         )
 
-    def solve_moving_shot(
-        self, current_position: Translation2d, current_velocity: Translation2d
-    ):
+    def solve_moving_shot(self, current_pose: Pose2d, current_velocity: ChassisSpeeds):
         """pretty how you going but we do what we can. This worked well enough
         for us in Rapid React. We are basically iterating N times assuming
         constant velocity to determine where the equivilent static shot would
         be from"""
 
-        predicted_translation = current_position
+        predicted_translation = current_pose.translation()
 
         if not self.lead_shots:
             return predicted_translation
@@ -152,24 +150,20 @@ class BallisticsComponent:
                 self.active_table.flight_time,
             )
 
-            predicted_translation = current_position + current_velocity * flight_time
+            current_twist = current_velocity.toTwist2d(flight_time)
+            predicted_translation = current_pose.exp(current_twist).translation()
 
         return predicted_translation
 
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
-
         current_rotation = current_pose.rotation()
-        current_position = (
-            current_pose.translation()
-            + BallisticsComponent.TURRET_OFFSET.rotateBy(current_rotation)
-        )
-        field_speeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+
+        current_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
             self.chassis.get_velocity(), current_rotation
         )
-        current_velocity = Translation2d(field_speeds.vx, field_speeds.vy)
 
-        predicted_position = self.solve_moving_shot(current_position, current_velocity)
+        predicted_position = self.solve_moving_shot(current_pose, current_velocity)
 
         distance_to_target = predicted_position.distance(self.target_position)
         angle_to_target = (self.target_position - predicted_position).angle()
