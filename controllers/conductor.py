@@ -23,7 +23,7 @@ class Conductor(StateMachine):
         self.engage()
 
     def stop_shooting(self) -> None:
-        self.purging()
+        self.engage("purging", force=True)
 
     @default_state
     def tracking(self) -> None:
