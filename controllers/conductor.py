@@ -7,7 +7,6 @@ from wpimath.kinematics import ChassisSpeeds
 from components.ballistics import BallisticsSolver
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
-from components.intake import IntakeComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
@@ -106,6 +105,9 @@ class Conductor(StateMachine):
         self.engage(self.deploying_only, force=True)
         self.keep_deploying = True
 
+    def backdrive(self) -> None:
+        self.engage(self.backdriving, force=True)
+
     @default_state
     def priming(self) -> None:
         self.dispatch_ballistics_setpoints(False)
@@ -144,6 +146,18 @@ class Conductor(StateMachine):
     @state(must_finish=True)
     def purging(self) -> None:
         self.dispatch_ballistics_setpoints()
+
+        if self.intake.is_retracted():
+            self.done()
+
+    @state
+    def backdriving(self) -> None:
+        self.ballistics.backdrive(50)
+        self.ballistics.solve_for(self.targeter.get_target())
+
+    @state(must_finish=True)
+    def purging(self) -> None:
+        self.activate_full_ballistics()
 
         if self.intake.is_retracted():
             self.done()

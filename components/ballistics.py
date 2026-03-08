@@ -75,6 +75,9 @@ class BallisticsSolver:
         self.distance_to_target = 0.0
         self.sent_rps = 0.0
 
+    def backdrive(self, feed_rate: units.meters_per_second) -> None:
+        self.hopper.backdrive(feed_rate)
+
     def compute_range_bearing_for(
         self, base_to_goal: Translation2d, base_velocity: Translation2d
     ) -> tuple[units.meters, Rotation2d]:
