@@ -98,7 +98,7 @@ class IntakeComponent:
         # siq hand tuned gains
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(80.63)
+            .with_k_p(35.63)
             .with_k_i(0.00)
             .with_k_d(5.05)
             .with_k_s(0.2220703125)
