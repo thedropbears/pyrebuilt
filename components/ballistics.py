@@ -85,9 +85,6 @@ class BallisticsComponent:
             desired_hood_angle,
         )
 
-    def retract_in_trench(self) -> None:
-        pass
-
     def execute(self) -> None:
         current_pose = self.chassis.get_pose()
 
@@ -120,6 +117,5 @@ class BallisticsComponent:
 
         self.shooter.pitch_to(target_hood_angle)
         self.turret.slew_to(target_turret_bearing)
-        if is_in_transition_zone:
-            self.shooter.pitch_to(self.desired_hood_angle)
-            pass
+        if is_in_transition_zone(self.chassis.get_pose().translation()):
+            self.shooter.pitch_to(target_hood_angle)
