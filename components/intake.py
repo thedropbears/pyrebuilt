@@ -1,6 +1,6 @@
 from math import degrees, isclose, radians, tau
 
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import MagicRobot, feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
     CommutationConfigs,
@@ -145,7 +145,11 @@ class IntakeComponent:
             CANcoderConfiguration().with_magnet_sensor(
                 MagnetSensorConfigs()
                 .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
-                .with_sensor_direction(SensorDirectionValue.CLOCKWISE_POSITIVE)
+                .with_sensor_direction(
+                    SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE
+                    if MagicRobot.isSimulation()
+                    else SensorDirectionValue.CLOCKWISE_POSITIVE
+                )
             )
         )
 
