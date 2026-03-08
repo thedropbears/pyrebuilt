@@ -13,7 +13,7 @@ from wpimath.controller import PIDController
 from ids import CancoderId, PwmChannel, TalonId
 from utilities.functions import clamp
 
-hood_controller = PIDController(100.0, 0.0, 0.0)
+hood_controller = PIDController(180.0, 0.0, 0.0)
 
 wpilib.SmartDashboard.putData("Hood PID", hood_controller)
 
@@ -78,6 +78,8 @@ class ShooterComponent:
 
         self.target_hood_angle = self.get_hood_angle()
 
+        self.hood_velocity = 0.0
+
     def on_enable(self) -> None:
         self.target_hood_angle = self.get_hood_angle()
 
@@ -90,6 +92,14 @@ class ShooterComponent:
 
     def get_hood_angle_rotations(self) -> units.turns:
         return self.hood_encoder.get_position().value
+
+    @feedback
+    def get_hood_output(self) -> units.turns_per_second:
+        return self.hood_velocity
+
+    @feedback
+    def get_hood_error(self) -> units.turns:
+        return self.target_hood_angle - self.get_hood_angle()
 
     @feedback
     def hood_is_at_setpoint(self) -> bool:
