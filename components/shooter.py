@@ -25,8 +25,8 @@ class ShooterComponent:
     # 0 deg   = shooting straight up
     # 90 deg  = shooting horizontal
     # mechanical range is currently 23 - 50 deg in this frame
-    MIN_HOOD_ANGLE = math.radians(23.0)
-    MAX_HOOD_ANGLE = math.radians(50.0)
+    MIN_HOOD_ANGLE = math.radians(25.0)
+    MAX_HOOD_ANGLE = math.radians(52.0)
 
     ENCODER_ZERO_OFFSET = -0.168045
 
@@ -34,7 +34,7 @@ class ShooterComponent:
         55.0 * math.tau / 60.0
     )  # rad/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
-    FLYWHEEL_GEAR_RATIO = 1 / (40 / 20)
+    FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
@@ -47,10 +47,10 @@ class ShooterComponent:
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
-            .with_k_s(0.23739)
-            .with_k_v(0.060043)
-            .with_k_a(0.0089409)
-            .with_k_p(0.0071216)
+            .with_k_s(0.19674)
+            .with_k_v(0.078402)
+            .with_k_a(0.0069887)
+            .with_k_p(0.33451)
         )
         feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
             self.FLYWHEEL_GEAR_RATIO
