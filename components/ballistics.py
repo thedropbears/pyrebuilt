@@ -163,7 +163,9 @@ class BallisticsComponent:
             self.chassis.get_velocity(), current_rotation
         )
 
-        predicted_position = self.solve_moving_shot(current_pose, current_velocity)
+        predicted_position = (
+            self.solve_moving_shot(current_pose, current_velocity) + self.TURRET_OFFSET
+        )
 
         distance_to_target = predicted_position.distance(self.target_position)
         angle_to_target = (self.target_position - predicted_position).angle()
