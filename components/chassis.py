@@ -306,10 +306,10 @@ class ChassisComponent:
         )
 
         self.modules = (
-            self.module_fl,
-            self.module_rl,
             self.module_rr,
             self.module_fr,
+            self.module_fl,
+            self.module_rl,
         )
 
         self.kinematics = SwerveDrive4Kinematics(
