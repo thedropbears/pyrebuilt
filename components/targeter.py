@@ -72,6 +72,13 @@ class Targeter:
         )
         return close_pos
 
+    def get_distance_to_target(self):
+        return (
+            self.chassis.get_pose()
+            .translation()
+            .distance(self.target_pos_obj.Translation2d)
+        )
+
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
 
