@@ -112,6 +112,8 @@ class BallisticsComponent:
                 self.forced_solution
             )
 
+            target_turret_angle -= current_rotation.radians()
+
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 

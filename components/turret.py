@@ -25,6 +25,7 @@ from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
 
 from ids import CancoderId, TalonId
+from utilities.functions import clamp
 
 
 class TurretComponent:
@@ -106,9 +107,9 @@ class TurretComponent:
         motor_limits_config = (
             SoftwareLimitSwitchConfigs()
             .with_forward_soft_limit_enable(True)
-            .with_forward_soft_limit_threshold(self.MAX_TURRET_ROTATION)
+            .with_forward_soft_limit_threshold(self.MAX_TURRET_ROTATION / math.tau)
             .with_reverse_soft_limit_enable(True)
-            .with_reverse_soft_limit_threshold(self.MIN_TURRET_ROTATION)
+            .with_reverse_soft_limit_threshold(self.MIN_TURRET_ROTATION / math.tau)
         )
 
         motor_commutation_config = CommutationConfigs().with_motor_arrangement(
@@ -152,6 +153,11 @@ class TurretComponent:
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
         return math.degrees(self.get_current_velocity())
 
+    def clamp_rotation(self, angle: units.radians) -> units.radians:
+        return clamp(
+            self.desired_angle, self.MIN_TURRET_ROTATION, self.MAX_TURRET_ROTATION
+        )
+
     @feedback
     def get_error(self) -> units.turns:
         return self.motor.get_closed_loop_error().value
@@ -161,10 +167,10 @@ class TurretComponent:
         return self.get_error() * 360.0
 
     def slew_relative(self, angle: units.radians) -> None:
-        self.desired_angle = self.get_current_angle() + angle
+        self.desired_angle = self.clamp_rotation(self.get_current_angle() + angle)
 
     def slew_to(self, angle: units.radians) -> None:
-        self.desired_angle = angle
+        self.desired_angle = self.clamp_rotation(angle)
 
     def execute(self) -> None:
         self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
