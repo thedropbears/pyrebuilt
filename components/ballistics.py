@@ -10,6 +10,7 @@ from wpimath.geometry import Rotation2d, Translation2d
 from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
+from utilities.game import is_in_transition_zone
 
 # TODO: Tune lookup tables for use
 DISTANCE_LOOKUP_30 = np.array([1.0, 1.5, 2.0, 2.5, 3.0], dtype=float)
@@ -114,5 +115,8 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        self.shooter.pitch_to(target_hood_angle)
+        if is_in_transition_zone(current_position):
+            self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
+        else:
+            self.shooter.pitch_to(target_hood_angle)
         self.turret.slew_to(target_turret_bearing)
