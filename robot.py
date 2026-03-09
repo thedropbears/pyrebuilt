@@ -257,7 +257,7 @@ class MyRobot(magicbot.MagicRobot):
             else:
                 self.ballistics.force_solution(
                     self.test_flywheel_speed,
-                    Rotation2d.fromDegrees(self.test_turret_angle),
+                    math.radians(self.test_turret_angle),
                     math.radians(self.test_hood_angle),
                 )
 
