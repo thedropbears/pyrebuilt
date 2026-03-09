@@ -154,16 +154,16 @@ class MyRobot(magicbot.MagicRobot):
             self.port_vision_name = "port_turret"
             self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
             self.port_vision_turret_rot = Rotation2d()
-            self.port_vision_camera_offset = Translation3d(-0.030825, 0, 0)
+            self.port_vision_camera_offset = Translation3d(0.0285, 0, 0.0045)
             self.port_vision_camera_pitch = math.radians(-10.0)
-            self.port_vision_encoder_offset = Rotation2d(4.554)
+            self.port_vision_encoder_offset = Rotation2d(2.048)
             self.port_vision_servo_offsets = ServoOffsets(
-                neutral=Rotation2d(4.009),
-                full_range=Rotation2d(6.186),
+                neutral=Rotation2d(1.323),
+                full_range=Rotation2d(3.341),
             )
             self.port_vision_rotation_range = (
-                Rotation2d(2.4),
-                Rotation2d(5.6),
+                Rotation2d(0.852),
+                Rotation2d(3.341),
             )
 
     def teleopInit(self) -> None:
