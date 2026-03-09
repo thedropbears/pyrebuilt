@@ -23,7 +23,6 @@ from phoenix6.signals import (
 )
 from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
-from wpimath.geometry import Rotation2d
 
 from ids import CancoderId, TalonId
 
@@ -134,13 +133,10 @@ class TurretComponent:
         )
 
     def setup(self) -> None:
-        self.slew_to(self.get_current_bearing())
+        self.slew_to(self.get_current_angle())
 
     def on_enable(self) -> None:
-        self.slew_to(self.get_current_bearing())
-
-    def get_current_bearing(self) -> Rotation2d:
-        return Rotation2d(self.get_current_angle())
+        self.slew_to(self.get_current_angle())
 
     def get_current_angle(self) -> units.radians:
         return self.motor.get_position().value * math.tau
@@ -167,8 +163,8 @@ class TurretComponent:
     def slew_relative(self, angle: units.radians) -> None:
         self.desired_angle = self.get_current_angle() + angle
 
-    def slew_to(self, angle: Rotation2d) -> None:
-        self.desired_angle = angle.radians()
+    def slew_to(self, angle: units.radians) -> None:
+        self.desired_angle = angle
 
     def execute(self) -> None:
         self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
