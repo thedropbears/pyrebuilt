@@ -22,8 +22,8 @@ DISTANCE_LOOKUP_45 = np.array([4.0,   4.5,   5.0,   5.5,   6.0,   6.5,   7.0], d
 SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
 TIME_LOOKUP_45 =     np.array([0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
 
-DISTANCE_LOOKUP_PASS = np.array([6.0,  7.0,  8.0,  9.0], dtype=float)
-SPEED_LOOKUP_PASS =    np.array([79.0, 90.0, 101, 130], dtype=float)
+DISTANCE_LOOKUP_PASS = np.array([6.0,   7.0,   8.0,   9.0], dtype=float)
+SPEED_LOOKUP_PASS =    np.array([79.0,  90.0,  101,   130], dtype=float)
 TIME_LOOKUP_PASS =     np.array([1.139, 1.293, 1.376, 1.431], dtype=float)
 # fmt: on
 
@@ -189,7 +189,7 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        if is_in_transition_zone(current_position):
+        if is_in_transition_zone(current_pose.translation()):
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
         else:
             self.shooter.pitch_to(target_hood_angle)
