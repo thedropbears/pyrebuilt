@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from magicbot import feedback, will_reset_to
 from wpimath import units
-from wpimath.geometry import Rotation2d, Translation2d
+from wpimath.geometry import Translation2d
 
 from components.chassis import ChassisComponent
 from components.shooter import ShooterComponent
@@ -20,7 +20,7 @@ SPEED_LOOKUP_45 = np.array([44.0, 55.0, 66.0, 77.0, 88.0], dtype=float)
 DISTANCE_LOOKUP_60 = np.array([4.0, 4.5, 5.0, 5.5, 6.0, 6.5], dtype=float)
 SPEED_LOOKUP_60 = np.array([66.0, 77.0, 87.0, 88.0, 89.0, 90.0], dtype=float)
 
-type ForcedSolution = tuple[units.turns_per_second, Rotation2d, units.radians]
+type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
 
 
 @dataclass
@@ -76,7 +76,7 @@ class BallisticsComponent:
     def force_solution(
         self,
         desired_flywheel_speed: units.turns_per_second,
-        desired_turret_bearing: Rotation2d,
+        desired_turret_bearing: units.radians,
         desired_hood_angle: units.radians,
     ) -> None:
         self.forced_solution = (
@@ -95,7 +95,7 @@ class BallisticsComponent:
         angle_to_target = (self.target_position - current_position).angle()
 
         if self.forced_solution is None:
-            target_turret_bearing = angle_to_target - current_rotation
+            target_turret_angle = (angle_to_target - current_rotation).radians()
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(distance_to_target):
                 for table_pair in self.tables:
@@ -108,7 +108,7 @@ class BallisticsComponent:
                 self.active_table.speed,
             )
         else:
-            target_flywheel_speed, target_turret_bearing, target_hood_angle = (
+            target_flywheel_speed, target_turret_angle, target_hood_angle = (
                 self.forced_solution
             )
 
@@ -119,4 +119,4 @@ class BallisticsComponent:
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
         else:
             self.shooter.pitch_to(target_hood_angle)
-        self.turret.slew_to(target_turret_bearing)
+        self.turret.slew_to(target_turret_angle)

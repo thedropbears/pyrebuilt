@@ -9,6 +9,7 @@ from phoenix6.configs import (
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
+    SoftwareLimitSwitchConfigs,
     TalonFXSConfiguration,
 )
 from phoenix6.controls import MotionMagicVoltage
@@ -22,10 +23,9 @@ from phoenix6.signals import (
 )
 from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
-from wpimath.geometry import Rotation2d
 
 from ids import CancoderId, TalonId
-from utilities.functions import constrain_angle
+from utilities.functions import clamp
 
 
 class TurretComponent:
@@ -43,10 +43,7 @@ class TurretComponent:
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
     MAX_TURRET_ROTATION = math.radians(140)
-    NEGATIVE_OVERLAP_START = constrain_angle(MAX_TURRET_ROTATION)
     MIN_TURRET_ROTATION = math.radians(-140)
-    POSITIVE_OVERLAP_START = constrain_angle(MIN_TURRET_ROTATION)
-    TURRET_MOTION_RANGE = MAX_TURRET_ROTATION - MIN_TURRET_ROTATION
 
     def __init__(self) -> None:
         # Initialise Encoder
@@ -107,6 +104,14 @@ class TurretComponent:
             .with_motion_magic_jerk(self.MAX_JERK)
         )
 
+        motor_limits_config = (
+            SoftwareLimitSwitchConfigs()
+            .with_forward_soft_limit_enable(True)
+            .with_forward_soft_limit_threshold(self.MAX_TURRET_ROTATION / math.tau)
+            .with_reverse_soft_limit_enable(True)
+            .with_reverse_soft_limit_threshold(self.MIN_TURRET_ROTATION / math.tau)
+        )
+
         motor_commutation_config = CommutationConfigs().with_motor_arrangement(
             MotorArrangementValue.MINION_JST
         )
@@ -118,6 +123,7 @@ class TurretComponent:
             .with_external_feedback(motor_feedback_config)
             .with_motion_magic(motor_motion_magic_config)
             .with_commutation(motor_commutation_config)
+            .with_software_limit_switch(motor_limits_config)
         )
 
         mech = Mechanism2d(2, 2)
@@ -128,21 +134,10 @@ class TurretComponent:
         )
 
     def setup(self) -> None:
-        self.slew_to(self.get_current_bearing())
+        self.slew_to(self.get_current_angle())
 
     def on_enable(self) -> None:
-        self.slew_to(self.get_current_bearing())
-
-    def wrap_range(self, target_angle: units.radians) -> units.radians:
-        if target_angle < self.MIN_TURRET_ROTATION:
-            target_angle += self.TURRET_MOTION_RANGE
-        elif target_angle > self.MAX_TURRET_ROTATION:
-            target_angle -= self.TURRET_MOTION_RANGE
-
-        return target_angle
-
-    def get_current_bearing(self) -> Rotation2d:
-        return Rotation2d(self.get_current_angle())
+        self.slew_to(self.get_current_angle())
 
     def get_current_angle(self) -> units.radians:
         return self.motor.get_position().value * math.tau
@@ -158,6 +153,11 @@ class TurretComponent:
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
         return math.degrees(self.get_current_velocity())
 
+    def clamp_rotation(self, angle: units.radians) -> units.radians:
+        return clamp(
+            self.desired_angle, self.MIN_TURRET_ROTATION, self.MAX_TURRET_ROTATION
+        )
+
     @feedback
     def get_error(self) -> units.turns:
         return self.motor.get_closed_loop_error().value
@@ -167,22 +167,10 @@ class TurretComponent:
         return self.get_error() * 360.0
 
     def slew_relative(self, angle: units.radians) -> None:
-        self.desired_angle = self.wrap_range(self.get_current_angle() + angle)
+        self.desired_angle = self.clamp_rotation(self.get_current_angle() + angle)
 
-    def slew_to(self, bearing: Rotation2d) -> None:
-        desired_angle = bearing.radians()
-        current_angle = self.get_current_angle()
-        error = abs(desired_angle - current_angle)
-        if desired_angle >= self.POSITIVE_OVERLAP_START:
-            wraparound_angle = desired_angle - math.tau
-            if abs(wraparound_angle - current_angle) < error:
-                desired_angle = wraparound_angle
-        elif desired_angle <= self.NEGATIVE_OVERLAP_START:
-            wraparound_angle = desired_angle + math.tau
-            if abs(wraparound_angle - current_angle) < error:
-                desired_angle = wraparound_angle
-
-        self.desired_angle = desired_angle
+    def slew_to(self, angle: units.radians) -> None:
+        self.desired_angle = self.clamp_rotation(angle)
 
     def execute(self) -> None:
         self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
