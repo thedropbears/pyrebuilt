@@ -36,8 +36,9 @@ class TurretComponent:
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
-    MAX_VELOCITY = 4.0
-    MAX_ACCELERATION = 8.0
+    MAX_VELOCITY = 3.0
+    MAX_ACCELERATION = 6.0
+    MAX_JERK = 18
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
@@ -63,12 +64,12 @@ class TurretComponent:
         # Motor gains
         motor_gains_config = (
             Slot0Configs()
-            .with_k_p(3.8238)
+            .with_k_p(11.698)
             .with_k_i(0.0)
-            .with_k_d(0.023241)
-            .with_k_s(0.079256)
-            .with_k_v(2.3677)
-            .with_k_a(0.214941)
+            .with_k_d(0.49798)
+            .with_k_s(0.080404)
+            .with_k_v(2.3756)
+            .with_k_a(0.16107)
         )
 
         motor_output_config = (
@@ -103,6 +104,7 @@ class TurretComponent:
             MotionMagicConfigs()
             .with_motion_magic_cruise_velocity(self.MAX_VELOCITY)
             .with_motion_magic_acceleration(self.MAX_ACCELERATION)
+            .with_motion_magic_jerk(self.MAX_JERK)
         )
 
         motor_commutation_config = CommutationConfigs().with_motor_arrangement(
