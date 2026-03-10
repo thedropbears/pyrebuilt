@@ -20,6 +20,7 @@ from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
+from controllers.gobbler import Gobbler
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import is_red
 from utilities.scalers import rescale_js
@@ -30,7 +31,8 @@ class MyRobot(magicbot.MagicRobot):
     targeter: Targeter
 
     # Controllers
-    shooter_state_machine: Conductor
+    conductor: Conductor
+    gobbler: Gobbler
 
     # Components
     hopper: HopperComponent
@@ -200,10 +202,10 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis.stop_snapping()
 
         if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.shooter_state_machine.shoot()
+            self.conductor.shoot()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.shooter_state_machine.stop_shooting()
+            self.conductor.stop_shooting()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
@@ -235,7 +237,7 @@ class MyRobot(magicbot.MagicRobot):
             self.chassis.stop()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.intake.intake()
+            self.gobbler.gobble()
 
         if self.gamepad.getAButton():
             self.climber.deploy()
@@ -265,6 +267,7 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.execute()
 
         self.chassis.execute()
+        self.gobbler.execute()
         self.shooter.execute()
         self.climber.execute()
         self.intake.execute()

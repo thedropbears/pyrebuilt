@@ -183,10 +183,14 @@ class IntakeComponent:
         )
         self.intake_motor.set_control(VelocityVoltage(self.target_intake_rps))
 
-    def is_retracting(self) -> bool:
+    def is_retracted(self) -> bool:
         return isclose(
             self.target_deployer_angle, self.RETRACTED_INTAKE_ANGLE, abs_tol=0.01
-        ) and self.deployer_motor_left.get_closed_loop_error().value * tau > radians(10)
+        ) and isclose(
+            self.get_deployer_position(),
+            self.RETRACTED_INTAKE_ANGLE,
+            abs_tol=radians(10),
+        )
 
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
