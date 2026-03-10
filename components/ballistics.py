@@ -14,9 +14,9 @@ from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
 
 # fmt: off
-DISTANCE_LOOKUP_30 = np.array([1.5, 2.0, 2.5,   3.0,   3.5,   4.0,   4.5,   5.0,   5.5], dtype=float)
-SPEED_LOOKUP_30 =    np.array([1.5, 2.0, 80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
-TIME_LOOKUP_30 =     np.array([1.5, 2.0, 0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
+DISTANCE_LOOKUP_25 = np.array([1.5, 2.0, 2.5,   3.0,   3.5,   4.0,   4.5,   5.0,   5.5], dtype=float)
+SPEED_LOOKUP_25 =    np.array([1.5, 2.0, 80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
+TIME_LOOKUP_25 =     np.array([1.5, 2.0, 0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
 
 DISTANCE_LOOKUP_45 = np.array([4.0,   4.5,   5.0,   5.5,   6.0,   6.5,   7.0], dtype=float)
 SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
@@ -76,11 +76,11 @@ class BallisticsComponent:
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
-                DISTANCE_LOOKUP_30,
-                SPEED_LOOKUP_30,
-                TIME_LOOKUP_30,
+                DISTANCE_LOOKUP_25,
+                SPEED_LOOKUP_25,
+                TIME_LOOKUP_25,
                 math.radians(25),
-                "Score Table 30",
+                "Score Table 25",
             ),
             LookupTable(
                 DISTANCE_LOOKUP_45,
