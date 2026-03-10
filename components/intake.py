@@ -10,6 +10,7 @@ from phoenix6.configs import (
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
+    Slot1Configs,
     TalonFXConfiguration,
     TalonFXSConfiguration,
 )
@@ -39,9 +40,9 @@ class IntakeComponent:
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
-    MAX_DEPLOYER_VELOCITY = 4
-    MAX_DEPLOYER_ACCEL = 20
-    MAX_DEPLOYER_JERK = 120
+    MAX_DEPLOYER_VELOCITY = 3
+    MAX_DEPLOYER_ACCEL = 6
+    MAX_DEPLOYER_JERK = 54
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
@@ -96,11 +97,24 @@ class IntakeComponent:
         )
 
         # siq hand tuned gains
-        intake_deployer_slot_config = (
+        intake_deployer_deploy_config = (
             Slot0Configs()
-            .with_k_p(35.63)
+            .with_k_p(30.63)
             .with_k_i(0.00)
-            .with_k_d(5.05)
+            .with_k_d(3.05)
+            .with_k_s(0.2220703125)
+            .with_k_v(1.09)
+            .with_k_a(0.26)
+            .with_k_g(0.6)
+            .with_gravity_arm_position_offset(0.00)
+            .with_gravity_type(GravityTypeValue.ARM_COSINE)
+        )
+
+        intake_deployer_hold_config = (
+            Slot1Configs()
+            .with_k_p(120.63)
+            .with_k_i(0.00)
+            .with_k_d(3.05)
             .with_k_s(0.2220703125)
             .with_k_v(1.09)
             .with_k_a(0.26)
@@ -133,7 +147,8 @@ class IntakeComponent:
         deployer_config = (
             TalonFXConfiguration()
             .with_motor_output(intake_deployer_output_config)
-            .with_slot0(intake_deployer_slot_config)
+            .with_slot0(intake_deployer_deploy_config)
+            .with_slot1(intake_deployer_hold_config)
             .with_feedback(intake_deployer_feedback_config)
             .with_motion_magic(intake_deployer_magic_config)
         )
@@ -172,8 +187,10 @@ class IntakeComponent:
         self.target_intake_rps = self.desired_intake_rps
 
     def execute(self) -> None:
+
+        active_slot = 1 if self.should_use_holding_config() else 0
         self.deployer_motor_left.set_control(
-            MotionMagicVoltage(self.target_deployer_angle / tau)
+            MotionMagicVoltage(self.target_deployer_angle / tau, slot=active_slot)
         )
         self.deployer_motor_right.set_control(
             Follower(
@@ -190,6 +207,15 @@ class IntakeComponent:
             self.get_deployer_position(),
             self.RETRACTED_INTAKE_ANGLE,
             abs_tol=radians(10),
+        )
+
+    def should_use_holding_config(self) -> bool:
+        return isclose(
+            self.target_deployer_angle, self.DEPLOYED_INTAKE_ANGLE, abs_tol=0.01
+        ) and isclose(
+            self.get_deployer_position(),
+            self.DEPLOYED_INTAKE_ANGLE,
+            abs_tol=radians(15),
         )
 
     def periodic(self) -> None:
