@@ -7,7 +7,7 @@ import wpiutil.log
 import wpiutil.wpistruct
 from magicbot import feedback, tunable
 from photonlibpy.photonCamera import PhotonCamera
-from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
+from photonlibpy.targeting import PhotonPipelineResult, PhotonTrackedTarget
 from wpimath.geometry import (
     Pose2d,
     Pose3d,
@@ -320,16 +320,17 @@ class VisualLocalizer(HasPerLoopCache):
             return
 
         all_results = self.camera.getAllUnreadResults()
+        # Skip processing results other than the most recent.
+        last_results: PhotonPipelineResult | None = None
         for results in all_results:
             # if results didn't see any targets
             if not results.getTargets():
-                return
+                continue
+            last_results = results
 
-            # if we have already processed these results
+        if last_results is not None:
+            results = last_results
             timestamp = results.getTimestampSeconds()
-
-            if timestamp == self.last_timestamp:
-                return
 
             camera_to_robot = self.robot_to_camera(timestamp).inverse()
 
