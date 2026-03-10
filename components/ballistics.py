@@ -9,7 +9,11 @@ from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
+<<<<<<< HEAD
 from components.leds import LEDComponent
+=======
+from components.hopper import HopperComponent
+>>>>>>> 807958e (set hopper surface speed in ballistics)
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
@@ -28,7 +32,9 @@ SPEED_LOOKUP_PASS =    np.array([79.0,  90.0,  101,   130], dtype=float)
 TIME_LOOKUP_PASS =     np.array([1.139, 1.293, 1.376, 1.431], dtype=float)
 # fmt: on
 
-type ForcedSolution = tuple[units.turns_per_second, units.radians, units.radians]
+type ForcedSolution = tuple[
+    units.turns_per_second, units.radians, units.radians, units.meters_per_second
+]
 
 
 @dataclass
@@ -47,6 +53,7 @@ class LookupTable:
     The flight time for a "pass shot" should be once its hit the ground
     """
     hood_angle: units.radians
+    hopper_surface_speed: units.meters_per_second
     name: str
 
     def is_within_range(self, distance: units.meters) -> bool:
@@ -63,7 +70,11 @@ class BallisticsComponent:
     chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
+<<<<<<< HEAD
     leds: LEDComponent
+=======
+    hopper: HopperComponent
+>>>>>>> 807958e (set hopper surface speed in ballistics)
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
@@ -83,6 +94,7 @@ class BallisticsComponent:
                 SPEED_LOOKUP_25,
                 TIME_LOOKUP_25,
                 math.radians(25),
+                10,
                 "Score Table 25",
             ),
             LookupTable(
@@ -90,6 +102,7 @@ class BallisticsComponent:
                 SPEED_LOOKUP_45,
                 TIME_LOOKUP_45,
                 math.radians(45),
+                12,
                 "Score Table 45",
             ),
             LookupTable(
@@ -97,6 +110,7 @@ class BallisticsComponent:
                 SPEED_LOOKUP_PASS,
                 TIME_LOOKUP_PASS,
                 math.radians(54),
+                12,
                 "Pass Table",
             ),
         )
@@ -121,11 +135,13 @@ class BallisticsComponent:
         desired_flywheel_speed: units.turns_per_second,
         desired_turret_bearing: units.radians,
         desired_hood_angle: units.radians,
+        desired_hopper_surface_speed: units.meters_per_second,
     ) -> None:
         self.forced_solution = (
             desired_flywheel_speed,
             desired_turret_bearing,
             desired_hood_angle,
+            desired_hopper_surface_speed,
         )
 
     def solve_moving_shot(self, current_pose: Pose2d, current_velocity: ChassisSpeeds):
@@ -194,11 +210,15 @@ class BallisticsComponent:
             target_flywheel_speed: units.turns_per_second = self.active_table.speed_for(
                 distance_to_target
             )
+            target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
         else:
-            target_flywheel_speed, target_turret_angle, target_hood_angle = (
-                self.forced_solution
-            )
+            (
+                target_flywheel_speed,
+                target_turret_angle,
+                target_hood_angle,
+                target_hopper_surface_speed,
+            ) = self.forced_solution
 
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
@@ -212,3 +232,4 @@ class BallisticsComponent:
 
         if self.is_driving_faster_than_max_shoot_speed():
             self.leds.driving_faster_than_shoot_speed()
+        self.hopper.set_desired_surface_speed(target_hopper_surface_speed)

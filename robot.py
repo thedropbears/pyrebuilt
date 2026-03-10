@@ -54,6 +54,7 @@ class MyRobot(magicbot.MagicRobot):
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
     test_hood_angle = tunable(45.0)  # degrees
+    test_hopper_surface_speed = tunable(12.0)  # metres/s
 
     START_POS_TOLERANCE = 0.2
 
@@ -262,12 +263,16 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.execute()
         self.targeter.execute()
 
-        if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.ballistics.force_solution(
-                self.test_flywheel_speed,
-                math.radians(self.test_turret_angle),
-                math.radians(self.test_hood_angle),
-            )
+        if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
+            if self.gamepad.getRightTriggerAxis() > 0.5:
+                self.ballistics.solve_for(self.targeter.get_target())
+            else:
+                self.ballistics.force_solution(
+                    self.test_flywheel_speed,
+                    math.radians(self.test_turret_angle),
+                    math.radians(self.test_hood_angle),
+                    self.test_hopper_surface_speed,
+                )
 
             self.ballistics.energise_flywheels()
             self.ballistics.execute()
