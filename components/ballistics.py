@@ -60,9 +60,7 @@ class BallisticsComponent:
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
 
-    lead_shots = tunable(False)
-
-    LEAD_SHOT_ITERATIONS = 2
+    LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
 
@@ -131,12 +129,9 @@ class BallisticsComponent:
 
         predicted_translation = current_pose.translation()
 
-        if not self.lead_shots:
-            return predicted_translation
-
         flight_time = 0.0
 
-        for _ in range(BallisticsComponent.LEAD_SHOT_ITERATIONS):
+        for _ in range(self.LEAD_SHOT_ITERATIONS):
             distance = predicted_translation.distance(self.target_position)
 
             if distance < BallisticsComponent.MINIMUM_LEAD_DISTANCE:
