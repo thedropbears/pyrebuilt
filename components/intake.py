@@ -39,9 +39,9 @@ class IntakeComponent:
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
-    MAX_DEPLOYER_VELOCITY = 4
-    MAX_DEPLOYER_ACCEL = 20
-    MAX_DEPLOYER_JERK = 120
+    MAX_DEPLOYER_VELOCITY = 3
+    MAX_DEPLOYER_ACCEL = 6
+    MAX_DEPLOYER_JERK = 54
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
@@ -98,9 +98,9 @@ class IntakeComponent:
         # siq hand tuned gains
         intake_deployer_slot_config = (
             Slot0Configs()
-            .with_k_p(35.63)
+            .with_k_p(30.63)
             .with_k_i(0.00)
-            .with_k_d(5.05)
+            .with_k_d(3.05)
             .with_k_s(0.2220703125)
             .with_k_v(1.09)
             .with_k_a(0.26)
