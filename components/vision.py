@@ -7,7 +7,7 @@ import wpiutil.log
 import wpiutil.wpistruct
 from magicbot import feedback, tunable, will_reset_to
 from photonlibpy import PhotonCamera, PhotonPoseEstimator
-from photonlibpy.targeting import PhotonPipelineResult
+from photonlibpy.targeting import MultiTargetPNPResult, PhotonPipelineResult
 from wpimath.geometry import (
     Rotation2d,
     Rotation3d,
@@ -316,11 +316,17 @@ class VisualLocalizer(HasPerLoopCache):
         all_results = self.camera.getAllUnreadResults()
         # Skip processing results other than the most recent.
         last_results: PhotonPipelineResult | None = None
+        multitag_result: MultiTargetPNPResult | None = None
         for results in all_results:
             # if results didn't see any targets
             if not results.getTargets():
                 continue
+            # We trust multitag results more.
+            # Don't replace multitag results with single tag results.
+            if multitag_result is not None and results.multitagResult is None:
+                continue
             last_results = results
+            multitag_result = results.multitagResult
 
         if last_results is None:
             return
@@ -333,7 +339,7 @@ class VisualLocalizer(HasPerLoopCache):
         if heading is not None:
             self.estimator.addHeadingData(timestamp, heading)
 
-        if last_results.multitagResult:
+        if multitag_result is not None:
             pipeline_result = self.estimator.estimateCoprocMultiTagPose(last_results)
             if pipeline_result is None:
                 return
@@ -341,9 +347,7 @@ class VisualLocalizer(HasPerLoopCache):
             rotation_vision_uncertainty = self.rotation_uncertainty_multi_tag
             self.has_multitag = True
 
-            self.current_reproj = (
-                last_results.multitagResult.estimatedPose.bestReprojErr
-            )
+            self.current_reproj = multitag_result.estimatedPose.bestReprojErr
             if self.current_reproj > self.reproj_error_threshold:
                 return
             self.has_seen_multitag = True
