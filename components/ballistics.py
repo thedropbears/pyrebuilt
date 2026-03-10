@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpimath import units
-from wpimath.geometry import Pose2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
@@ -64,9 +64,7 @@ class BallisticsComponent:
 
     MINIMUM_LEAD_DISTANCE = 2.0
 
-    TURRET_OFFSET = Translation2d(
-        -0.170, -0.137
-    )  # assuming intake is front... verify before merge
+    TURRET_OFFSET = Transform2d(Translation2d(0.170, -0.137), Rotation2d())
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
@@ -149,22 +147,34 @@ class BallisticsComponent:
         return predicted_translation
 
     def execute(self) -> None:
-        current_pose = self.chassis.get_pose()
-        current_rotation = current_pose.rotation()
+        chassis_pose = self.chassis.get_pose()
+        chassis_rotation = chassis_pose.rotation()
 
-        current_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
-            self.chassis.get_velocity(), current_rotation
+        chassis_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
+            self.chassis.get_velocity(), chassis_rotation
         )
 
-        predicted_position = (
-            self.solve_moving_shot(current_pose, current_velocity) + self.TURRET_OFFSET
+        turret_base_pose = chassis_pose.transformBy(self.TURRET_OFFSET)
+
+        turret_offset_field = (
+            turret_base_pose.translation() - chassis_pose.translation()
+        )
+
+        turret_base_velocity = ChassisSpeeds(
+            chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
+            chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
+            chassis_velocity.omega,
+        )
+
+        predicted_position = self.solve_moving_shot(
+            turret_base_pose, turret_base_velocity
         )
 
         distance_to_target = predicted_position.distance(self.target_position)
         angle_to_target = (self.target_position - predicted_position).angle()
 
         if self.forced_solution is None:
-            target_turret_angle = (angle_to_target - current_rotation).radians()
+            target_turret_angle = (angle_to_target - chassis_rotation).radians()
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(distance_to_target):
                 for table_pair in self.tables:
@@ -184,7 +194,7 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        if is_in_transition_zone(current_pose.translation()):
+        if is_in_transition_zone(chassis_pose.translation()):
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
         else:
             self.shooter.pitch_to(target_hood_angle)
