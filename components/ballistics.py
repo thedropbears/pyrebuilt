@@ -51,6 +51,12 @@ class LookupTable:
     def is_within_range(self, distance: units.meters) -> bool:
         return self.dist.min() < distance < self.dist.max()
 
+    def speed_for(self, distance: float) -> float:
+        return np.interp(distance, self.dist, self.speed)
+
+    def flight_time_for(self, distance: float) -> float:
+        return np.interp(distance, self.dist, self.flight_time)
+
 
 class BallisticsComponent:
     chassis: ChassisComponent
@@ -135,11 +141,7 @@ class BallisticsComponent:
             if distance < BallisticsComponent.MINIMUM_LEAD_DISTANCE:
                 break
 
-            flight_time = np.interp(
-                distance,
-                self.active_table.dist,
-                self.active_table.flight_time,
-            )
+            flight_time = self.active_table.flight_time_for(distance)
 
             current_twist = current_velocity.toTwist2d(flight_time)
             predicted_translation = current_pose.exp(current_twist).translation()
@@ -181,11 +183,10 @@ class BallisticsComponent:
                     if table_pair.is_within_range(distance_to_target):
                         self.active_table = table_pair
             target_hood_angle = self.active_table.hood_angle
-            target_flywheel_speed: units.turns_per_second = np.interp(
-                distance_to_target,
-                self.active_table.dist,
-                self.active_table.speed,
+            target_flywheel_speed: units.turns_per_second = self.active_table.speed_for(
+                distance_to_target
             )
+
         else:
             target_flywheel_speed, target_turret_angle, target_hood_angle = (
                 self.forced_solution
