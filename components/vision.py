@@ -418,16 +418,12 @@ def estimate_poses_from_apriltag(
     best_transform = robot_to_camera + target.getBestCameraToTarget()
     alternate_transform = robot_to_camera + target.getAlternateCameraToTarget()
 
-    best_pos = (
-        tag_pose.translation().toTranslation2d()
-        - best_transform.translation().toTranslation2d().rotateBy(robot_heading)
-    )
-    alt_pos = (
-        tag_pose.translation().toTranslation2d()
-        - alternate_transform.translation().toTranslation2d().rotateBy(robot_heading)
-    )
+    # --- Minimal changes from original ---
+    # Step 1: get robot pose in field frame using inverses
+    best_robot_pose_field = tag_pose + best_transform.inverse()
+    alt_robot_pose_field = tag_pose + alternate_transform.inverse()
 
-    return Pose2d(best_pos, robot_heading), Pose2d(alt_pos, robot_heading)
+    return best_robot_pose_field.toPose2d(), alt_robot_pose_field.toPose2d()
 
 
 def get_target_skew(target: PhotonTrackedTarget) -> float:
