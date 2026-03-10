@@ -154,9 +154,7 @@ class TurretComponent:
         return math.degrees(self.get_current_velocity())
 
     def clamp_rotation(self, angle: units.radians) -> units.radians:
-        return clamp(
-            self.desired_angle, self.MIN_TURRET_ROTATION, self.MAX_TURRET_ROTATION
-        )
+        return clamp(angle, self.MIN_TURRET_ROTATION, self.MAX_TURRET_ROTATION)
 
     @feedback
     def get_error(self) -> units.turns:
