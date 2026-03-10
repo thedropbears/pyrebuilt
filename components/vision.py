@@ -72,6 +72,8 @@ class VisualLocalizer(HasPerLoopCache):
 
     reproj_error_threshold = tunable(2.0)
 
+    chassis: ChassisComponent
+
     def __init__(
         self,
         # The name of the camera in PhotonVision.
@@ -92,7 +94,6 @@ class VisualLocalizer(HasPerLoopCache):
         rotation_range: tuple[Rotation2d, Rotation2d],
         field: wpilib.Field2d,
         data_log: wpiutil.log.DataLog,
-        chassis: ChassisComponent,
     ) -> None:
         super().__init__()
         self.camera = PhotonCamera(name)
@@ -155,7 +156,6 @@ class VisualLocalizer(HasPerLoopCache):
             data_log, name + "_vision_pose"
         )
 
-        self.chassis = chassis
         self.current_reproj = 0.0
         self.has_multitag = False
 

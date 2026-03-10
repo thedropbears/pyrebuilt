@@ -27,6 +27,8 @@ from utilities.scalers import rescale_js
 
 
 class MyRobot(magicbot.MagicRobot):
+    # These components have specific ordering concerns with data flow.
+    port_vision: VisualLocalizer
     chassis: ChassisComponent
     targeter: Targeter
 
@@ -42,7 +44,6 @@ class MyRobot(magicbot.MagicRobot):
     intake: IntakeComponent
     turret: TurretComponent
     leds: LEDComponent
-    port_vision: VisualLocalizer
 
     # Driving constraints
     upper_max_speed = tunable(2.0)  # m/s
@@ -251,6 +252,13 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.shooter.pitch_to(math.radians(self.test_hood_angle))
 
+        if self.gamepad.getLeftStickButton():
+            self.port_vision.zero_servo_()
+        elif self.gamepad.getRightStickButton():
+            self.port_vision.full_range_servo_()
+
+        self.port_vision.execute()
+        self.chassis.execute()
         self.targeter.execute()
 
         if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
@@ -266,7 +274,6 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.energise_flywheels()
             self.ballistics.execute()
 
-        self.chassis.execute()
         self.gobbler.execute()
         self.shooter.execute()
         self.climber.execute()
@@ -274,13 +281,6 @@ class MyRobot(magicbot.MagicRobot):
         self.leds.execute()
         self.turret.execute()
         self.hopper.execute()
-
-        if self.gamepad.getLeftStickButton():
-            self.port_vision.zero_servo_()
-        elif self.gamepad.getRightStickButton():
-            self.port_vision.full_range_servo_()
-
-        self.port_vision.execute()
 
     def disabledPeriodic(self) -> None:
         self.leds.set_disabled_lights()
@@ -295,8 +295,8 @@ class MyRobot(magicbot.MagicRobot):
         self.climber.try_index()
 
         self.chassis.update_alliance()
-        self.chassis.update_odometry()
         self.port_vision.execute()
+        self.chassis.update_odometry()
         self.leds.execute()
 
     def robotPeriodic(self) -> None:
