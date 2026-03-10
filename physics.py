@@ -244,7 +244,7 @@ class TurretSim:
             self.motor_sim.gearbox, moi, self.motor_sim.gearing
         )
         self.encoder_sim = encoder.sim_state
-        self.encoder_offset = encoder_offset
+        self.encoder_sim.sensor_offset = encoder_offset
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
@@ -254,7 +254,7 @@ class TurretSim:
             dt,
         )
         self.encoder_sim.set_raw_position(
-            self.mech_sim.get_angular_position() / math.tau - self.encoder_offset
+            self.mech_sim.get_angular_position() / math.tau
         )
         self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
@@ -273,10 +273,8 @@ class ArmSim:
     ) -> None:
         self.motor_sim = motor_sim
         self.encoder_sim = encoder.sim_state
-        self.encoder_offset = encoder_offset
-        self.encoder_sim.set_raw_position(
-            starting_angle / math.tau - self.encoder_offset
-        )
+        self.encoder_sim.sensor_offset = encoder_offset
+        self.encoder_sim.set_raw_position(starting_angle / math.tau)
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
@@ -296,7 +294,7 @@ class ArmSim:
             dt,
         )
         self.encoder_sim.set_raw_position(
-            self.mech_sim.get_angular_position() / math.tau - self.encoder_offset
+            self.mech_sim.get_angular_position() / math.tau
         )
         self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
