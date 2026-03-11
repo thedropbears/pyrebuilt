@@ -9,6 +9,8 @@ from phoenix6.controls import (
 )
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import RGBWColor
+from wpimath.geometry import Translation2d
+from wpimath.units import hertz
 
 from ids import CandleId
 
@@ -43,7 +45,7 @@ class LEDComponent:
     LED_START = 0
     LED_END = 255
 
-    FLASHING_SPEED = 10
+    FLASHING_SPEED = 10.0
 
     current_state_priority = will_reset_to(StatePriorities.IDLE)
 
@@ -58,10 +60,10 @@ class LEDComponent:
 
     def _set_leds(
         self,
-        priority,
-        color,
+        priority: StatePriorities,
+        color: RGBWColor,
         is_flashing=False,
-        speed=FLASHING_SPEED,
+        speed: hertz = FLASHING_SPEED,
         specific_led=None,
     ):
         if priority >= self.current_state_priority:
@@ -87,7 +89,7 @@ class LEDComponent:
                 led_start_index=start_index, led_end_index=end_index, color=color
             )
 
-    def _set_rainbow(self, priority):
+    def _set_rainbow(self, priority: StatePriorities):
         if priority >= self.current_state_priority:
             return
 
@@ -107,10 +109,10 @@ class LEDComponent:
     def no_auto(self):
         self._set_leds(StatePriorities.NO_AUTO, Colors.purple)
 
-    def mispositioned_start(self, translation, tol):
+    def mispositioned_start(self, translation: Translation2d, tol: float):
         # 7,6,5,4 is top, l to r
         target_leds = []
-        blink_speed = 25
+        blink_speed = 25.0
 
         if translation.x < tol:
             target_leds = [7, 6, 0, 1]
