@@ -266,19 +266,12 @@ class VisualLocalizer(HasPerLoopCache):
         turret_rotation = self.turret_rotation_buffer.sample(timestamp)
         if turret_rotation is None:
             return self.robot_to_turret
-        r2t = self.robot_to_turret.translation()
-        t2c = (
-            self.turret_to_camera.translation()
-            .rotateBy(self.turret_to_camera.rotation())
-            .rotateBy(Rotation3d(turret_rotation))
+
+        return (
+            self.robot_to_turret
+            + self.turret_to_camera
+            + Transform3d(Translation3d(), Rotation3d(turret_rotation))
         )
-        trans = r2t + t2c
-        rot = (
-            self.robot_to_turret.rotation()
-            .rotateBy(Rotation3d(turret_rotation))
-            .rotateBy(self.turret_to_camera.rotation())
-        )
-        return Transform3d(trans, rot)
 
     def zero_servo_(self) -> None:
         # ONLY CALL THIS IN TEST MODE!
