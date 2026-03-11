@@ -329,73 +329,75 @@ class VisualLocalizer(HasPerLoopCache):
                 continue
             last_results = results
 
-        if last_results is not None:
-            results = last_results
-            timestamp = results.getTimestampSeconds()
+        if last_results is None:
+            return
 
-            camera_to_robot = self.robot_to_camera(timestamp).inverse()
+        results = last_results
+        timestamp = results.getTimestampSeconds()
 
-            if results.multitagResult:
-                self.last_timestamp = timestamp
-                self.has_multitag = True
-                p = results.multitagResult.estimatedPose
-                pose = (Pose3d() + p.best + camera_to_robot).toPose2d()
-                reprojectionErr = p.bestReprojErr
-                self.current_reproj = reprojectionErr
+        camera_to_robot = self.robot_to_camera(timestamp).inverse()
+
+        if results.multitagResult:
+            self.last_timestamp = timestamp
+            self.has_multitag = True
+            p = results.multitagResult.estimatedPose
+            pose = (Pose3d() + p.best + camera_to_robot).toPose2d()
+            reprojectionErr = p.bestReprojErr
+            self.current_reproj = reprojectionErr
+
+            self.field_pos_obj.setPose(pose)
+
+            if self.current_reproj < self.reproj_error_threshold:
+                self.chassis.estimator.addVisionMeasurement(
+                    pose,
+                    timestamp,
+                    (
+                        self.linear_vision_uncertainty_multi_tag,
+                        self.linear_vision_uncertainty_multi_tag,
+                        self.rotation_vision_uncertainty_multi_tag,
+                    ),
+                )
+
+            if self.should_log:
+                # Multitag results don't have best and alternates
+                self.best_log.setPose(pose)
+        else:
+            self.has_multitag = False
+            if self.only_use_multitag:
+                return
+            self.last_timestamp = timestamp
+            for target in results.getTargets():
+                # filter out likely bad targets
+                if target.getPoseAmbiguity() > 0.1:
+                    continue
+
+                heading = self.heading_buffer.sample(results.getTimestampSeconds())
+                if heading is None:
+                    heading = self.chassis.get_rotation()
+                poses = estimate_poses_from_apriltag(
+                    self.robot_to_camera(results.getTimestampSeconds()),
+                    heading,
+                    target,
+                )
+                if poses is None:
+                    # tag doesn't exist
+                    continue
+
+                pose, _ = poses
 
                 self.field_pos_obj.setPose(pose)
-
-                if self.current_reproj < self.reproj_error_threshold:
-                    self.chassis.estimator.addVisionMeasurement(
-                        pose,
-                        timestamp,
-                        (
-                            self.linear_vision_uncertainty_multi_tag,
-                            self.linear_vision_uncertainty_multi_tag,
-                            self.rotation_vision_uncertainty_multi_tag,
-                        ),
-                    )
+                self.chassis.estimator.addVisionMeasurement(
+                    pose,
+                    timestamp,
+                    (
+                        self.linear_vision_uncertainty,
+                        self.linear_vision_uncertainty,
+                        self.rotation_vision_uncertainty,
+                    ),
+                )
 
                 if self.should_log:
-                    # Multitag results don't have best and alternates
                     self.best_log.setPose(pose)
-            else:
-                self.has_multitag = False
-                if self.only_use_multitag:
-                    return
-                self.last_timestamp = timestamp
-                for target in results.getTargets():
-                    # filter out likely bad targets
-                    if target.getPoseAmbiguity() > 0.1:
-                        continue
-
-                    heading = self.heading_buffer.sample(results.getTimestampSeconds())
-                    if heading is None:
-                        heading = self.chassis.get_rotation()
-                    poses = estimate_poses_from_apriltag(
-                        self.robot_to_camera(results.getTimestampSeconds()),
-                        heading,
-                        target,
-                    )
-                    if poses is None:
-                        # tag doesn't exist
-                        continue
-
-                    pose, _ = poses
-
-                    self.field_pos_obj.setPose(pose)
-                    self.chassis.estimator.addVisionMeasurement(
-                        pose,
-                        timestamp,
-                        (
-                            self.linear_vision_uncertainty,
-                            self.linear_vision_uncertainty,
-                            self.rotation_vision_uncertainty,
-                        ),
-                    )
-
-                    if self.should_log:
-                        self.best_log.setPose(pose)
 
     @feedback
     def sees_target(self) -> bool:
