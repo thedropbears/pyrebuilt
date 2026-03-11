@@ -323,7 +323,7 @@ class MyRobot(magicbot.MagicRobot):
                     relative_translation, self.START_POS_TOLERANCE
                 )
             else:
-                self.leds.set_rainbow()
+                self.leds.idle()
         else:
             self.leds.no_auto()
 

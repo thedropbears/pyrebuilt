@@ -1,3 +1,6 @@
+from enum import IntEnum
+
+from magicbot import will_reset_to
 from phoenix6.controls import (
     EmptyAnimation,
     RainbowAnimation,
@@ -20,53 +23,86 @@ class Colors:
     white = RGBWColor(255, 255, 255, 255)
 
 
+class StatePriorities(IntEnum):
+    HOPPER_JAM = 0
+    TOO_CLOSE_TO_TRENCH_TO_SHOOT = 1
+    DRIVING_FASTER_THAN_MAX_SHOOT_SPEED = 2
+    TURRET_AT_ROTATION_LIMIT = 3
+    TURRET_CLOSE_TO_ROTATION_LIMIT = 4
+    CONDUCTOR_STATE_MACHINE_ACTIVE = 5
+    CONDUCTOR_STATE_MACHINE_TRACKING = 6
+
+    NO_AUTO = 7
+    MISPOSITIONED_START = 8
+    NO_MULTITAG_VISION_SOLUTION = 9
+
+    IDLE = 10
+
+
 class LEDComponent:
     LED_START = 0
     LED_END = 255
 
     FLASHING_SPEED = 10
 
+    CURRENT_STATE_PRIORITY = will_reset_to(StatePriorities.IDLE)
+
+    desired_command: SolidColor | StrobeAnimation | RainbowAnimation | EmptyAnimation
+
     def __init__(self):
         self.candle = CANdle(device_id=CandleId.LED)
-        self.set_rainbow()
+        self._set_rainbow(StatePriorities.IDLE)
 
-    def _set_static_leds(self, color, specific_led=None):
+    def _set_leds(
+        self,
+        priority,
+        color,
+        is_flashing=False,
+        speed=FLASHING_SPEED,
+        specific_led=None,
+    ):
+        if priority >= self.CURRENT_STATE_PRIORITY:
+            return
+
+        self.CURRENT_STATE_PRIORITY = priority
+
         if specific_led:
             start_index, end_index = specific_led, specific_led
         else:
             start_index, end_index = self.LED_START, self.LED_END
 
-        self.desired_command = SolidColor(
-            led_start_index=start_index, led_end_index=end_index, color=color
-        )
+        if is_flashing:
+            self.desired_command = StrobeAnimation(
+                led_start_index=start_index,
+                led_end_index=end_index,
+                color=color,
+                frame_rate=speed,
+            )
 
-    def _set_flashing_leds(self, color, specific_led=None, speed=FLASHING_SPEED):
-        if specific_led:
-            start_index, end_index = specific_led, specific_led
         else:
-            start_index, end_index = self.LED_START, self.LED_END
+            self.desired_command = SolidColor(
+                led_start_index=start_index, led_end_index=end_index, color=color
+            )
 
-        self.desired_command = StrobeAnimation(
-            led_start_index=start_index,
-            led_end_index=end_index,
-            color=color,
-            frame_rate=speed,
-        )
+    def _set_rainbow(self, priority):
+        if priority >= self.CURRENT_STATE_PRIORITY:
+            return
 
-    def set_rainbow(self):
+        self.CURRENT_STATE_PRIORITY = priority
+
         self.desired_command = RainbowAnimation(
             led_start_index=self.LED_START,
             led_end_index=self.LED_END,
         )
 
-    def set_none(self):
+    def _set_none(self):
         self.desired_command = EmptyAnimation(0)
 
     def no_multitag_solution(self):
-        self._set_static_leds(Colors.red)
+        self._set_leds(StatePriorities.NO_MULTITAG_VISION_SOLUTION, Colors.red)
 
     def no_auto(self):
-        self._set_static_leds(StrobeAnimation, Colors.purple)
+        self._set_leds(StatePriorities.NO_AUTO, Colors.purple)
 
     def mispositioned_start(self, translation, tol):
         # 7,6,5,4 is top, l to r
@@ -87,30 +123,41 @@ class LEDComponent:
             target_leds = [4, 5, 6, 7]
             blink_speed = abs(tol / translation.y)
 
-        self.set_none()
+        self._set_none()
         for led in target_leds:
-            self._set_flashing_leds(Colors.blue, led, blink_speed)
+            self._set_leds(
+                StatePriorities.MISPOSITIONED_START,
+                Colors.blue,
+                is_flashing=True,
+                speed=blink_speed,
+                specific_led=led,
+            )
 
     def turret_close_to_rotation_limit(self):
-        self._set_flashing_leds(Colors.orange)
+        self._set_leds(StatePriorities.TURRET_CLOSE_TO_ROTATION_LIMIT, Colors.orange)
 
     def turret_at_rotation_limit(self):
-        self._set_static_leds(Colors.orange)
+        self._set_leds(StatePriorities.TURRET_AT_ROTATION_LIMIT, Colors.orange)
 
     def hopper_jammed(self):
-        self._set_static_leds(Colors.red)
+        self._set_leds(StatePriorities.HOPPER_JAM, Colors.red)
 
     def too_close_to_trench_to_shoot(self):
-        self._set_flashing_leds(Colors.blue)
+        self._set_leds(
+            StatePriorities.TOO_CLOSE_TO_TRENCH_TO_SHOOT, Colors.blue, is_flashing=True
+        )
 
     def driving_faster_than_shoot_speed(self):
-        self._set_static_leds(Colors.blue)
+        self._set_leds(StatePriorities.DRIVING_FASTER_THAN_MAX_SHOOT_SPEED, Colors.blue)
 
     def conducter_state_machine_active(self):
-        self._set_static_leds(Colors.purple)
+        self._set_leds(StatePriorities.CONDUCTOR_STATE_MACHINE_ACTIVE, Colors.purple)
 
     def conductor_state_machine_tracking(self):
-        self._set_static_leds(Colors.green)
+        self._set_leds(StatePriorities.CONDUCTOR_STATE_MACHINE_TRACKING, Colors.green)
+
+    def idle(self):
+        self._set_rainbow(StatePriorities.IDLE)
 
     def execute(self):
         self.candle.set_control(self.desired_command)
