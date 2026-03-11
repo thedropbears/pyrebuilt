@@ -177,6 +177,10 @@ def is_close_to_tower(robot_pos: Translation2d) -> bool:
     )
 
 
+def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
+    return robot_pos.y > FIELD_WIDTH / 2
+
+
 def get_movement_to_tower(robot_pos: Translation2d) -> Rotation2d:
     y_direction = -1 if is_in_upper_field_half(robot_pos) else 1
     x_direction = -1 if is_red() else 1
@@ -280,7 +284,3 @@ def is_alliance_hub_active() -> bool:
 # This will default to the blue alliance if a proper link to the driver station has not yet been established
 def is_red() -> bool:
     return wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed
-
-
-def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
-    return robot_pos.y < FIELD_CENTRE_POS.y

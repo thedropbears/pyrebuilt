@@ -278,6 +278,9 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.energise_flywheels()
             self.ballistics.execute()
 
+        if self.gamepad.getXButton():
+            self.climber_state_machine.autoclimb()
+
         self.gobbler.execute()
         self.shooter.execute()
         self.climber.execute()
@@ -285,6 +288,7 @@ class MyRobot(magicbot.MagicRobot):
         self.leds.execute()
         self.turret.execute()
         self.hopper.execute()
+        self.climber_state_machine.execute()
 
     def disabledPeriodic(self) -> None:
         self.leds.set_disabled_lights()

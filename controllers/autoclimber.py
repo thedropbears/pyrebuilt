@@ -1,6 +1,6 @@
 import math
 
-from magicbot import StateMachine, state, timed_state, tunable
+from magicbot import StateMachine, feedback, state, timed_state, tunable
 from wpimath.controller import PIDController
 from wpimath.kinematics import ChassisSpeeds
 
@@ -31,11 +31,12 @@ class AutoClimber(StateMachine):
             self.chassis.get_pose().translation()
         )
 
-    def get_snap_heading(self) -> float:  # heading in radians
+    @feedback
+    def get_snap_heading(self):  # heading in radians
         if is_in_upper_field_half(self.chassis.get_pose().translation()):
-            return math.radians(-90)
+            return math.radians(180)
         else:
-            return math.radians(90)
+            return math.radians(0)
 
     def autoclimb(self):
         self.engage()
@@ -56,16 +57,10 @@ class AutoClimber(StateMachine):
     def moving_to_tower(self):
         pose = self.chassis.get_pose()
         tower_pos = alliance_tower_pos(is_red())
-        tower_heading = (
-            self.get_snap_heading()
-        )  # TODO Remove if confirmed that snap_heading already does this
 
         speeds = ChassisSpeeds(
             self.pid_controller.calculate(pose.x, tower_pos.x),
             self.pid_controller.calculate(pose.y, tower_pos.y),
-            self.chassis.heading_controller.calculate(
-                pose.rotation().radians(), tower_heading
-            ),
         )
 
         self.chassis.drive_field(speeds.vx, speeds.vy, speeds.omega)
