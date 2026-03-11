@@ -1,7 +1,7 @@
 import choreo
 import wpilib
 from choreo.trajectory import SwerveSample, SwerveTrajectory
-from magicbot import AutonomousStateMachine, state
+from magicbot import AutonomousStateMachine, state, tunable
 from wpilib import RobotBase
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
@@ -9,6 +9,7 @@ from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
 from controllers.conductor import Conductor
+from controllers.gobbler import Gobbler
 from utilities import game
 
 x_controller = PIDController(2.0, 0.0, 0.0)
@@ -21,7 +22,10 @@ wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
 class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
-    shooter_state_machine: Conductor
+    conductor: Conductor
+    gobbler: Gobbler
+
+    action = tunable("none")
 
     def __init__(self, trajectory_names: list[str], actions: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
@@ -107,12 +111,12 @@ class AutoBase(AutonomousStateMachine):
             self.done()
             return
 
-        action = self.actions[self.current_leg]
-        if action == "shoot":
-            self.shooter_state_machine.shoot()
-        elif action == "cage":
-            self.shooter_state_machine.shoot()
-            # self.gobbler.cage() # We need the cage method for this from the gobbler
+        self.action = self.actions[self.current_leg]
+        if self.action == "shoot":
+            self.conductor.shoot()
+        elif self.action == "cage":
+            self.conductor.shoot()
+            self.gobbler.cage()
             pass
 
         sample = self.trajectories[self.current_leg].sample_at(state_tm, game.is_red())
