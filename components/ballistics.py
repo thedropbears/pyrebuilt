@@ -150,6 +150,7 @@ class BallisticsComponent:
             predicted_translation = current_pose.exp(current_twist).translation()
 
         return predicted_translation
+
     def is_driving_faster_than_max_shoot_speed(self) -> bool:
         chassis_speed = self.chassis.get_velocity()
         current_velocity = math.sqrt(chassis_speed.vx**2 + chassis_speed.vy**2)

@@ -47,10 +47,13 @@ class LEDComponent:
 
     CURRENT_STATE_PRIORITY = will_reset_to(StatePriorities.IDLE)
 
-    desired_command: SolidColor | StrobeAnimation | RainbowAnimation | EmptyAnimation
-
     def __init__(self):
         self.candle = CANdle(device_id=CandleId.LED)
+        self.desired_command: (
+            SolidColor | StrobeAnimation | RainbowAnimation | EmptyAnimation
+        )
+
+    def setup(self):
         self._set_rainbow(StatePriorities.IDLE)
 
     def _set_leds(
