@@ -5,7 +5,7 @@ from typing import ClassVar
 import wpilib
 import wpiutil.log
 import wpiutil.wpistruct
-from magicbot import feedback, tunable
+from magicbot import feedback, tunable, will_reset_to
 from photonlibpy.photonCamera import PhotonCamera
 from photonlibpy.targeting import PhotonPipelineResult, PhotonTrackedTarget
 from wpimath.geometry import (
@@ -71,6 +71,8 @@ class VisualLocalizer(HasPerLoopCache):
     rotation_vision_uncertainty_multi_tag = tunable(0.05)
 
     reproj_error_threshold = tunable(2.0)
+
+    should_override = will_reset_to(False)
 
     chassis: ChassisComponent
 
@@ -161,7 +163,6 @@ class VisualLocalizer(HasPerLoopCache):
 
         self._has_pairs = False
 
-        self.should_override = False
         self.override_setpoint = 0.5
 
     @feedback
@@ -395,8 +396,6 @@ class VisualLocalizer(HasPerLoopCache):
 
                     if self.should_log:
                         self.best_log.setPose(pose)
-
-        self.should_override = False
 
     @feedback
     def sees_target(self) -> bool:
