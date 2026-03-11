@@ -14,7 +14,7 @@ from phoenix6.configs import (
     TalonFXConfiguration,
     TalonFXSConfiguration,
 )
-from phoenix6.controls import Follower, MotionMagicVoltage, VelocityVoltage
+from phoenix6.controls import Follower, MotionMagicVoltage, NeutralOut, VelocityVoltage
 from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
 from phoenix6.signals import (
     FeedbackSensorSourceValue,
@@ -56,7 +56,6 @@ class IntakeComponent:
     ARM_MOI = 0.398668741
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
-
         self.intake_motor = TalonFXS(TalonId.INTAKE)
         self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
@@ -187,7 +186,6 @@ class IntakeComponent:
         self.target_intake_rps = self.desired_intake_rps
 
     def execute(self) -> None:
-
         active_slot = 1 if self.should_use_holding_config() else 0
         self.deployer_motor_left.set_control(
             MotionMagicVoltage(self.target_deployer_angle / tau, slot=active_slot)
@@ -198,7 +196,11 @@ class IntakeComponent:
                 MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
             )
         )
-        self.intake_motor.set_control(VelocityVoltage(self.target_intake_rps))
+
+        if self.target_intake_rps == 0.0:
+            self.intake_motor.set_control(NeutralOut())
+        else:
+            self.intake_motor.set_control(VelocityVoltage(self.target_intake_rps))
 
     def is_retracted(self) -> bool:
         return isclose(
