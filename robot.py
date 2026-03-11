@@ -294,12 +294,12 @@ class MyRobot(magicbot.MagicRobot):
 
         self.climber.try_index()
 
-        self._set_prematch_status_lights()
-
         self.chassis.update_alliance()
         self.port_vision.execute()
         self.chassis.update_odometry()
         self.leds.execute()
+
+        self._set_prematch_status_lights()
 
     def _set_prematch_status_lights(self) -> None:
         if not self.port_vision.sees_multi_tag_target():
