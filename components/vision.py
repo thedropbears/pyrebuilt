@@ -158,6 +158,7 @@ class VisualLocalizer(HasPerLoopCache):
 
         self.current_reproj = 0.0
         self.has_multitag = False
+        self.has_seen_multitag = False
 
         self._has_pairs = False
 
@@ -345,12 +346,18 @@ class VisualLocalizer(HasPerLoopCache):
             )
             if self.current_reproj > self.reproj_error_threshold:
                 return
+            self.has_seen_multitag = True
         else:
             if self.only_use_multitag:
                 return
-            pipeline_result = self.estimator.estimatePnpDistanceTrigSolvePose(
-                last_results
-            )
+            if self.has_seen_multitag:
+                pipeline_result = self.estimator.estimatePnpDistanceTrigSolvePose(
+                    last_results
+                )
+            else:
+                pipeline_result = self.estimator.estimateLowestAmbiguityPose(
+                    last_results
+                )
             if pipeline_result is None:
                 return
             linear_vision_uncertainty = self.linear_uncertainty_single_tag
