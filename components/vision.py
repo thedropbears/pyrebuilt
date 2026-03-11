@@ -71,6 +71,7 @@ class VisualLocalizer(HasPerLoopCache):
     reproj_error_threshold = tunable(2.0)
 
     should_override = will_reset_to(False)
+    has_multitag = will_reset_to(False)
 
     chassis: ChassisComponent
 
@@ -329,18 +330,17 @@ class VisualLocalizer(HasPerLoopCache):
         self.estimator.robotToCamera = self.robot_to_camera(timestamp)
 
         heading = self.heading_buffer.sample(timestamp)
-        assert heading
-        self.estimator.addHeadingData(timestamp, heading)
+        if heading is not None:
+            self.estimator.addHeadingData(timestamp, heading)
 
-        self.has_multitag = bool(last_results.multitagResult)
-
-        if self.has_multitag:
+        if last_results.multitagResult:
             pipeline_result = self.estimator.estimateCoprocMultiTagPose(last_results)
             if pipeline_result is None:
                 return
             linear_vision_uncertainty = self.linear_uncertainty_multi_tag
             rotation_vision_uncertainty = self.rotation_uncertainty_multi_tag
-            assert last_results.multitagResult
+            self.has_multitag = True
+
             self.current_reproj = (
                 last_results.multitagResult.estimatedPose.bestReprojErr
             )
