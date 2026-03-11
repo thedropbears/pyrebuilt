@@ -9,6 +9,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
+from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
@@ -62,6 +63,7 @@ class BallisticsComponent:
     chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
+    leds: LEDComponent
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
@@ -71,6 +73,7 @@ class BallisticsComponent:
     MINIMUM_LEAD_DISTANCE = 2.0
 
     TURRET_OFFSET = Transform2d(Translation2d(0.170, -0.137), Rotation2d())
+    MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
 
     def __init__(self) -> None:
         self.target_position = Translation2d()
@@ -147,6 +150,10 @@ class BallisticsComponent:
             predicted_translation = current_pose.exp(current_twist).translation()
 
         return predicted_translation
+    def is_driving_faster_than_max_shoot_speed(self) -> bool:
+        chassis_speed = self.chassis.get_velocity()
+        current_velocity = math.sqrt(chassis_speed.vx**2 + chassis_speed.vy**2)
+        return current_velocity > self.MAX_DRIVE_SPEED_FOR_SHOOTING
 
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
@@ -197,6 +204,10 @@ class BallisticsComponent:
 
         if is_in_transition_zone(chassis_pose.translation()):
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
+            self.leds.too_close_to_trench_to_shoot()
         else:
             self.shooter.pitch_to(target_hood_angle)
         self.turret.slew_to(target_turret_angle)
+
+        if self.is_driving_faster_than_max_shoot_speed():
+            self.leds.driving_faster_than_shoot_speed()

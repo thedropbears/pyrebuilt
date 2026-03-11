@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, tau
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
@@ -12,10 +12,13 @@ from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from wpimath import units
 
+from components.leds import LEDComponent
 from ids import TalonId
 
 
 class HopperComponent:
+    leds: LEDComponent
+
     desired_hopper_surface_speed = tunable(12.0)  # meters / sec
 
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
@@ -23,6 +26,9 @@ class HopperComponent:
 
     target_indexer_rps = will_reset_to(0.0)
     target_injector_rps = will_reset_to(0.0)
+
+    ALLOWABLE_INJECTOR_ERROR = 0
+    ALLOWABLE_INDEXER_ERROR = 0
 
     MOTOR_TO_INDEXER_RATIO = 1
     MOTOR_TO_INJECTOR_RATIO = 1
@@ -81,6 +87,12 @@ class HopperComponent:
     def get_target_injector_rps(self) -> float:
         return self.target_injector_rps
 
+    def get_indexer_error(self) -> units.radians_per_second:
+        return self.indexer_motor.get_closed_loop_error().value * tau
+
+    def get_injector_error(self) -> units.radians_per_second:
+        return self.injector_motor.get_closed_loop_error().value * tau
+
     def get_indexer_surface_speed(self) -> units.meters_per_second:
         return (
             self.indexer_motor.get_velocity().value * pi * self.INDEXER_WHEEL_DIAMETER
@@ -89,6 +101,12 @@ class HopperComponent:
     def get_injector_surface_speed(self) -> units.meters_per_second:
         return (
             self.injector_motor.get_velocity().value * pi * self.INJECTOR_WHEEL_DIAMETER
+        )
+
+    def is_jammed(self) -> bool:
+        return (
+            self.get_indexer_error() > self.ALLOWABLE_INDEXER_ERROR
+            or self.get_injector_error() > self.ALLOWABLE_INJECTOR_ERROR
         )
 
     def feed(self) -> None:
@@ -101,5 +119,8 @@ class HopperComponent:
         )
 
     def execute(self) -> None:
+        if self.is_jammed():
+            self.leds.hopper_jammed()
+
         self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
         self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))

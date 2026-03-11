@@ -3,6 +3,7 @@ from magicbot import StateMachine, default_state, state
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
+from components.leds import LEDComponent
 from components.targeter import Targeter
 from controllers.gobbler import Gobbler
 
@@ -13,6 +14,7 @@ class Conductor(StateMachine):
     chassis: ChassisComponent
     targeter: Targeter
     hopper: HopperComponent
+    leds: LEDComponent
 
     def shoot(self) -> None:
         self.engage()
@@ -23,6 +25,7 @@ class Conductor(StateMachine):
     @default_state
     def tracking(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
+        self.leds.conductor_state_machine_tracking()
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
@@ -30,6 +33,7 @@ class Conductor(StateMachine):
         self.gobbler.gobble()
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
+        self.leds.conducter_state_machine_active()
 
     def done(self) -> None:
         super().done()
