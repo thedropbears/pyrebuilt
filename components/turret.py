@@ -45,8 +45,8 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    MAX_TURRET_ROTATION = math.radians(90)
-    MIN_TURRET_ROTATION = math.radians(-130)
+    MAX_TURRET_ROTATION = math.radians(155)
+    MIN_TURRET_ROTATION = math.radians(-145)
 
     def __init__(self) -> None:
         # Initialise Encoder
