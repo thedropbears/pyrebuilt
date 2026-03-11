@@ -262,15 +262,12 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.execute()
         self.targeter.execute()
 
-        if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
-            if self.gamepad.getRightTriggerAxis() > 0.5:
-                self.ballistics.solve_for(self.targeter.get_target())
-            else:
-                self.ballistics.force_solution(
-                    self.test_flywheel_speed,
-                    math.radians(self.test_turret_angle),
-                    math.radians(self.test_hood_angle),
-                )
+        if self.gamepad.getRightTriggerAxis() > 0.5:
+            self.ballistics.force_solution(
+                self.test_flywheel_speed,
+                math.radians(self.test_turret_angle),
+                math.radians(self.test_hood_angle),
+            )
 
             self.ballistics.energise_flywheels()
             self.ballistics.execute()

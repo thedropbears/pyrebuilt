@@ -35,7 +35,7 @@ class TurretComponent:
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
-    ENCODER_OFFSET = 0.369352
+    ENCODER_OFFSET = -0.228760
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
@@ -45,8 +45,8 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    MAX_TURRET_ROTATION = math.radians(140)
-    MIN_TURRET_ROTATION = math.radians(-140)
+    MAX_TURRET_ROTATION = math.radians(155)
+    MIN_TURRET_ROTATION = math.radians(-145)
 
     def __init__(self) -> None:
         # Initialise Encoder
