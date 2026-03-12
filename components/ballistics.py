@@ -145,7 +145,9 @@ class BallisticsComponent:
             desired_hopper_surface_speed,
         )
 
-    def solve_moving_shot(self, current_pose: Pose2d, current_velocity: ChassisSpeeds):
+    def solve_moving_shot(
+        self, current_pose: Pose2d, current_velocity: ChassisSpeeds
+    ) -> Translation2d:
         """pretty how you going but we do what we can. This worked well enough
         for us in Rapid React. We are basically iterating N times assuming
         constant velocity to determine where the equivilent static shot would
