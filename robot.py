@@ -204,6 +204,12 @@ class MyRobot(magicbot.MagicRobot):
         if drive_z != 0:
             self.chassis.stop_snapping()
 
+        if self.gamepad.getYButton():
+            self.climber.deploy()
+
+        if self.gamepad.getXButton():
+            self.climber.retract()
+
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
 
