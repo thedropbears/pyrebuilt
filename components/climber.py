@@ -128,7 +128,7 @@ class ClimberComponent:
         self.target_pos = self.RETRACTED_POS
 
     def try_index(self) -> None:
-        if self.at_retraction_limit() and not self.has_indexed:
+        if self.get_retraction_limit_switch_state() and not self.has_indexed:
             self.climber_motor.set_position(self.RETRACTED_POS)
             self.has_indexed = True
             self.target_pos = self.RETRACTED_POS
