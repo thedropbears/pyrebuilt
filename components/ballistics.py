@@ -80,6 +80,8 @@ class BallisticsComponent:
     TURRET_OFFSET = Transform2d(Translation2d(0.170, -0.137), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
 
+    is_shooting = tunable(False)
+
     def __init__(self) -> None:
         self.target_position = Translation2d()
         self.tables = (
@@ -171,6 +173,9 @@ class BallisticsComponent:
     def get_distance_to_target(self) -> units.meters:
         return self.distance_to_target
 
+    def log_shot(self) -> None:
+        self.is_shooting = True
+
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
@@ -232,3 +237,5 @@ class BallisticsComponent:
         if self.is_driving_faster_than_max_shoot_speed():
             self.leds.driving_faster_than_shoot_speed()
         self.hopper.set_desired_surface_speed(target_hopper_surface_speed)
+
+        self.is_shooting = False
