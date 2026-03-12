@@ -58,6 +58,8 @@ class MyRobot(magicbot.MagicRobot):
     test_turret_angle = tunable(0.0)  # degrees
     test_hood_angle = tunable(45.0)  # degrees
 
+    START_POS_TOLERANCE = 0.2
+
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
@@ -178,7 +180,6 @@ class MyRobot(magicbot.MagicRobot):
         self.climber_state_machine.ground()
 
     def teleopPeriodic(self) -> None:
-        self.leds.set_teleop_lights()
         self.leds.execute()
         max_speed = self.lower_max_speed
         max_spin_rate = self.lower_max_spin_rate
@@ -216,7 +217,7 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(True)
 
     def testPeriodic(self) -> None:
-        self.leds.set_test_lights()
+        self.leds.execute()
         allowed_to_drive = self.gamepad.getRightBumperButton()
 
         if allowed_to_drive:
@@ -265,15 +266,12 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.execute()
         self.targeter.execute()
 
-        if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
-            if self.gamepad.getRightTriggerAxis() > 0.5:
-                self.ballistics.solve_for(self.targeter.get_target())
-            else:
-                self.ballistics.force_solution(
-                    self.test_flywheel_speed,
-                    math.radians(self.test_turret_angle),
-                    math.radians(self.test_hood_angle),
-                )
+        if self.gamepad.getRightTriggerAxis() > 0.5:
+            self.ballistics.force_solution(
+                self.test_flywheel_speed,
+                math.radians(self.test_turret_angle),
+                math.radians(self.test_hood_angle),
+            )
 
             self.ballistics.energise_flywheels()
             self.ballistics.execute()
@@ -291,7 +289,6 @@ class MyRobot(magicbot.MagicRobot):
         self.climber_state_machine.execute()
 
     def disabledPeriodic(self) -> None:
-        self.leds.set_disabled_lights()
         self.event_loop.poll()
 
         selected_auto = self._automodes.chooser.getSelected()
@@ -306,6 +303,34 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision.execute()
         self.chassis.update_odometry()
         self.leds.execute()
+
+        self._set_prematch_status_lights()
+
+    def _set_prematch_status_lights(self) -> None:
+        if not self.port_vision.sees_multi_tag_target():
+            self.leds.no_multitag_solution()
+            return
+
+        selected_auto = self._automodes.chooser.getSelected()
+        if not isinstance(selected_auto, AutoBase):
+            self.leds.no_auto()
+            return
+
+        intended_start_pose = selected_auto.get_starting_pose()
+        current_pose = self.chassis.get_pose()
+        if intended_start_pose is not None:
+            self.field.getObject("Intended start pos").setPose(intended_start_pose)
+            relative_translation = intended_start_pose.relativeTo(
+                current_pose
+            ).translation()
+            if relative_translation.norm() > self.START_POS_TOLERANCE:
+                self.leds.mispositioned_start(
+                    relative_translation, self.START_POS_TOLERANCE
+                )
+            else:
+                self.leds.idle()
+        else:
+            self.leds.no_auto()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()

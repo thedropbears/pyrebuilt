@@ -24,15 +24,18 @@ from phoenix6.signals import (
 from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
 
+from components.leds import LEDComponent
 from ids import CancoderId, TalonId
 from utilities.functions import clamp
 
 
 class TurretComponent:
+    leds: LEDComponent
+
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
-    ENCODER_OFFSET = 0.369352
+    ENCODER_OFFSET = -0.228760
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
@@ -42,8 +45,8 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    MAX_TURRET_ROTATION = math.radians(140)
-    MIN_TURRET_ROTATION = math.radians(-140)
+    MAX_TURRET_ROTATION = math.radians(155)
+    MIN_TURRET_ROTATION = math.radians(-145)
 
     def __init__(self) -> None:
         # Initialise Encoder
@@ -171,7 +174,19 @@ class TurretComponent:
         self.desired_angle = self.clamp_rotation(angle)
 
     def execute(self) -> None:
+        if self.is_close_to_rotation_limit():
+            self.leds.turret_close_to_rotation_limit()
+        if not self.can_rotate_to_target():
+            self.leds.turret_at_rotation_limit()
         self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
+
+    def can_rotate_to_target(self) -> bool:
+        return self.desired_angle == self.clamp_rotation(self.desired_angle)
+
+    def is_close_to_rotation_limit(self) -> bool:
+        return math.isclose(
+            abs(self.desired_angle), self.MAX_TURRET_ROTATION, abs_tol=math.radians(15)
+        )

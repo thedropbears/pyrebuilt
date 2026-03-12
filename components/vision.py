@@ -5,12 +5,10 @@ from typing import ClassVar
 import wpilib
 import wpiutil.log
 import wpiutil.wpistruct
-from magicbot import feedback, tunable
-from photonlibpy.photonCamera import PhotonCamera
-from photonlibpy.targeting import PhotonPipelineResult, PhotonTrackedTarget
+from magicbot import feedback, tunable, will_reset_to
+from photonlibpy import PhotonCamera, PhotonPoseEstimator
+from photonlibpy.targeting import MultiTargetPNPResult, PhotonPipelineResult
 from wpimath.geometry import (
-    Pose2d,
-    Pose3d,
     Rotation2d,
     Rotation3d,
     Transform2d,
@@ -64,13 +62,16 @@ class VisualLocalizer(HasPerLoopCache):
     should_log = tunable(True)
 
     last_pose_z = tunable(0.0, writeDefault=False)
-    linear_vision_uncertainty = tunable(0.30)
-    rotation_vision_uncertainty = tunable(0.6)
+    linear_uncertainty_single_tag = tunable(0.30)
+    rotation_uncertainty_single_tag = tunable(0.6)
 
-    linear_vision_uncertainty_multi_tag = tunable(0.05)
-    rotation_vision_uncertainty_multi_tag = tunable(0.05)
+    linear_uncertainty_multi_tag = tunable(0.05)
+    rotation_uncertainty_multi_tag = tunable(0.05)
 
     reproj_error_threshold = tunable(2.0)
+
+    should_override = will_reset_to(False)
+    has_multitag = will_reset_to(False)
 
     chassis: ChassisComponent
 
@@ -148,7 +149,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.heading_buffer = TimeInterpolatableRotation2dBuffer(2.0)
         self.turret_setpoint = 0.5
         self.min_servo_movement = 5.0 / 180.0  # In duty cycle between 0.0 and 1.0
-
+        self.estimator = PhotonPoseEstimator(apriltag_layout, Transform3d())
         self.last_timestamp = -1.0
         self.best_log = field.getObject(name + "_best_log")
         self.field_pos_obj = field.getObject(name + "_vision_pose")
@@ -158,10 +159,10 @@ class VisualLocalizer(HasPerLoopCache):
 
         self.current_reproj = 0.0
         self.has_multitag = False
+        self.has_seen_multitag = False
 
         self._has_pairs = False
 
-        self.should_override = False
         self.override_setpoint = 0.5
 
     @feedback
@@ -267,19 +268,12 @@ class VisualLocalizer(HasPerLoopCache):
         turret_rotation = self.turret_rotation_buffer.sample(timestamp)
         if turret_rotation is None:
             return self.robot_to_turret
-        r2t = self.robot_to_turret.translation()
-        t2c = (
-            self.turret_to_camera.translation()
-            .rotateBy(self.turret_to_camera.rotation())
-            .rotateBy(Rotation3d(turret_rotation))
+
+        return (
+            self.robot_to_turret
+            + self.turret_to_camera
+            + Transform3d(Translation3d(), Rotation3d(turret_rotation))
         )
-        trans = r2t + t2c
-        rot = (
-            self.robot_to_turret.rotation()
-            .rotateBy(Rotation3d(turret_rotation))
-            .rotateBy(self.turret_to_camera.rotation())
-        )
-        return Transform3d(trans, rot)
 
     def zero_servo_(self) -> None:
         # ONLY CALL THIS IN TEST MODE!
@@ -322,81 +316,73 @@ class VisualLocalizer(HasPerLoopCache):
         all_results = self.camera.getAllUnreadResults()
         # Skip processing results other than the most recent.
         last_results: PhotonPipelineResult | None = None
+        multitag_result: MultiTargetPNPResult | None = None
         for results in all_results:
             # if results didn't see any targets
             if not results.getTargets():
                 continue
+            # We trust multitag results more.
+            # Don't replace multitag results with single tag results.
+            if multitag_result is not None and results.multitagResult is None:
+                continue
             last_results = results
+            multitag_result = results.multitagResult
 
-        if last_results is not None:
-            results = last_results
-            timestamp = results.getTimestampSeconds()
+        if last_results is None:
+            return
 
-            camera_to_robot = self.robot_to_camera(timestamp).inverse()
+        timestamp = last_results.getTimestampSeconds()
 
-            if results.multitagResult:
-                self.last_timestamp = timestamp
-                self.has_multitag = True
-                p = results.multitagResult.estimatedPose
-                pose = (Pose3d() + p.best + camera_to_robot).toPose2d()
-                reprojectionErr = p.bestReprojErr
-                self.current_reproj = reprojectionErr
+        self.estimator.robotToCamera = self.robot_to_camera(timestamp)
 
-                self.field_pos_obj.setPose(pose)
+        heading = self.heading_buffer.sample(timestamp)
+        if heading is not None:
+            self.estimator.addHeadingData(timestamp, heading)
 
-                if self.current_reproj < self.reproj_error_threshold:
-                    self.chassis.estimator.addVisionMeasurement(
-                        pose,
-                        timestamp,
-                        (
-                            self.linear_vision_uncertainty_multi_tag,
-                            self.linear_vision_uncertainty_multi_tag,
-                            self.rotation_vision_uncertainty_multi_tag,
-                        ),
-                    )
+        if multitag_result is not None:
+            pipeline_result = self.estimator.estimateCoprocMultiTagPose(last_results)
+            if pipeline_result is None:
+                return
+            linear_vision_uncertainty = self.linear_uncertainty_multi_tag
+            rotation_vision_uncertainty = self.rotation_uncertainty_multi_tag
+            self.has_multitag = True
 
-                if self.should_log:
-                    # Multitag results don't have best and alternates
-                    self.best_log.setPose(pose)
+            self.current_reproj = multitag_result.estimatedPose.bestReprojErr
+            if self.current_reproj > self.reproj_error_threshold:
+                return
+            self.has_seen_multitag = True
+        else:
+            if self.only_use_multitag:
+                return
+            if self.has_seen_multitag:
+                pipeline_result = self.estimator.estimatePnpDistanceTrigSolvePose(
+                    last_results
+                )
             else:
-                self.has_multitag = False
-                if self.only_use_multitag:
-                    return
-                self.last_timestamp = timestamp
-                for target in results.getTargets():
-                    # filter out likely bad targets
-                    if target.getPoseAmbiguity() > 0.1:
-                        continue
+                pipeline_result = self.estimator.estimateLowestAmbiguityPose(
+                    last_results
+                )
+            if pipeline_result is None:
+                return
+            linear_vision_uncertainty = self.linear_uncertainty_single_tag
+            rotation_vision_uncertainty = self.rotation_uncertainty_single_tag
+            if pipeline_result.targetsUsed[0].getPoseAmbiguity() > 0.1:
+                return
 
-                    heading = self.heading_buffer.sample(results.getTimestampSeconds())
-                    if heading is None:
-                        heading = self.chassis.get_rotation()
-                    poses = estimate_poses_from_apriltag(
-                        self.robot_to_camera(results.getTimestampSeconds()),
-                        heading,
-                        target,
-                    )
-                    if poses is None:
-                        # tag doesn't exist
-                        continue
+        self.last_timestamp = timestamp
 
-                    pose, _ = poses
-
-                    self.field_pos_obj.setPose(pose)
-                    self.chassis.estimator.addVisionMeasurement(
-                        pose,
-                        timestamp,
-                        (
-                            self.linear_vision_uncertainty,
-                            self.linear_vision_uncertainty,
-                            self.rotation_vision_uncertainty,
-                        ),
-                    )
-
-                    if self.should_log:
-                        self.best_log.setPose(pose)
-
-        self.should_override = False
+        pose = pipeline_result.estimatedPose.toPose2d()
+        self.chassis.estimator.addVisionMeasurement(
+            pose,
+            timestamp,
+            (
+                linear_vision_uncertainty,
+                linear_vision_uncertainty,
+                rotation_vision_uncertainty,
+            ),
+        )
+        self.field_pos_obj.setPose(pose)
+        self.best_log.setPose(pose)
 
     @feedback
     def sees_target(self) -> bool:
@@ -405,45 +391,3 @@ class VisualLocalizer(HasPerLoopCache):
     @feedback
     def sees_multi_tag_target(self) -> bool:
         return self.has_multitag and self.sees_target()
-
-
-def estimate_poses_from_apriltag(
-    robot_to_camera: Transform3d, robot_heading: Rotation2d, target: PhotonTrackedTarget
-) -> tuple[Pose2d, Pose2d] | None:
-    tag_id = target.getFiducialId()
-    tag_pose = apriltag_layout.getTagPose(tag_id)
-    if tag_pose is None:
-        return None
-
-    best_transform = robot_to_camera + target.getBestCameraToTarget()
-    alternate_transform = robot_to_camera + target.getAlternateCameraToTarget()
-
-    best_pos = (
-        tag_pose.translation().toTranslation2d()
-        - best_transform.translation().toTranslation2d().rotateBy(robot_heading)
-    )
-    alt_pos = (
-        tag_pose.translation().toTranslation2d()
-        - alternate_transform.translation().toTranslation2d().rotateBy(robot_heading)
-    )
-
-    return Pose2d(best_pos, robot_heading), Pose2d(alt_pos, robot_heading)
-
-
-def get_target_skew(target: PhotonTrackedTarget) -> float:
-    tag_to_cam = target.getBestCameraToTarget().inverse()
-    return math.atan2(tag_to_cam.y, tag_to_cam.x)
-
-
-def choose_pose(best_pose: Pose2d, alternate_pose: Pose2d, cur_robot: Pose2d) -> Pose2d:
-    """Picks either the best or alternate pose estimate"""
-    best_dist = best_pose.translation().distance(cur_robot.translation())
-    alternate_dist = (
-        alternate_pose.translation().distance(cur_robot.translation())
-        * VisualLocalizer.BEST_POSE_BIAS
-    )
-
-    if best_dist < alternate_dist:
-        return best_pose
-    else:
-        return alternate_pose
