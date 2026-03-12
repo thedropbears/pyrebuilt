@@ -147,9 +147,9 @@ def is_in_transition_zone(robot_pos: Translation2d) -> bool:
         )
     else:
         return (
-            INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
+            INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
             < robot_pos.x
-            < INTERSECT_OF_TRANSITION_ALLIANCE_ZONE_FROM_ALLIANCE_WALL
+            < INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL
         )
 
 
