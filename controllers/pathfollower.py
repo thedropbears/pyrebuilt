@@ -1,0 +1,114 @@
+import choreo
+import wpilib
+from choreo.trajectory import SwerveSample, SwerveTrajectory
+from magicbot import StateMachine, state
+from wpilib import RobotBase
+from wpimath.controller import PIDController
+from wpimath.geometry import Pose2d
+from wpimath.kinematics import ChassisSpeeds
+
+from components.chassis import ChassisComponent
+from utilities import game
+
+x_controller = PIDController(0.0, 0.0, 0.0)
+y_controller = PIDController(0.0, 0.0, 0.0)
+
+wpilib.SmartDashboard.putData("Pathing X PID", x_controller)
+wpilib.SmartDashboard.putData("Pathing Y PID", y_controller)
+
+
+class PathFollower(StateMachine):
+    field: wpilib.Field2d
+    chassis: ChassisComponent
+
+    def __init__(self):
+        self.trajectories: list[SwerveTrajectory] = []
+        self.current_leg: int = -1
+        self.starting_pose = None
+        self.auto_name = ["spin3m_andreturn"]
+
+    def set_path(self, trajectory_names: list[str]) -> None:
+        # We want to parameterise these by paths and potentially a sequence of events
+
+        # Reset the counter for which leg we are executing
+        self.current_leg = -1
+        self.starting_pose = None
+        self.trajectories = []
+        for trajectory_name in trajectory_names:
+            try:
+                self.trajectories.append(choreo.load_swerve_trajectory(trajectory_name))
+                if self.starting_pose is None:
+                    self.starting_pose = self.get_starting_pose()
+            except ValueError:
+                # If the trajectory is not found, ChoreoLib already prints to DriverStation
+                pass
+
+    def follow_path(self) -> None:
+        self.set_path(self.auto_name)
+        self.engage()
+        return
+
+    def get_starting_pose(self) -> Pose2d | None:
+        return self.trajectories[0].get_initial_pose(game.is_red())
+
+    @state(first=True)
+    def initialising(self) -> None:
+        # Add any tasks that need doing first
+
+        # configure defaults for pose in sim
+        # Setup starting position in the simulator
+        starting_pose = self.get_starting_pose()
+        if RobotBase.isSimulation() and starting_pose is not None:
+            self.chassis.set_pose(starting_pose)
+
+        self.chassis.do_smooth = False
+        self.chassis.heading_controller.setPID(Kp=1.0, Ki=0.0, Kd=0.0)
+        self.next_state("tracking_trajectory")
+
+    @state
+    def tracking_trajectory(self, initial_call, state_tm) -> None:
+        if initial_call:
+            self.current_leg += 1
+
+            if self.current_leg == len(self.trajectories):
+                self.done()
+                return
+
+            trajectory = (
+                self.trajectories[self.current_leg].flipped()
+                if game.is_red()
+                else self.trajectories[self.current_leg]
+            )
+
+            trajectory_poses = trajectory.get_poses()
+            self.field.getObject("trajectory").setPoses(trajectory_poses)
+
+        final_pose = self.trajectories[self.current_leg].get_final_pose(game.is_red())
+        if final_pose is None:
+            self.done()
+            return
+
+        sample = self.trajectories[self.current_leg].sample_at(state_tm, game.is_red())
+        if sample is not None:
+            self.follow_trajectory(sample)
+
+        if state_tm > self.trajectories[self.current_leg].get_total_time():
+            self.next_state("tracking_trajectory")
+
+    def follow_trajectory(self, sample: SwerveSample):
+        # track path
+
+        pose = self.chassis.get_pose()
+
+        # Generate the next speeds for the robot
+        speeds = ChassisSpeeds(
+            sample.vx + x_controller.calculate(pose.X(), sample.x),
+            sample.vy + y_controller.calculate(pose.Y(), sample.y),
+            sample.omega
+            + self.chassis.heading_controller.calculate(
+                pose.rotation().radians(), sample.heading
+            ),
+        )
+
+        # Apply the generated speeds
+        self.chassis.drive_field(speeds.vx, speeds.vy, speeds.omega)

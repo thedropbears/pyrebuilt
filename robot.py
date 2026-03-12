@@ -21,6 +21,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
+from controllers.pathfollower import PathFollower
 from ids import DioChannel, PwmChannel, RioSerialNumber
 from utilities.game import is_red
 from utilities.scalers import rescale_js
@@ -35,6 +36,7 @@ class MyRobot(magicbot.MagicRobot):
     # Controllers
     conductor: Conductor
     gobbler: Gobbler
+    pathfollower: PathFollower
 
     # Components
     hopper: HopperComponent
@@ -179,6 +181,8 @@ class MyRobot(magicbot.MagicRobot):
         self.leds.execute()
         max_speed = self.lower_max_speed
         max_spin_rate = self.lower_max_spin_rate
+        if self.gamepad.getPOV() == 180:
+            self.pathfollower.follow_path()
 
         if self.gamepad.getRightBumperButton():
             max_speed = self.upper_max_speed
