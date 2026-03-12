@@ -1,3 +1,4 @@
+import enum
 from math import tau
 
 from magicbot import feedback, tunable
@@ -26,8 +27,15 @@ from wpilib import DigitalInput
 from ids import CandiId, DioChannel, TalonId
 
 
+@enum.unique
+class LastIndex(enum.IntEnum):
+    NONE = 0
+    RETRACTED = 1
+    EXTENDED = 1
+
+
 class ClimberComponent:
-    has_indexed = tunable(False)
+    last_index = LastIndex.NONE
 
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
@@ -128,22 +136,33 @@ class ClimberComponent:
         self.target_pos = self.RETRACTED_POS
 
     def try_index(self) -> None:
-        if self.get_retraction_limit_switch_state() and not self.has_indexed:
+
+        if (
+            self.last_index != LastIndex.RETRACTED
+            and self.get_retraction_limit_switch_state()
+        ):
             self.climber_motor.set_position(self.RETRACTED_POS)
-            self.has_indexed = True
-            self.target_pos = self.RETRACTED_POS
+            self.last_index = LastIndex.RETRACTED
+
+        if (
+            self.last_index != LastIndex.EXTENDED
+            and self.get_extension_limit_switch_state()
+        ):
+            self.climber_motor.set_position(self.EXTENDED_POS)
+            self.last_index = LastIndex.EXTENDED
 
     def execute(self):
         self.try_index()
 
-        if self.has_indexed:
-            self.climber_motor.set_control(PositionVoltage(self.target_pos))
-        else:
+        if self.last_index == LastIndex.NONE:
             self.climber_motor.set_control(
                 VoltageOut(
                     ClimberComponent.INDEX_SEARCH_VOLTAGE, ignore_software_limits=True
                 )
             )
+            return
+
+        self.climber_motor.set_control(PositionVoltage(self.target_pos))
 
     @feedback
     def get_extension_limit_switch_state(self) -> bool:
