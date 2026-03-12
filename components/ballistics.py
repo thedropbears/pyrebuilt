@@ -145,7 +145,7 @@ class BallisticsComponent:
             desired_hopper_surface_speed,
         )
 
-    def solve_moving_shot(
+    def predict_shot_base(
         self, current_pose: Pose2d, current_velocity: ChassisSpeeds
     ) -> Translation2d:
         """pretty how you going but we do what we can. This worked well enough
@@ -201,12 +201,12 @@ class BallisticsComponent:
             chassis_velocity.omega,
         )
 
-        predicted_position = self.solve_moving_shot(
+        predicted_shot_base = self.predict_shot_base(
             turret_base_pose, turret_base_velocity
         )
 
-        self.distance_to_target = predicted_position.distance(self.target_position)
-        angle_to_target = (self.target_position - predicted_position).angle()
+        self.distance_to_target = predicted_shot_base.distance(self.target_position)
+        angle_to_target = (self.target_position - predicted_shot_base).angle()
 
         if self.forced_solution is None:
             target_turret_angle = (
