@@ -6,7 +6,7 @@ import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpilib import Field2d
 from wpimath import units
-from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
+from wpimath.geometry import Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
@@ -62,6 +62,12 @@ class LookupTable:
 
     def flight_time_for(self, distance: float) -> float:
         return np.interp(distance, self.dist, self.flight_time)
+
+    def rps_to_mps(self, speed_rps: float) -> float:
+        return np.interp(speed_rps, self.speed, self.dist / self.flight_time)
+
+    def mps_to_rps(self, speed_mps: float) -> float:
+        return np.interp(speed_mps, self.dist / self.flight_time, self.speed)
 
 
 class BallisticsComponent:
@@ -148,30 +154,22 @@ class BallisticsComponent:
             desired_hopper_surface_speed,
         )
 
-    def predict_shot_base(
-        self, current_pose: Pose2d, current_velocity: ChassisSpeeds
+    def calculate_shot_velocity(
+        self,
+        relative_target_translation: Translation2d,
+        current_velocity: ChassisSpeeds,
     ) -> Translation2d:
-        """pretty how you going but we do what we can. This worked well enough
-        for us in Rapid React. We are basically iterating N times assuming
-        constant velocity to determine where the equivilent static shot would
-        be from"""
+        distance_to_shot = relative_target_translation.norm()
+        ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
 
-        predicted_translation = current_pose.translation()
+        ideal_speed_mps = self.active_table.rps_to_mps(ideal_flywheel_speed)
 
-        flight_time = 0.0
+        target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
 
-        for _ in range(self.LEAD_SHOT_ITERATIONS):
-            distance = predicted_translation.distance(self.target_position)
+        robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
+        shot_vector = target_vector - robot_velocity
 
-            if distance < BallisticsComponent.MINIMUM_LEAD_DISTANCE:
-                break
-
-            flight_time = self.active_table.flight_time_for(distance)
-
-            current_twist = current_velocity.toTwist2d(flight_time)
-            predicted_translation = current_pose.exp(current_twist).translation()
-
-        return predicted_translation
+        return shot_vector
 
     def is_driving_faster_than_max_shoot_speed(self) -> bool:
         chassis_speed = self.chassis.get_velocity()
@@ -204,26 +202,37 @@ class BallisticsComponent:
             chassis_velocity.omega,
         )
 
-        predicted_shot_base = self.predict_shot_base(
-            turret_base_pose, turret_base_velocity
-        )
-
-        self.distance_to_target = predicted_shot_base.distance(self.target_position)
-        angle_to_target = (self.target_position - predicted_shot_base).angle()
-
         if self.forced_solution is None:
+            rel_target_trans = self.target_position - turret_base_pose.translation()
+
+            # Get velocity vector of shot (m/s)
+            shot_vector = self.calculate_shot_velocity(
+                rel_target_trans, turret_base_velocity
+            )
+
+            self.distance_to_target = rel_target_trans.norm()
+
+            # Convert shot angle to chassis relative
             target_turret_angle = (
-                angle_to_target - turret_base_pose.rotation()
+                shot_vector.angle() - turret_base_pose.rotation()
             ).radians()
+
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(self.distance_to_target):
                 for table_pair in self.tables:
                     if table_pair.is_within_range(self.distance_to_target):
                         self.active_table = table_pair
+
             target_hood_angle = self.active_table.hood_angle
-            target_flywheel_speed: units.turns_per_second = self.active_table.speed_for(
-                self.distance_to_target
+
+            # TODO add this implementation
+            # Note - this currently uses the flywheel speed calculated from original active hood angle.
+            # If the hood angle changes, this will be incorrect. If we encounter this case, then should
+            # calculate effective distance, and compute new flywheel speed from that.
+            target_flywheel_speed: units.turns_per_second = (
+                self.active_table.mps_to_rps(shot_vector.norm())
             )
+
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
         else:
@@ -266,6 +275,7 @@ class BallisticsComponent:
             )
         )
 
-        self.predicted_shot_base_visual.setPose(
-            Pose2d(predicted_shot_base, Rotation2d())
-        )
+        # TODO enable this again
+        # self.predicted_shot_base_visual.setPose(
+        #     Pose2d(predicted_shot_base, Rotation2d())
+        # )
