@@ -9,11 +9,8 @@ from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
-<<<<<<< HEAD
-from components.leds import LEDComponent
-=======
 from components.hopper import HopperComponent
->>>>>>> 807958e (set hopper surface speed in ballistics)
+from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
@@ -70,11 +67,8 @@ class BallisticsComponent:
     chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
-<<<<<<< HEAD
     leds: LEDComponent
-=======
     hopper: HopperComponent
->>>>>>> 807958e (set hopper surface speed in ballistics)
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)

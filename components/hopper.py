@@ -1,6 +1,6 @@
 from math import pi, tau
 
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import feedback, will_reset_to
 from phoenix6.configs import (
     FeedbackConfigs,
     MotorOutputConfigs,
@@ -19,7 +19,7 @@ from ids import TalonId
 class HopperComponent:
     leds: LEDComponent
 
-    desired_surface_speed = tunable(12.0)  # meters / sec
+    desired_surface_speed: units.meters_per_second = 12.0
 
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
     INDEXER_WHEEL_DIAMETER: units.meters = 0.137
