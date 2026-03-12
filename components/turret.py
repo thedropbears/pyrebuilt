@@ -64,12 +64,12 @@ class TurretComponent:
         # Motor gains
         motor_gains_config = (
             Slot0Configs()
-            .with_k_p(11.698)
+            .with_k_p(40.126)
             .with_k_i(0.0)
-            .with_k_d(0.49798)
-            .with_k_s(0.080404)
-            .with_k_v(2.3756)
-            .with_k_a(0.16107)
+            .with_k_d(1.797)
+            .with_k_s(0.12914)
+            .with_k_v(2.3284)
+            .with_k_a(0.2601)
         )
 
         motor_output_config = (
