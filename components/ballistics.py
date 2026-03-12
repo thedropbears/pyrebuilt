@@ -84,6 +84,8 @@ class BallisticsComponent:
     is_shooting = tunable(False)
 
     def __init__(self, field: Field2d) -> None:
+
+        self.predicted_shot_base_visual = field.getObject("predicted_shot_base")
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
@@ -252,4 +254,8 @@ class BallisticsComponent:
                 turret_base_pose.translation(),
                 Rotation2d(self.turret.get_current_angle()),
             )
+        )
+
+        self.predicted_shot_base_visual.setPose(
+            Pose2d(predicted_shot_base, Rotation2d())
         )
