@@ -80,6 +80,8 @@ class BallisticsComponent:
     TURRET_OFFSET = Transform2d(Translation2d(0.170, -0.137), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
 
+    is_shooting = tunable(False)
+
     def __init__(self) -> None:
         self.target_position = Translation2d()
         self.tables = (
@@ -109,6 +111,8 @@ class BallisticsComponent:
             ),
         )
         self.active_table = self.tables[0]
+
+        self.distance_to_target = 0.0
 
     @feedback
     def get_active_table(self) -> str:
@@ -166,6 +170,12 @@ class BallisticsComponent:
         current_velocity = math.sqrt(chassis_speed.vx**2 + chassis_speed.vy**2)
         return current_velocity > self.MAX_DRIVE_SPEED_FOR_SHOOTING
 
+    def get_distance_to_target(self) -> units.meters:
+        return self.distance_to_target
+
+    def log_shot(self) -> None:
+        self.is_shooting = True
+
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
@@ -190,19 +200,19 @@ class BallisticsComponent:
             turret_base_pose, turret_base_velocity
         )
 
-        distance_to_target = predicted_position.distance(self.target_position)
+        self.distance_to_target = predicted_position.distance(self.target_position)
         angle_to_target = (self.target_position - predicted_position).angle()
 
         if self.forced_solution is None:
             target_turret_angle = (angle_to_target - chassis_rotation).radians()
             # Check if distance is within range of distance table and switch if necessary
-            if not self.active_table.is_within_range(distance_to_target):
+            if not self.active_table.is_within_range(self.distance_to_target):
                 for table_pair in self.tables:
-                    if table_pair.is_within_range(distance_to_target):
+                    if table_pair.is_within_range(self.distance_to_target):
                         self.active_table = table_pair
             target_hood_angle = self.active_table.hood_angle
             target_flywheel_speed: units.turns_per_second = self.active_table.speed_for(
-                distance_to_target
+                self.distance_to_target
             )
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
@@ -227,3 +237,5 @@ class BallisticsComponent:
         if self.is_driving_faster_than_max_shoot_speed():
             self.leds.driving_faster_than_shoot_speed()
         self.hopper.set_desired_surface_speed(target_hopper_surface_speed)
+
+        self.is_shooting = False

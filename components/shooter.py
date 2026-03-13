@@ -93,25 +93,16 @@ class ShooterComponent:
     def get_hood_angle_rotations(self) -> units.turns:
         return self.hood_encoder.get_position().value
 
-    @feedback
-    def get_hood_output(self) -> units.turns_per_second:
-        return self.hood_output
-
-    @feedback
-    def get_hood_error(self) -> units.turns:
-        return self.target_hood_angle - self.get_hood_angle_rotations()
-
-    @feedback
-    def hood_is_at_setpoint(self) -> bool:
-        return math.isclose(
-            self.get_hood_angle_rotations(),
-            self.target_hood_angle,
-            abs_tol=self.hood_error_tolerance,
-        )
+    def get_hood_error_degrees(self) -> units.degrees:
+        return (self.target_hood_angle - self.get_hood_angle_rotations()) * 360.0
 
     @feedback
     def get_flywheel_error(self) -> units.turns_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
+
+    @feedback
+    def get_flywheel_target(self) -> units.turns_per_second:
+        return self.flywheel_motor.get_velocity().value
 
     def pitch_relative(self, angle: units.radians):
         self.target_hood_angle = clamp(

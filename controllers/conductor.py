@@ -16,6 +16,9 @@ class Conductor(StateMachine):
     hopper: HopperComponent
     leds: LEDComponent
 
+    def log_shot(self) -> None:
+        return self.ballistics.log_shot()
+
     def shoot(self) -> None:
         self.engage()
 

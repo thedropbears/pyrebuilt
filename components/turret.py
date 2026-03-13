@@ -159,7 +159,6 @@ class TurretComponent:
     def clamp_rotation(self, angle: units.radians) -> units.radians:
         return clamp(angle, self.MIN_TURRET_ROTATION, self.MAX_TURRET_ROTATION)
 
-    @feedback
     def get_error(self) -> units.turns:
         return self.motor.get_closed_loop_error().value
 

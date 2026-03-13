@@ -77,6 +77,7 @@ class MyRobot(magicbot.MagicRobot):
         meta_table.putString("rio_serial", wpilib.RobotController.getSerialNumber())
 
         self.gamepad = wpilib.XboxController(0)
+        self.codriver_joystick = wpilib.Joystick(1)
         self.left_trigger_reset = True
 
         self.field = wpilib.Field2d()
@@ -212,6 +213,9 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
+
+        if self.codriver_joystick.getTrigger():
+            self.conductor.log_shot()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
