@@ -184,7 +184,6 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             drive_speed = self.slowed_speed
-            spin_rate = self.max_spin_rate
 
         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * drive_speed
         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * drive_speed
