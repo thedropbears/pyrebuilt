@@ -37,9 +37,9 @@ class MyRobot(magicbot.MagicRobot):
     gobbler: Gobbler
 
     # Components
-    hopper: HopperComponent
     ballistics: BallisticsComponent
     shooter: ShooterComponent
+    hopper: HopperComponent
     climber: ClimberComponent
     intake: IntakeComponent
     turret: TurretComponent
