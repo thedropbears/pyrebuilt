@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
+from wpilib import Field2d
 from wpimath import units
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
@@ -82,7 +83,7 @@ class BallisticsComponent:
 
     is_shooting = tunable(False)
 
-    def __init__(self) -> None:
+    def __init__(self, field: Field2d) -> None:
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
@@ -113,6 +114,8 @@ class BallisticsComponent:
         self.active_table = self.tables[0]
 
         self.distance_to_target = 0.0
+
+        self.turret_pose = field.getObject("Turret Pose")
 
     @feedback
     def get_active_table(self) -> str:
@@ -204,7 +207,9 @@ class BallisticsComponent:
         angle_to_target = (self.target_position - predicted_position).angle()
 
         if self.forced_solution is None:
-            target_turret_angle = (angle_to_target - chassis_rotation).radians()
+            target_turret_angle = (
+                angle_to_target - turret_base_pose.rotation()
+            ).radians()
             # Check if distance is within range of distance table and switch if necessary
             if not self.active_table.is_within_range(self.distance_to_target):
                 for table_pair in self.tables:
@@ -239,3 +244,10 @@ class BallisticsComponent:
         self.hopper.set_desired_surface_speed(target_hopper_surface_speed)
 
         self.is_shooting = False
+
+        self.turret_pose.setPose(
+            turret_base_pose.rotateAround(
+                turret_base_pose.translation(),
+                Rotation2d(self.turret.get_current_angle()),
+            )
+        )
