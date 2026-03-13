@@ -49,6 +49,9 @@ class MyRobot(magicbot.MagicRobot):
     max_speed = tunable(3.0)  # m/s
     max_spin_rate = tunable(3.0)  # rad/s
 
+    slowed_speed = tunable(1.5)
+    slowed_spin_rate = tunable(1.5)
+
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
     test_hood_angle = tunable(45.0)  # degrees
@@ -177,13 +180,17 @@ class MyRobot(magicbot.MagicRobot):
 
     def teleopPeriodic(self) -> None:
         self.leds.execute()
-        max_speed = self.max_speed
-        max_spin_rate = self.max_spin_rate
+        drive_speed = self.max_speed
+        spin_rate = self.max_spin_rate
 
-        drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * max_speed
-        drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * max_speed
+        if self.gamepad.getLeftTriggerAxis() > 0.5:
+            drive_speed = self.slowed_speed
+            spin_rate = self.slowed_spin_rate
+
+        drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * drive_speed
+        drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * drive_speed
         drive_z = (
-            -rescale_js(self.gamepad.getRightX(), 0.1, exponential=2.0) * max_spin_rate
+            -rescale_js(self.gamepad.getRightX(), 0.1, exponential=2.0) * spin_rate
         )
 
         local_driving = self.gamepad.getRightBumperButton()
