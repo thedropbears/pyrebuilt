@@ -152,8 +152,15 @@ class ClimberComponent:
 
         self.climber_motor.set_control(VoltageOut(self.target_output))
 
-        if self.at_extension_limit() or self.at_retraction_limit():
-            self.target_output = 0.0
+        if self.at_extension_limit():
+            self.target_output = min(
+                self.target_output, 0.0
+            )  # this will be negative if retracting and used or 0.0
+
+        if self.at_retraction_limit():
+            self.target_output = max(
+                self.target_output, 0.0
+            )  # this will be positive if extending and used or 0.0
 
     @feedback
     def get_extension_limit_switch_state(self) -> bool:
