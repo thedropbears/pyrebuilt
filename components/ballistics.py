@@ -69,6 +69,23 @@ class LookupTable:
     def mps_to_rps(self, speed_mps: float) -> float:
         return np.interp(speed_mps, self.dist / self.flight_time, self.speed)
 
+    def velocity_to_effective_distance(
+        self, velocity: units.meters_per_second
+    ) -> units.meters:
+        for i in range(0, len(self.dist)):
+            dist = self.dist[i]
+            vel = dist / self.flight_time[i]
+
+            if vel >= velocity:
+                return dist
+
+        return self.dist[-1]
+
+    def solution_for(
+        self, distance: units.meters
+    ) -> tuple[units.turns_per_second, units.seconds]:
+        return (self.speed_for(distance), self.flight_time_for(distance))
+
 
 class BallisticsComponent:
     chassis: ChassisComponent
@@ -85,6 +102,7 @@ class BallisticsComponent:
     LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
+    LATENCY_FACTOR = 0.1
 
     TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
@@ -196,43 +214,42 @@ class BallisticsComponent:
             turret_base_pose.translation() - chassis_pose.translation()
         )
 
-        turret_base_velocity = ChassisSpeeds(
+        turret_base_velocity = Translation2d(
             chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
             chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
-            chassis_velocity.omega,
         )
 
         if self.forced_solution is None:
-            rel_target_trans = self.target_position - turret_base_pose.translation()
-
-            # Get velocity vector of shot (m/s)
-            shot_vector = self.calculate_shot_velocity(
-                rel_target_trans, turret_base_velocity
+            # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
+            # See heading full integration example
+            future_position = (
+                turret_base_pose.translation()
+                + turret_base_velocity * self.LATENCY_FACTOR
             )
 
-            self.distance_to_target = rel_target_trans.norm()
+            to_goal = self.target_position - future_position
+            distance_to_target = to_goal.norm()
+            base_to_target_direction = to_goal / distance_to_target
+            baseline_rps, baseline_tof = self.active_table.solution_for(
+                distance_to_target
+            )
 
-            # Convert shot angle to chassis relative
-            target_turret_angle = (
-                shot_vector.angle() - turret_base_pose.rotation()
-            ).radians()
+            baseline_vel = distance_to_target / baseline_tof
 
-            # Check if distance is within range of distance table and switch if necessary
-            if not self.active_table.is_within_range(self.distance_to_target):
-                for table_pair in self.tables:
-                    if table_pair.is_within_range(self.distance_to_target):
-                        self.active_table = table_pair
+            target_velocity = base_to_target_direction * baseline_vel
+            shot_velocity = target_velocity - turret_base_velocity
 
+            turret_angle = shot_velocity.angle()
+            required_velocity = shot_velocity.norm()
+
+            effective_distance = self.active_table.velocity_to_effective_distance(
+                required_velocity
+            )
+            required_rpm = self.active_table.speed_for(effective_distance)
+
+            target_turret_angle = turret_angle.radians()
+            target_flywheel_speed = required_rpm
             target_hood_angle = self.active_table.hood_angle
-
-            # TODO add this implementation
-            # Note - this currently uses the flywheel speed calculated from original active hood angle.
-            # If the hood angle changes, this will be incorrect. If we encounter this case, then should
-            # calculate effective distance, and compute new flywheel speed from that.
-            target_flywheel_speed: units.turns_per_second = (
-                self.active_table.mps_to_rps(shot_vector.norm())
-            )
-
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
         else:
