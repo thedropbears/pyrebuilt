@@ -84,6 +84,8 @@ class BallisticsComponent:
     is_shooting = tunable(False)
 
     def __init__(self, field: Field2d) -> None:
+
+        self.predicted_shot_base_visual = field.getObject("predicted_shot_base")
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
@@ -145,7 +147,9 @@ class BallisticsComponent:
             desired_hopper_surface_speed,
         )
 
-    def solve_moving_shot(self, current_pose: Pose2d, current_velocity: ChassisSpeeds):
+    def predict_shot_base(
+        self, current_pose: Pose2d, current_velocity: ChassisSpeeds
+    ) -> Translation2d:
         """pretty how you going but we do what we can. This worked well enough
         for us in Rapid React. We are basically iterating N times assuming
         constant velocity to determine where the equivilent static shot would
@@ -199,12 +203,12 @@ class BallisticsComponent:
             chassis_velocity.omega,
         )
 
-        predicted_position = self.solve_moving_shot(
+        predicted_shot_base = self.predict_shot_base(
             turret_base_pose, turret_base_velocity
         )
 
-        self.distance_to_target = predicted_position.distance(self.target_position)
-        angle_to_target = (self.target_position - predicted_position).angle()
+        self.distance_to_target = predicted_shot_base.distance(self.target_position)
+        angle_to_target = (self.target_position - predicted_shot_base).angle()
 
         if self.forced_solution is None:
             target_turret_angle = (
@@ -250,4 +254,8 @@ class BallisticsComponent:
                 turret_base_pose.translation(),
                 Rotation2d(self.turret.get_current_angle()),
             )
+        )
+
+        self.predicted_shot_base_visual.setPose(
+            Pose2d(predicted_shot_base, Rotation2d())
         )
