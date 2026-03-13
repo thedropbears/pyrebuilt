@@ -3,12 +3,14 @@ from magicbot import StateMachine, default_state, state
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
+from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.targeter import Targeter
 from controllers.gobbler import Gobbler
 
 
 class Conductor(StateMachine):
+    intake: IntakeComponent
     ballistics: BallisticsComponent
     gobbler: Gobbler
     chassis: ChassisComponent
@@ -23,7 +25,7 @@ class Conductor(StateMachine):
         self.engage()
 
     def stop_shooting(self) -> None:
-        self.done()
+        self.engage("purging", force=True)
 
     @default_state
     def tracking(self) -> None:
@@ -37,6 +39,15 @@ class Conductor(StateMachine):
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
         self.leds.conducter_state_machine_active()
+
+    @state(must_finish=True)
+    def purging(self) -> None:
+        self.hopper.feed()
+        self.ballistics.solve_for(self.targeter.get_target())
+        self.ballistics.energise_flywheels()
+
+        if self.intake.is_retracted():
+            self.done()
 
     def done(self) -> None:
         super().done()
