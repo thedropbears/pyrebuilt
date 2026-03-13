@@ -47,7 +47,6 @@ class ClimberComponent:
     MAX_EXTENSION_LIMIT = EXTENDED_POS + ALLOWABLE_OVERSPOOL
 
     MOTION_VOLTAGE = 8.0
-    target_output = 0.0
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
