@@ -17,13 +17,13 @@ from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
 
 # fmt: off
-DISTANCE_LOOKUP_25 = np.array([2.5,   3.0,   3.5,   4.0,   4.5,   5.0,   5.5], dtype=float)
-SPEED_LOOKUP_25 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
-TIME_LOOKUP_25 =     np.array([0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
+DISTANCE_LOOKUP_25 = np.array([2.5,   3.0,   3.5,   4.0,   4.5,   5.0], dtype=float)
+SPEED_LOOKUP_25 =    np.array([70.0,  74.0,  79.0,  88.0,  98.0, 112.0], dtype=float)
+TIME_LOOKUP_25 =     np.array([1.003, 1.103, 1.147, 1.294, 1.348, 1.450], dtype=float)
 
-DISTANCE_LOOKUP_45 = np.array([4.0,   4.5,   5.0,   5.5,   6.0,   6.5,   7.0], dtype=float)
-SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0, 120.0], dtype=float)
-TIME_LOOKUP_45 =     np.array([0.871, 1.004, 1.041, 1.080, 1.155, 1.212, 1.297], dtype=float)
+DISTANCE_LOOKUP_45 = np.array([4.0,   4.5,   5.0,   5.5,   6.0,   6.5], dtype=float)
+SPEED_LOOKUP_45 =    np.array([80.0,  84.0,  88.0,  90.0,  101.0, 112.0], dtype=float)
+TIME_LOOKUP_45 =     np.array([0.950, 1.004, 1.041, 1.080, 1.155, 1.212], dtype=float)
 
 DISTANCE_LOOKUP_PASS = np.array([6.0,   7.0,   8.0,   9.0], dtype=float)
 SPEED_LOOKUP_PASS =    np.array([79.0,  90.0,  101,   130], dtype=float)
@@ -63,6 +63,24 @@ class LookupTable:
     def flight_time_for(self, distance: float) -> float:
         return np.interp(distance, self.dist, self.flight_time)
 
+    def rps_to_mps(self, speed_rps: float) -> float:
+        return np.interp(speed_rps, self.speed, self.dist / self.flight_time)
+
+    def mps_to_rps(self, speed_mps: float) -> float:
+        return np.interp(speed_mps, self.dist / self.flight_time, self.speed)
+
+    def velocity_to_effective_distance(
+        self, velocity: units.meters_per_second
+    ) -> units.meters:
+
+        velocities = self.dist / self.flight_time
+        return float(np.interp(velocity, velocities, self.dist))
+
+    def solution_for(
+        self, distance: units.meters
+    ) -> tuple[units.turns_per_second, units.seconds]:
+        return (self.speed_for(distance), self.flight_time_for(distance))
+
 
 class BallisticsComponent:
     chassis: ChassisComponent
@@ -79,6 +97,7 @@ class BallisticsComponent:
     LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
+    LATENCY_FACTOR = 0.1
 
     TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
@@ -148,30 +167,22 @@ class BallisticsComponent:
             desired_hopper_surface_speed,
         )
 
-    def predict_shot_base(
-        self, current_pose: Pose2d, current_velocity: ChassisSpeeds
+    def calculate_shot_velocity(
+        self,
+        relative_target_translation: Translation2d,
+        current_velocity: ChassisSpeeds,
     ) -> Translation2d:
-        """pretty how you going but we do what we can. This worked well enough
-        for us in Rapid React. We are basically iterating N times assuming
-        constant velocity to determine where the equivilent static shot would
-        be from"""
+        distance_to_shot = relative_target_translation.norm()
+        ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
 
-        predicted_translation = current_pose.translation()
+        ideal_speed_mps = self.active_table.rps_to_mps(ideal_flywheel_speed)
 
-        flight_time = 0.0
+        target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
 
-        for _ in range(self.LEAD_SHOT_ITERATIONS):
-            distance = predicted_translation.distance(self.target_position)
+        robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
+        shot_vector = target_vector - robot_velocity
 
-            if distance < BallisticsComponent.MINIMUM_LEAD_DISTANCE:
-                break
-
-            flight_time = self.active_table.flight_time_for(distance)
-
-            current_twist = current_velocity.toTwist2d(flight_time)
-            predicted_translation = current_pose.exp(current_twist).translation()
-
-        return predicted_translation
+        return shot_vector
 
     def is_driving_faster_than_max_shoot_speed(self) -> bool:
         chassis_speed = self.chassis.get_velocity()
@@ -183,6 +194,27 @@ class BallisticsComponent:
 
     def log_shot(self) -> None:
         self.is_shooting = True
+
+    def compute_range_bearing_for(
+        self, base_to_goal: Translation2d, base_velocity: Translation2d
+    ) -> tuple[units.meters, Rotation2d]:
+        distance_to_target = base_to_goal.norm()
+        base_to_goal_direction = base_to_goal / distance_to_target
+        baseline_rps, baseline_tof = self.active_table.solution_for(distance_to_target)
+
+        baseline_vel = distance_to_target / baseline_tof
+
+        target_velocity = base_to_goal_direction * baseline_vel
+        shot_velocity = target_velocity - base_velocity
+
+        required_velocity = shot_velocity.norm()
+
+        turret_angle = shot_velocity.angle()
+        effective_distance = self.active_table.velocity_to_effective_distance(
+            required_velocity
+        )
+
+        return effective_distance, turret_angle
 
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
@@ -198,33 +230,57 @@ class BallisticsComponent:
             turret_base_pose.translation() - chassis_pose.translation()
         )
 
-        turret_base_velocity = ChassisSpeeds(
+        turret_base_velocity = Translation2d(
             chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
             chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
-            chassis_velocity.omega,
         )
-
-        predicted_shot_base = self.predict_shot_base(
-            turret_base_pose, turret_base_velocity
-        )
-
-        self.distance_to_target = predicted_shot_base.distance(self.target_position)
-        angle_to_target = (self.target_position - predicted_shot_base).angle()
 
         if self.forced_solution is None:
-            target_turret_angle = (
-                angle_to_target - turret_base_pose.rotation()
-            ).radians()
-            # Check if distance is within range of distance table and switch if necessary
-            if not self.active_table.is_within_range(self.distance_to_target):
-                for table_pair in self.tables:
-                    if table_pair.is_within_range(self.distance_to_target):
-                        self.active_table = table_pair
-            target_hood_angle = self.active_table.hood_angle
-            target_flywheel_speed: units.turns_per_second = self.active_table.speed_for(
-                self.distance_to_target
+            # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
+            # See heading full integration example
+            future_position = (
+                turret_base_pose.translation()
+                + turret_base_velocity * self.LATENCY_FACTOR
             )
+            to_goal = self.target_position - future_position
+
+            effective_distance, turret_angle = self.compute_range_bearing_for(
+                to_goal, turret_base_velocity
+            )
+
+            if not self.active_table.is_within_range(effective_distance):
+                # Try other tables
+                for table in self.tables:
+                    if table.is_within_range(effective_distance):
+                        self.active_table = table
+                        # recalc effective distance with new table if needed
+                        effective_distance, turret_angle = (
+                            self.compute_range_bearing_for(
+                                to_goal, turret_base_velocity
+                            )
+                        )
+                        break
+                else:
+                    # No table fits: clamp to closest table
+                    if effective_distance < self.tables[0].dist.min():
+                        self.active_table = self.tables[0]
+                    else:
+                        self.active_table = self.tables[-1]
+                    effective_distance = max(
+                        self.active_table.dist.min(),
+                        min(effective_distance, self.active_table.dist.max()),
+                    )
+
+            required_rpm = self.active_table.speed_for(effective_distance)
+
+            target_turret_angle = (turret_angle - chassis_rotation).radians()
+            target_flywheel_speed = required_rpm
+            target_hood_angle = self.active_table.hood_angle
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
+
+            self.predicted_shot_base_visual.setPose(
+                Pose2d(future_position, turret_angle)
+            )
 
         else:
             (
@@ -264,8 +320,4 @@ class BallisticsComponent:
                 turret_base_pose.translation(),
                 Rotation2d(self.turret.get_current_angle()),
             )
-        )
-
-        self.predicted_shot_base_visual.setPose(
-            Pose2d(predicted_shot_base, Rotation2d())
         )
