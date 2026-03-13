@@ -70,11 +70,10 @@ class LEDComponent:
         speed: hertz = FLASHING_SPEED,
         specific_led=None,
     ):
-        if priority > self.current_state_priority or priority == self.last_used_state:
+        if priority > self.current_state_priority:
             return
 
         self.current_state_priority = priority
-        self.last_used_state = priority
 
         if specific_led:
             start_index, end_index = specific_led, specific_led
@@ -95,11 +94,10 @@ class LEDComponent:
             )
 
     def _set_rainbow(self, priority: StatePriorities):
-        if priority >= self.current_state_priority or priority == self.last_used_state:
+        if priority > self.current_state_priority:
             return
 
         self.current_state_priority = priority
-        self.last_used_state = priority
 
         self.desired_command = RainbowAnimation(
             led_start_index=self.LED_START,
@@ -171,4 +169,6 @@ class LEDComponent:
         self._set_rainbow(StatePriorities.IDLE)
 
     def execute(self):
-        self.candle.set_control(self.desired_command)
+        if self.current_state_priority != self.last_used_state:
+            self.candle.set_control(self.desired_command)
+            self.last_used_state = self.current_state_priority
