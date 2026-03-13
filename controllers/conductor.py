@@ -1,8 +1,7 @@
-from magicbot import StateMachine, default_state, state
+from magicbot import StateMachine, default_state, state, will_reset_to
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
-from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.targeter import Targeter
@@ -15,17 +14,21 @@ class Conductor(StateMachine):
     gobbler: Gobbler
     chassis: ChassisComponent
     targeter: Targeter
-    hopper: HopperComponent
     leds: LEDComponent
+
+    keep_shooting = will_reset_to(False)
 
     def log_shot(self) -> None:
         return self.ballistics.log_shot()
 
     def shoot(self) -> None:
         self.engage()
+        self.keep_shooting = True
 
-    def stop_shooting(self) -> None:
-        self.engage("purging", force=True)
+    def activate_full_ballistics(self) -> None:
+        self.ballistics.solve_for(self.targeter.get_target())
+        self.ballistics.feed_shooter()
+        self.ballistics.energise_flywheels()
 
     @default_state
     def tracking(self) -> None:
@@ -33,21 +36,26 @@ class Conductor(StateMachine):
         self.leds.conductor_state_machine_tracking()
 
     @state(first=True)
-    def shooting(self) -> None:
-        self.hopper.feed()
-        self.gobbler.gobble()
+    def energising_shooter(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
+        self.leds.conductor_state_machine_tracking()
         self.ballistics.energise_flywheels()
+
+        if self.ballistics.shooter_is_ready():
+            self.next_state(self.shooting)
+
+    @state(must_finish=True)
+    def shooting(self) -> None:
+        self.gobbler.gobble()
+        self.activate_full_ballistics()
         self.leds.conducter_state_machine_active()
+
+        if not self.keep_shooting:
+            self.next_state(self.purging)
 
     @state(must_finish=True)
     def purging(self) -> None:
-        self.hopper.feed()
-        self.ballistics.solve_for(self.targeter.get_target())
-        self.ballistics.energise_flywheels()
+        self.activate_full_ballistics()
 
         if self.intake.is_retracted():
             self.done()
-
-    def done(self) -> None:
-        super().done()
