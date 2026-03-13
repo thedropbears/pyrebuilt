@@ -6,7 +6,7 @@ import wpilib
 import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
-from wpimath.geometry import Rotation2d, Translation2d, Translation3d
+from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
@@ -50,6 +50,9 @@ class MyRobot(magicbot.MagicRobot):
     max_spin_rate = tunable(2.5)  # rad/s
 
     slowed_speed = tunable(1)
+
+    test_max_speed = tunable(1.5)
+    test_spin_rate = tunable(1)
 
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
@@ -220,103 +223,64 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(True)
 
     def testPeriodic(self) -> None:
-        self.leds.execute()
+        allowed_to_drive = self.gamepad.getRightBumperButton()
 
-        if self.gamepad.getYButton():
-            self.leds.no_multitag_solution()
+        if allowed_to_drive:
+            # Set max speed
+            max_speed = self.test_max_speed
+            max_spin_rate = self.test_spin_rate
 
-        if self.gamepad.getBButton():
-            self.leds.no_auto()
+            if self.gamepad.getXButton():
+                drive_x = 0.75 * max_speed
+                drive_y = 0.0
+                drive_z = 0.0
+            else:
+                # Driving
+                drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
+                drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
+                drive_z = (
+                    -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
+                    * max_spin_rate
+                )
+
+            self.chassis.drive_local(drive_x, drive_y, drive_z)
+        else:
+            self.chassis.stop()
+
+        if self.gamepad.getLeftTriggerAxis() > 0.5:
+            self.gobbler.gobble()
 
         if self.gamepad.getAButton():
-            self.leds.mispositioned_start(
-                self.chassis.get_pose().translation() + Translation2d(1, 0), 0.1
-            )
+            self.climber.deploy()
 
-        if self.gamepad.getXButton():
-            self.leds.turret_close_to_rotation_limit()
+        if self.gamepad.getBButton():
+            self.climber.retract()
 
-        if self.gamepad.getPOV() == 0:
-            self.leds.turret_at_rotation_limit()
+        if self.gamepad.getLeftBumperButton():
+            self.hopper.feed()
 
-        if self.gamepad.getPOV() == 90:
-            self.leds.hopper_jammed()
+        if self.gamepad.getYButton():
+            self.shooter.pitch_to(math.radians(self.test_hood_angle))
 
-        if self.gamepad.getPOV() == 180:
-            self.leds.too_close_to_trench_to_shoot()
+        if self.gamepad.getLeftStickButton():
+            self.port_vision.zero_servo_()
+        elif self.gamepad.getRightStickButton():
+            self.port_vision.full_range_servo_()
 
-        if self.gamepad.getPOV() == 270:
-            self.leds.driving_faster_than_shoot_speed()
-
-        if self.gamepad.getLeftBumper():
-            self.leds.conducter_state_machine_active()
-
-        if self.gamepad.getRightBumper():
-            self.leds.conductor_state_machine_tracking()
+        self.port_vision.execute()
+        self.chassis.execute()
+        self.targeter.execute()
 
         if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.leds.idle()
-        # allowed_to_drive = self.gamepad.getRightBumperButton()
+            self.ballistics.force_solution(
+                self.test_flywheel_speed,
+                math.radians(self.test_turret_angle),
+                math.radians(self.test_hood_angle),
+                self.test_hopper_surface_speed,
+            )
 
-        # if allowed_to_drive:
-        #     # Set max speed
-        #     max_speed = self.lower_max_speed
-        #     max_spin_rate = self.lower_max_spin_rate
-
-        #     if self.gamepad.getXButton():
-        #         drive_x = 0.75 * max_speed
-        #         drive_y = 0.0
-        #         drive_z = 0.0
-        #     else:
-        #         # Driving
-        #         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
-        #         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
-        #         drive_z = (
-        #             -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
-        #             * max_spin_rate
-        #         )
-
-        #     self.chassis.drive_local(drive_x, drive_y, drive_z)
-        # else:
-        #     self.chassis.stop()
-
-        # if self.gamepad.getLeftTriggerAxis() > 0.5:
-        #     self.gobbler.gobble()
-
-        # if self.gamepad.getAButton():
-        #     self.climber.deploy()
-
-        # if self.gamepad.getBButton():
-        #     self.climber.retract()
-
-        # if self.gamepad.getLeftBumperButton():
-        #     self.hopper.feed()
-
-        # if self.gamepad.getYButton():
-        #     self.shooter.pitch_to(math.radians(self.test_hood_angle))
-
-        # if self.gamepad.getLeftStickButton():
-        #     self.port_vision.zero_servo_()
-        # elif self.gamepad.getRightStickButton():
-        #     self.port_vision.full_range_servo_()
-
-        # self.port_vision.execute()
-        # self.chassis.execute()
-        # self.targeter.execute()
-
-        # if self.gamepad.getRightTriggerAxis() > 0.5 or self.gamepad.getXButton():
-        #     if self.gamepad.getRightTriggerAxis() > 0.5:
-        #         self.ballistics.solve_for(self.targeter.get_target())
-        #     else:
-        #         self.ballistics.force_solution(
-        #             self.test_flywheel_speed,
-        #             math.radians(self.test_turret_angle),
-        #             math.radians(self.test_hood_angle),
-        #             self.test_hopper_surface_speed,
-        #         )
-
-        #     self.ballistics.energise_flywheels()
-        #     self.ballistics.execute()
+            self.ballistics.energise_flywheels()
+            self.ballistics.execute()
 
         self.gobbler.execute()
         self.shooter.execute()
