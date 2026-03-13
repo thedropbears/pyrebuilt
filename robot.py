@@ -49,8 +49,8 @@ class MyRobot(magicbot.MagicRobot):
     max_speed = tunable(3.0)  # m/s
     max_spin_rate = tunable(3.0)  # rad/s
 
-    slowed_speed = tunable(1.5)
-    slowed_spin_rate = tunable(1.5)
+    slowed_speed = tunable(1)
+    slowed_spin_rate = tunable(1)
 
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
