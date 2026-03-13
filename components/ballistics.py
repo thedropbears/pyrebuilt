@@ -6,7 +6,7 @@ import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpilib import Field2d
 from wpimath import units
-from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
+from wpimath.geometry import Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
@@ -97,7 +97,7 @@ class BallisticsComponent:
     LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
-    LATENCY_FACTOR = 0.1
+    LATENCY_FACTOR = tunable(0.1)
 
     TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
@@ -105,7 +105,6 @@ class BallisticsComponent:
     is_shooting = tunable(False)
 
     def __init__(self, field: Field2d) -> None:
-        self.predicted_shot_base_visual = field.getObject("predicted_shot_base")
         self.target_position = Translation2d()
         self.tables = (
             LookupTable(
@@ -277,10 +276,6 @@ class BallisticsComponent:
             target_flywheel_speed = required_rpm
             target_hood_angle = self.active_table.hood_angle
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
-
-            self.predicted_shot_base_visual.setPose(
-                Pose2d(future_position, turret_angle)
-            )
 
         else:
             (
