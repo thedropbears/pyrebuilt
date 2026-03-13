@@ -240,6 +240,30 @@ class BallisticsComponent:
             effective_distance = self.active_table.velocity_to_effective_distance(
                 required_velocity
             )
+
+            if not self.active_table.is_within_range(effective_distance):
+                # Try other tables
+                for table in self.tables:
+                    if table.is_within_range(effective_distance):
+                        self.active_table = table
+                        # recalc effective distance with new table if needed
+                        effective_distance = (
+                            self.active_table.velocity_to_effective_distance(
+                                required_velocity
+                            )
+                        )
+                        break
+                else:
+                    # No table fits: clamp to closest table
+                    if effective_distance < self.tables[0].dist.min():
+                        self.active_table = self.tables[0]
+                    else:
+                        self.active_table = self.tables[-1]
+                    effective_distance = max(
+                        self.active_table.dist.min(),
+                        min(effective_distance, self.active_table.dist.max()),
+                    )
+
             required_rpm = self.active_table.speed_for(effective_distance)
 
             target_turret_angle = turret_angle.radians()
