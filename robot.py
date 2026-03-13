@@ -207,6 +207,11 @@ class MyRobot(magicbot.MagicRobot):
         if drive_z != 0:
             self.chassis.stop_snapping()
 
+        if self.ballistics.will_intercept_trench():
+            self.chassis.scale_translation_for_collision(
+                self.shooter.get_time_to_hood_retract(), 0.5
+            )
+
         if self.gamepad.getYButton():
             self.climber.deploy()
 

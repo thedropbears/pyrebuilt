@@ -34,6 +34,8 @@ class ShooterComponent:
         55.0 / 60.0
     )  # rot/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
+    HOOD_GEAR_REDUCTION = 1 / (375 / 28)
+
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
     def __init__(self) -> None:
@@ -78,7 +80,7 @@ class ShooterComponent:
 
         self.target_hood_angle = self.get_hood_angle_rotations()
 
-        self.hood_output = 0.0
+        self.hood_speed = 0.0
 
     def on_enable(self) -> None:
         self.target_hood_angle = self.get_hood_angle_rotations()
@@ -103,6 +105,12 @@ class ShooterComponent:
     @feedback
     def get_flywheel_target(self) -> units.turns_per_second:
         return self.flywheel_motor.get_velocity().value
+
+    def get_time_to_hood_retract(self) -> units.seconds:
+        return abs(
+            (self.MIN_HOOD_ANGLE - self.get_hood_angle_rotations())
+            / (self.HOOD_SERVO_MAX_SPEED * self.HOOD_GEAR_REDUCTION)
+        )
 
     def pitch_relative(self, angle: units.radians):
         self.target_hood_angle = clamp(

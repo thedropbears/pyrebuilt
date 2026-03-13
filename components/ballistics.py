@@ -215,6 +215,18 @@ class BallisticsComponent:
 
         return effective_distance, turret_angle
 
+    def will_intercept_trench(self) -> bool:
+        chassis_pose = self.chassis.get_pose()
+        chassis_velocity = self.chassis.get_velocity()
+
+        return is_in_transition_zone(
+            chassis_pose.exp(
+                ChassisSpeeds.fromRobotRelativeSpeeds(
+                    chassis_velocity, chassis_pose.rotation()
+                ).toTwist2d(self.shooter.get_time_to_hood_retract())
+            ).translation()
+        )
+
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
@@ -288,15 +300,7 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        if is_in_transition_zone(
-            self.chassis.get_pose()
-            .exp(
-                ChassisSpeeds.fromRobotRelativeSpeeds(
-                    self.chassis.get_velocity(), chassis_pose.rotation()
-                ).toTwist2d(self.EXTRAPOLATION_TIME_FOR_HOOD_SERVO)
-            )
-            .translation()
-        ):
+        if self.will_intercept_trench():
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
             self.leds.too_close_to_trench_to_shoot()
         else:

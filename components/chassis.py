@@ -418,6 +418,19 @@ class ChassisComponent:
             0.0 if self.chassis_speeds.vx <= 0.0 else self.chassis_speeds.vx
         )
 
+    def scale_translation_for_collision(
+        self, time_to_collision: float, safe_time: float
+    ) -> None:
+        if time_to_collision <= 0:
+            self.chassis_speeds.vx = 0.0
+            self.chassis_speeds.vy = 0.0
+            return
+
+        scale = time_to_collision / (time_to_collision + safe_time)
+
+        self.chassis_speeds.vx *= scale
+        self.chassis_speeds.vy *= scale
+
     def snap_to_heading(self, heading: float) -> None:
         """set a heading target for the heading controller"""
         self.snapping_to_heading = True
