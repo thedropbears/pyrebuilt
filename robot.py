@@ -47,10 +47,9 @@ class MyRobot(magicbot.MagicRobot):
 
     # Driving constraints
     max_speed = tunable(3.0)  # m/s
-    max_spin_rate = tunable(3.0)  # rad/s
+    max_spin_rate = tunable(2.5)  # rad/s
 
     slowed_speed = tunable(1)
-    slowed_spin_rate = tunable(1)
 
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
@@ -185,7 +184,6 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             drive_speed = self.slowed_speed
-            spin_rate = self.slowed_spin_rate
 
         drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 1.5) * drive_speed
         drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 1.5) * drive_speed
