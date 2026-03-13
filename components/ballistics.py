@@ -72,14 +72,9 @@ class LookupTable:
     def velocity_to_effective_distance(
         self, velocity: units.meters_per_second
     ) -> units.meters:
-        for i in range(0, len(self.dist)):
-            dist = self.dist[i]
-            vel = dist / self.flight_time[i]
 
-            if vel >= velocity:
-                return dist
-
-        return self.dist[-1]
+        velocities = self.dist / self.flight_time
+        return float(np.interp(velocity, velocities, self.dist))
 
     def solution_for(
         self, distance: units.meters
