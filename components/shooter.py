@@ -109,7 +109,7 @@ class ShooterComponent:
 
     def pitch_min(self):
         self.target_hood_angle = self.MIN_HOOD_ANGLE
-    
+
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = clamp(
             angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
