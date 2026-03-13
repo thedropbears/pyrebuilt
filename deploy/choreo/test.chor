@@ -4,51 +4,23 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
-   "MaxAcceleration":{
-    "dimension":"LinAcc",
+   "offset":{
+    "dimension":"Length",
     "var":{
-     "exp":"3 m / s ^ 2",
-     "val":3.0
-    }
-   },
-   "MaxVelocity":{
-    "dimension":"LinVel",
-    "var":{
-     "exp":"1.3 m / s",
-     "val":1.3
-    }
-   },
-   "RetreatDistance":{
-    "dimension":"Number",
-    "var":{
-     "exp":"0.4",
-     "val":0.4
-    }
-   },
-   "cos60":{
-    "dimension":"Number",
-    "var":{
-     "exp":"0.5",
-     "val":0.5
-    }
-   },
-   "sin60":{
-    "dimension":"Number",
-    "var":{
-     "exp":"0.86602540378",
-     "val":0.86602540378
+     "exp":"0.6 m",
+     "val":0.6
     }
    }
   },
   "poses":{
    "start":{
     "x":{
-     "exp":"2.448 m",
-     "val":2.448
+     "exp":"0.7 m",
+     "val":0.7
     },
     "y":{
-     "exp":"5.5 m",
-     "val":5.5
+     "exp":"7.35 m",
+     "val":7.35
     },
     "heading":{
      "exp":"0 rad",
