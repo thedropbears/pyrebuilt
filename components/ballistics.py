@@ -6,7 +6,7 @@ import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpilib import Field2d
 from wpimath import units
-from wpimath.geometry import Rotation2d, Transform2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
@@ -278,6 +278,10 @@ class BallisticsComponent:
             target_hood_angle = self.active_table.hood_angle
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
+            self.predicted_shot_base_visual.setPose(
+                Pose2d(future_position, turret_angle)
+            )
+
         else:
             (
                 target_flywheel_speed,
@@ -317,8 +321,3 @@ class BallisticsComponent:
                 Rotation2d(self.turret.get_current_angle()),
             )
         )
-
-        # TODO enable this again
-        # self.predicted_shot_base_visual.setPose(
-        #     Pose2d(predicted_shot_base, Rotation2d())
-        # )
