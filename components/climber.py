@@ -1,7 +1,7 @@
 import enum
 from math import tau
 
-from magicbot import feedback, tunable
+from magicbot import feedback
 from phoenix6.configs import (
     CANdiConfiguration,
     FeedbackConfigs,
@@ -42,13 +42,12 @@ class ClimberComponent:
     RETRACTED_POS = 0.0  # m
     EXTENDED_POS = 0.22  # m
 
-    target_pos = tunable(RETRACTED_POS)
-
     ALLOWABLE_OVERSPOOL = 0.02  # m
     MAX_RETRACTION_LIMIT = RETRACTED_POS - ALLOWABLE_OVERSPOOL
     MAX_EXTENSION_LIMIT = EXTENDED_POS + ALLOWABLE_OVERSPOOL
 
     MOTION_VOLTAGE = 8.0
+    target_output = 0.0
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
