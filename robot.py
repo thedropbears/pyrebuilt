@@ -219,10 +219,10 @@ class MyRobot(magicbot.MagicRobot):
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
 
-        if self.codriver_joystick.getRawButton(6):
+        if self.codriver_joystick.getRawButton(4):
             self.ballistics.LATENCY_FACTOR += 0.01
 
-        if self.codriver_joystick.getRawButton(4):
+        if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
 
     def testInit(self) -> None:
