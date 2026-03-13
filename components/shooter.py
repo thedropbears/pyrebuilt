@@ -25,10 +25,13 @@ class ShooterComponent:
     # 0 deg   = shooting straight up
     # 90 deg  = shooting horizontal
     # mechanical range is currently 23 - 50 deg in this frame
+    # hood min roation = 0.0620
+    # hood max roataion = 0.1389
+
     MIN_HOOD_ANGLE: units.turns = 25.0 / 360.0
     MAX_HOOD_ANGLE: units.turns = 52.0 / 360.0
 
-    ENCODER_ZERO_OFFSET = -0.168045
+    ENCODER_ZERO_OFFSET = -(0.22783) + (25 / 360.0)
 
     HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
         55.0 / 60.0
