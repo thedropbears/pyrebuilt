@@ -74,6 +74,8 @@ class BallisticsComponent:
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
 
+    EXTRAPOLATION_TIME_FOR_HOOD_SERVO: units.seconds = 2
+
     LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
@@ -84,7 +86,6 @@ class BallisticsComponent:
     is_shooting = tunable(False)
 
     def __init__(self, field: Field2d) -> None:
-
         self.predicted_shot_base_visual = field.getObject("predicted_shot_base")
         self.target_position = Translation2d()
         self.tables = (
@@ -241,7 +242,7 @@ class BallisticsComponent:
             .exp(
                 ChassisSpeeds.fromRobotRelativeSpeeds(
                     self.chassis.get_velocity(), chassis_pose.rotation()
-                ).toTwist2d(2)
+                ).toTwist2d(self.EXTRAPOLATION_TIME_FOR_HOOD_SERVO)
             )
             .translation()
         ):
