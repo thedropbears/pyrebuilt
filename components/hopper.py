@@ -129,3 +129,6 @@ class HopperComponent:
         if self.shooter.is_shooter_ready():
             self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
             self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
+        else:
+            self.indexer_motor.set_control(VelocityVoltage(0.0))
+            self.injector_motor.set_control(VelocityVoltage(0.0))

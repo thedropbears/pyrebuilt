@@ -111,7 +111,9 @@ class ShooterComponent:
 
     @feedback
     def is_shooter_ready(self) -> bool:
-        return abs(self.get_flywheel_error()) < self.shooter_tolerance
+        return self.target_shooter_rps > 0.0 and (
+            abs(self.get_flywheel_error()) < self.shooter_tolerance
+        )
 
     def pitch_relative(self, angle: units.radians):
         self.target_hood_angle = clamp(
