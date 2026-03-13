@@ -27,7 +27,7 @@ class Conductor(StateMachine):
         self.ballistics.solve_for(self.targeter.get_target())
         self.leds.conductor_state_machine_tracking()
 
-    @state(first=True, must_finish=True)
+    @state(first=True)
     def shooting(self) -> None:
         self.hopper.feed()
         self.gobbler.gobble()

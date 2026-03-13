@@ -213,9 +213,6 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
 
-        if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.conductor.stop_shooting()
-
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
 
