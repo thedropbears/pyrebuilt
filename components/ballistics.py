@@ -273,7 +273,7 @@ class BallisticsComponent:
 
             required_rpm = self.active_table.speed_for(effective_distance)
 
-            target_turret_angle = turret_angle.radians()
+            target_turret_angle = (turret_angle - chassis_rotation).radians()
             target_flywheel_speed = required_rpm
             target_hood_angle = self.active_table.hood_angle
             target_hopper_surface_speed = self.active_table.hopper_surface_speed
