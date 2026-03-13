@@ -230,8 +230,3 @@ class IntakeComponent:
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
         return degrees(self.get_deployer_position())
-
-    def is_retracted(self) -> bool:
-        return isclose(
-            self.get_deployer_position(), self.RETRACTED_INTAKE_ANGLE, abs_tol=0.01
-        )

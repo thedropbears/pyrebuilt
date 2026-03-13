@@ -3,12 +3,14 @@ from magicbot import StateMachine, default_state, state
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
+from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.targeter import Targeter
 from controllers.gobbler import Gobbler
 
 
 class Conductor(StateMachine):
+    intake: IntakeComponent
     ballistics: BallisticsComponent
     gobbler: Gobbler
     chassis: ChassisComponent
