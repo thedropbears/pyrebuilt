@@ -75,7 +75,7 @@ class LEDComponent:
 
         self.current_state_priority = priority
 
-        if specific_led:
+        if specific_led is not None:
             start_index, end_index = specific_led, specific_led
         else:
             start_index, end_index = self.LED_START, self.LED_END
