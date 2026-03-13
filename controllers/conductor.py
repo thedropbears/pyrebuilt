@@ -38,8 +38,8 @@ class Conductor(StateMachine):
     @state(first=True)
     def energising_shooter(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
-        self.leds.conductor_state_machine_tracking()
         self.ballistics.energise_flywheels()
+        self.leds.conductor_state_machine_tracking()
 
         if self.ballistics.shooter_is_ready():
             self.next_state(self.shooting)
