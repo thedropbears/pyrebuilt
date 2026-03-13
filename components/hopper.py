@@ -13,11 +13,13 @@ from phoenix6.signals import InvertedValue, NeutralModeValue
 from wpimath import units
 
 from components.leds import LEDComponent
+from components.shooter import ShooterComponent
 from ids import TalonId
 
 
 class HopperComponent:
     leds: LEDComponent
+    shooter: ShooterComponent
 
     desired_surface_speed: units.meters_per_second = 12.0
 
@@ -124,6 +126,6 @@ class HopperComponent:
     def execute(self) -> None:
         if self.is_jammed():
             self.leds.hopper_jammed()
-
-        self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
-        self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
+        if self.shooter.is_shooter_ready():
+            self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
+            self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))

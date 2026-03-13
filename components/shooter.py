@@ -20,6 +20,7 @@ wpilib.SmartDashboard.putData("Hood PID", hood_controller)
 
 class ShooterComponent:
     target_shooter_rps = will_reset_to(0.0)
+    shooter_tolerance = 5.0  # rps
 
     hood_error_tolerance = 1.0 / 360.0
     # 0 deg   = shooting straight up
@@ -101,8 +102,16 @@ class ShooterComponent:
         return self.flywheel_motor.get_closed_loop_error().value
 
     @feedback
-    def get_flywheel_target(self) -> units.turns_per_second:
+    def get_flywheel_speed(self) -> units.turns_per_second:
         return self.flywheel_motor.get_velocity().value
+
+    @feedback
+    def get_flywheel_target(self) -> units.turns_per_second:
+        return self.target_shooter_rps
+
+    @feedback
+    def is_shooter_ready(self) -> bool:
+        return abs(self.get_flywheel_error()) < self.shooter_tolerance
 
     def pitch_relative(self, angle: units.radians):
         self.target_hood_angle = clamp(
