@@ -1,3 +1,4 @@
+import enum
 from math import tau
 
 from magicbot import feedback, tunable
@@ -6,15 +7,13 @@ from phoenix6.configs import (
     FeedbackConfigs,
     HardwareLimitSwitchConfigs,
     MotorOutputConfigs,
-    Slot0Configs,
     SoftwareLimitSwitchConfigs,
     TalonFXConfiguration,
 )
-from phoenix6.controls import PositionVoltage, VoltageOut
+from phoenix6.controls import VoltageOut
 from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import (
     ForwardLimitSourceValue,
-    GravityTypeValue,
     InvertedValue,
     NeutralModeValue,
     ReverseLimitSourceValue,
@@ -26,8 +25,15 @@ from wpilib import DigitalInput
 from ids import CandiId, DioChannel, TalonId
 
 
+@enum.unique
+class LastIndex(enum.IntEnum):
+    NONE = 0
+    RETRACTED = 1
+    EXTENDED = 2
+
+
 class ClimberComponent:
-    has_indexed = tunable(False)
+    last_index = LastIndex.NONE
 
     GEAR_RATIO = (1.0 / 1.0) * (1.0 / 9.0) * (1.0 / 4.0)
     SHAFT_RADIUS = 0.00733  # m
@@ -42,7 +48,7 @@ class ClimberComponent:
     MAX_RETRACTION_LIMIT = RETRACTED_POS - ALLOWABLE_OVERSPOOL
     MAX_EXTENSION_LIMIT = EXTENDED_POS + ALLOWABLE_OVERSPOOL
 
-    INDEX_SEARCH_VOLTAGE = -8.0
+    MOTION_VOLTAGE = 8.0
 
     def __init__(self):
         # create motor with correct forward direction sparkmax controller
@@ -101,49 +107,53 @@ class ClimberComponent:
             .with_reverse_soft_limit_enable(True)
         )
 
-        climber_motor_slot0_configs = (
-            Slot0Configs()
-            .with_k_p(594.12)
-            .with_k_i(0)
-            .with_k_d(230.65)
-            .with_k_s(0.0030436)
-            .with_k_v(72.04)
-            .with_k_a(1.11881)
-            .with_k_g(0.16926)
-            .with_gravity_type(GravityTypeValue.ELEVATOR_STATIC)
-        )
         self.climber_motor.configurator.apply(
             TalonFXConfiguration()
             .with_motor_output(climber_motor_output_configs)
             .with_feedback(climber_motor_feedback_configs)
-            .with_slot0(climber_motor_slot0_configs)
             .with_software_limit_switch(climber_motor_soft_limit_configs)
             .with_hardware_limit_switch(climber_motor_hard_limit_configs)
         )
 
+        self.target_output = 0.0
+
     def deploy(self):
-        self.target_pos = self.EXTENDED_POS
+        self.target_output = self.MOTION_VOLTAGE
 
     def retract(self):
-        self.target_pos = self.RETRACTED_POS
+        self.target_output = -self.MOTION_VOLTAGE
 
     def try_index(self) -> None:
-        if self.at_retraction_limit() and not self.has_indexed:
+
+        if (
+            self.last_index != LastIndex.RETRACTED
+            and self.get_retraction_limit_switch_state()
+        ):
             self.climber_motor.set_position(self.RETRACTED_POS)
-            self.has_indexed = True
-            self.target_pos = self.RETRACTED_POS
+            self.last_index = LastIndex.RETRACTED
+
+        if (
+            self.last_index != LastIndex.EXTENDED
+            and self.get_extension_limit_switch_state()
+        ):
+            self.climber_motor.set_position(self.EXTENDED_POS)
+            self.last_index = LastIndex.EXTENDED
 
     def execute(self):
         self.try_index()
 
-        if self.has_indexed:
-            self.climber_motor.set_control(PositionVoltage(self.target_pos))
-        else:
+        if self.last_index == LastIndex.NONE:
             self.climber_motor.set_control(
                 VoltageOut(
-                    ClimberComponent.INDEX_SEARCH_VOLTAGE, ignore_software_limits=True
+                    -ClimberComponent.MOTION_VOLTAGE, ignore_software_limits=True
                 )
             )
+            return
+
+        self.climber_motor.set_control(VoltageOut(self.target_output))
+
+        if self.at_extension_limit() or self.at_retraction_limit():
+            self.target_output = 0.0
 
     @feedback
     def get_extension_limit_switch_state(self) -> bool:
