@@ -236,11 +236,20 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
-        if is_in_transition_zone(chassis_pose.translation()):
+        if is_in_transition_zone(
+            self.chassis.get_pose()
+            .exp(
+                ChassisSpeeds.fromRobotRelativeSpeeds(
+                    self.chassis.get_velocity(), chassis_pose.rotation()
+                ).toTwist2d(2)
+            )
+            .translation()
+        ):
             self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
             self.leds.too_close_to_trench_to_shoot()
         else:
             self.shooter.pitch_to(target_hood_angle)
+
         self.turret.slew_to(target_turret_angle)
 
         if self.is_driving_faster_than_max_shoot_speed():
