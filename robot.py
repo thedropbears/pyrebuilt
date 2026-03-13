@@ -160,8 +160,8 @@ class MyRobot(magicbot.MagicRobot):
             self.port_vision_name = "port_turret"
             self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
             self.port_vision_turret_rot = Rotation2d()
-            self.port_vision_camera_offset = Translation3d(0.0075, 0, 0.00375)
-            self.port_vision_camera_pitch = math.radians(-30.0)
+            self.port_vision_camera_offset = Translation3d(0.01078, 0, 0.0013)
+            self.port_vision_camera_pitch = math.radians(-10.0)
             self.port_vision_encoder_offset = Rotation2d(2.055)
             self.port_vision_servo_offsets = ServoOffsets(
                 neutral=Rotation2d(1.928),
