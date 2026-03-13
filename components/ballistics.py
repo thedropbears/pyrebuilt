@@ -195,6 +195,27 @@ class BallisticsComponent:
     def log_shot(self) -> None:
         self.is_shooting = True
 
+    def compute_range_bearing_for(
+        self, base_to_goal: Translation2d, base_velocity: Translation2d
+    ) -> tuple[units.meters, Rotation2d]:
+        distance_to_target = base_to_goal.norm()
+        base_to_goal_direction = base_to_goal / distance_to_target
+        baseline_rps, baseline_tof = self.active_table.solution_for(distance_to_target)
+
+        baseline_vel = distance_to_target / baseline_tof
+
+        target_velocity = base_to_goal_direction * baseline_vel
+        shot_velocity = target_velocity - base_velocity
+
+        required_velocity = shot_velocity.norm()
+
+        turret_angle = shot_velocity.angle()
+        effective_distance = self.active_table.velocity_to_effective_distance(
+            required_velocity
+        )
+
+        return effective_distance, turret_angle
+
     def execute(self) -> None:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
@@ -221,24 +242,10 @@ class BallisticsComponent:
                 turret_base_pose.translation()
                 + turret_base_velocity * self.LATENCY_FACTOR
             )
-
             to_goal = self.target_position - future_position
-            distance_to_target = to_goal.norm()
-            base_to_target_direction = to_goal / distance_to_target
-            baseline_rps, baseline_tof = self.active_table.solution_for(
-                distance_to_target
-            )
 
-            baseline_vel = distance_to_target / baseline_tof
-
-            target_velocity = base_to_target_direction * baseline_vel
-            shot_velocity = target_velocity - turret_base_velocity
-
-            turret_angle = shot_velocity.angle()
-            required_velocity = shot_velocity.norm()
-
-            effective_distance = self.active_table.velocity_to_effective_distance(
-                required_velocity
+            effective_distance, turret_angle = self.compute_range_bearing_for(
+                to_goal, turret_base_velocity
             )
 
             if not self.active_table.is_within_range(effective_distance):
@@ -247,9 +254,9 @@ class BallisticsComponent:
                     if table.is_within_range(effective_distance):
                         self.active_table = table
                         # recalc effective distance with new table if needed
-                        effective_distance = (
-                            self.active_table.velocity_to_effective_distance(
-                                required_velocity
+                        effective_distance, turret_angle = (
+                            self.compute_range_bearing_for(
+                                to_goal, turret_base_velocity
                             )
                         )
                         break
