@@ -77,7 +77,7 @@ class BallisticsComponent:
 
     MINIMUM_LEAD_DISTANCE = 2.0
 
-    TURRET_OFFSET = Transform2d(Translation2d(0.170, -0.137), Rotation2d())
+    TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
 
     is_shooting = tunable(False)
