@@ -76,12 +76,12 @@ class ShooterComponent:
             )
         )
 
-        self.target_hood_angle = self.get_hood_angle_rotations()
+        self.target_hood_angle = self.MIN_HOOD_ANGLE
 
         self.hood_output = 0.0
 
     def on_enable(self) -> None:
-        self.target_hood_angle = self.get_hood_angle_rotations()
+        self.target_hood_angle = self.MIN_HOOD_ANGLE
 
     @feedback
     def get_hood_angle_degrees(self) -> units.degrees:
@@ -104,13 +104,12 @@ class ShooterComponent:
     def get_flywheel_target(self) -> units.turns_per_second:
         return self.flywheel_motor.get_velocity().value
 
-    def pitch_relative(self, angle: units.radians):
-        self.target_hood_angle = clamp(
-            self.target_hood_angle + angle / math.tau,
-            self.MIN_HOOD_ANGLE,
-            self.MAX_HOOD_ANGLE,
-        )
+    def pitch_relative(self):
+        self.target_hood_angle = self.MIN_HOOD_ANGLE
 
+    def pitch_min(self):
+        self.target_hood_angle = self.MIN_HOOD_ANGLE
+    
     def pitch_to(self, angle: units.radians):
         self.target_hood_angle = clamp(
             angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
