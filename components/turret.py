@@ -35,7 +35,7 @@ class TurretComponent:
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
-    ENCODER_OFFSET = -0.228760
+    ENCODER_OFFSET = -0.259277
 
     ALLOWABLE_ERROR = math.radians(1.0)
 
