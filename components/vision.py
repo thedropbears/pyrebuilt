@@ -58,7 +58,7 @@ class VisualLocalizer(HasPerLoopCache):
     CAMERA_MAX_RANGE = 4.0  # m
 
     add_to_estimator = tunable(True)
-    only_use_multitag = tunable(False)
+    only_use_multitag = tunable(True)
     should_log = tunable(True)
 
     last_pose_z = tunable(0.0, writeDefault=False)
