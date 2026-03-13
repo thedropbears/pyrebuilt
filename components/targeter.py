@@ -29,6 +29,18 @@ class Targeter:
         return self.target
 
     @feedback
+    def current_zone(self) -> str:
+        robot_pos = self.chassis.get_pose().translation()
+        if is_in_alliance_zone(robot_pos):
+            return "alliance zone"
+        elif is_in_neutral_zone(robot_pos):
+            return "neutral zone"
+        elif is_in_transition_zone(robot_pos):
+            return "transition zone"
+        else:
+            return "enemy zone"
+
+    @feedback
     def get_optimal_target_from_alliance_zone(self) -> Translation2d:
         return alliance_hub_pos(is_red())
 
