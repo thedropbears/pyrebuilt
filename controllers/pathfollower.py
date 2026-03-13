@@ -25,7 +25,7 @@ class PathFollower(StateMachine):
         self.trajectories: list[SwerveTrajectory] = []
         self.current_leg: int = -1
         self.starting_pose = None
-        self.auto_name = ["spin3m_andreturn"]
+        self.auto_name = ["move3mandreturn"]
 
     def set_path(self, trajectory_names: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
