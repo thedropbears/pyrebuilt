@@ -97,7 +97,7 @@ class BallisticsComponent:
     LEAD_SHOT_ITERATIONS = tunable(2)
 
     MINIMUM_LEAD_DISTANCE = 2.0
-    LATENCY_FACTOR = tunable(0.13)
+    LATENCY_FACTOR = tunable(0.105)  # if shooting far, decrease
 
     TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
