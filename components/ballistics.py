@@ -297,7 +297,7 @@ class BallisticsComponent:
             )
             .translation()
         ):
-            self.shooter.pitch_to(self.shooter.MIN_HOOD_ANGLE)
+            self.shooter.pitch_min()
             self.leds.too_close_to_trench_to_shoot()
         else:
             self.shooter.pitch_to(target_hood_angle)
