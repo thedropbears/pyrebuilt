@@ -37,7 +37,7 @@ class Conductor(StateMachine):
         self.ballistics.energise_flywheels()
         self.leds.conductor_state_machine_tracking()
 
-    @state(must_finish=True)
+    @state(first=True, must_finish=True)
     def shooting(self) -> None:
         self.gobbler.gobble()
         self.activate_full_ballistics()
