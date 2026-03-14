@@ -37,8 +37,8 @@ class MyRobot(magicbot.MagicRobot):
     gobbler: Gobbler
 
     # Components
-    hopper: HopperComponent
     ballistics: BallisticsComponent
+    hopper: HopperComponent
     shooter: ShooterComponent
     climber: ClimberComponent
     intake: IntakeComponent
@@ -263,7 +263,7 @@ class MyRobot(magicbot.MagicRobot):
             self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
-            self.hopper.feed()
+            self.hopper.feed(self.test_hopper_surface_speed)
 
         if self.gamepad.getYButton():
             self.shooter.pitch_to(math.radians(self.test_hood_angle))
@@ -286,6 +286,7 @@ class MyRobot(magicbot.MagicRobot):
             )
 
             self.ballistics.energise_flywheels()
+            self.ballistics.feed_shooter()
             self.ballistics.execute()
 
         self.gobbler.execute()

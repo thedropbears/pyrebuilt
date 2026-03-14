@@ -36,6 +36,8 @@ class ShooterComponent:
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
+    FLYWHEEL_SETPOINT_TOLERANCE = 3.0
+
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
 
@@ -101,8 +103,16 @@ class ShooterComponent:
         return self.flywheel_motor.get_closed_loop_error().value
 
     @feedback
-    def get_flywheel_target(self) -> units.turns_per_second:
+    def get_flywheel_speed(self) -> units.turns_per_second:
         return self.flywheel_motor.get_velocity().value
+
+    @feedback
+    def flywheel_is_at_speed(self) -> bool:
+        return (
+            self.flywheel_motor.get_closed_loop_reference().value != 0.0
+            and abs(self.flywheel_motor.get_closed_loop_error().value)
+            < self.FLYWHEEL_SETPOINT_TOLERANCE
+        )
 
     def pitch_relative(self, angle: units.radians):
         self.target_hood_angle = clamp(

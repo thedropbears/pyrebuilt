@@ -91,6 +91,7 @@ class BallisticsComponent:
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
+    should_energise_hopper = will_reset_to(False)
 
     EXTRAPOLATION_TIME_FOR_HOOD_SERVO: units.seconds = 2
 
@@ -146,6 +147,12 @@ class BallisticsComponent:
         # assuming that we dont want to have the flywheel spun up all the time,
         # but the hood and turret should always run
         self.should_energise_flywheels = True
+
+    def feed_shooter(self) -> None:
+        self.should_energise_hopper = True
+
+    def shooter_is_ready(self) -> bool:
+        return self.shooter.flywheel_is_at_speed()
 
     def solve_for(self, target_position: Translation2d) -> None:
         # like components with hardware attached we dont want to perform the
@@ -306,7 +313,9 @@ class BallisticsComponent:
 
         if self.is_driving_faster_than_max_shoot_speed():
             self.leds.driving_faster_than_shoot_speed()
-        self.hopper.set_desired_surface_speed(target_hopper_surface_speed)
+
+        if self.should_energise_hopper:
+            self.hopper.feed(target_hopper_surface_speed)
 
         self.is_shooting = False
 
