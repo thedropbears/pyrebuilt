@@ -24,7 +24,7 @@ class Gobbler(StateMachine):
 
     @state(must_finish=True)
     def retracting(self) -> None:
-        self.intake.backdrive()
+        self.intake.drive()
         if self.intake.is_retracted():
             self.done()
 
