@@ -1,13 +1,13 @@
-from math import pi, tau
+from math import isclose, pi, tau
 
-from magicbot import feedback, will_reset_to
+from magicbot import will_reset_to
 from phoenix6.configs import (
     FeedbackConfigs,
     MotorOutputConfigs,
     Slot0Configs,
     TalonFXConfiguration,
 )
-from phoenix6.controls import VelocityVoltage
+from phoenix6.controls import CoastOut, VelocityVoltage
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from wpimath import units
@@ -22,8 +22,7 @@ class HopperComponent:
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
     INDEXER_WHEEL_DIAMETER: units.meters = 0.137
 
-    target_indexer_rps = will_reset_to(0.0)
-    target_injector_rps = will_reset_to(0.0)
+    feed_rate = will_reset_to(0.0)
 
     ALLOWABLE_INJECTOR_ERROR = 0
     ALLOWABLE_INDEXER_ERROR = 0
@@ -77,13 +76,9 @@ class HopperComponent:
             .with_slot0(injector_gains_config)
         )
 
-    @feedback
-    def get_target_indexer_rps(self) -> float:
-        return self.target_indexer_rps
-
-    @feedback
-    def get_target_injector_rps(self) -> float:
-        return self.target_injector_rps
+    def on_disable(self) -> None:
+        self.indexer_motor.set_control(CoastOut())
+        self.injector_motor.set_control(CoastOut())
 
     def get_indexer_error(self) -> units.radians_per_second:
         return self.indexer_motor.get_closed_loop_error().value * tau
@@ -108,12 +103,18 @@ class HopperComponent:
         )
 
     def feed(self, feed_rate: units.meters_per_second) -> None:
-        self.target_indexer_rps = feed_rate / (pi * self.INDEXER_WHEEL_DIAMETER)
-        self.target_injector_rps = feed_rate / (pi * self.INJECTOR_WHEEL_DIAMETER)
+        self.feed_rate = feed_rate
 
     def execute(self) -> None:
         if self.is_jammed():
             self.leds.hopper_jammed()
 
-        self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
-        self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
+        if not isclose(self.feed_rate, 0.0, abs_tol=0.1):
+            target_indexer_rps = self.feed_rate / (pi * self.INDEXER_WHEEL_DIAMETER)
+            target_injector_rps = self.feed_rate / (pi * self.INJECTOR_WHEEL_DIAMETER)
+
+            self.indexer_motor.set_control(VelocityVoltage(target_indexer_rps))
+            self.injector_motor.set_control(VelocityVoltage(target_injector_rps))
+        else:
+            self.indexer_motor.set_control(CoastOut())
+            self.injector_motor.set_control(CoastOut())

@@ -339,6 +339,15 @@ class PhysicsEngine:
             for module in robot.chassis.modules
         ]
 
+        self.flywheel_sim = SteerModuleSim(
+            TalonFXMotorSim(
+                DCMotor.krakenX60,
+                robot.shooter.flywheel_motor,
+                gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
+            ),
+            796.0 * 1e-6,
+        )
+
         self.turret_sim = TurretSim(
             TalonFXMotorSim(
                 DCMotor.minion,
@@ -399,6 +408,8 @@ class PhysicsEngine:
                 self.swerve_modules[3].get(),
             )
         )
+
+        self.flywheel_sim.update(tm_diff)
 
         self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
 
