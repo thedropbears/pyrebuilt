@@ -36,7 +36,7 @@ class ShooterComponent:
         55.0 / 60.0
     )  # rot/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
 
-    fudge = tunable(0.0)
+    IS_RETRACTED_ALLOWABLE_ERROR = tunable(1.0)
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
@@ -105,7 +105,9 @@ class ShooterComponent:
     @feedback
     def is_hood_retracted(self) -> bool:
         return math.isclose(
-            self.get_hood_angle(), self.MIN_HOOD_ANGLE, abs_tol=self.fudge
+            self.get_hood_angle(),
+            self.MIN_HOOD_ANGLE * math.tau,
+            abs_tol=math.radians(self.IS_RETRACTED_ALLOWABLE_ERROR),
         )
 
     @feedback

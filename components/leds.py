@@ -1,7 +1,7 @@
 from enum import IntEnum
 
-from magicbot import will_reset_to
-from phoenix6.controls import RainbowAnimation, SolidColor
+from magicbot import feedback
+from phoenix6.controls import SolidColor
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import RGBWColor
 
@@ -24,42 +24,31 @@ class LEDComponent:
     LED_START = 0
     LED_END = 255
 
-    desired_state = will_reset_to(States.IDLE)
+    desired_state = States.IDLE
     current_state = States.IDLE
 
     def __init__(self) -> None:
         self.candle = CANdle(CandleId.LED)
 
-    def _set_static(
-        self, color: RGBWColor, start_index=LED_START, end_index=LED_END
-    ) -> SolidColor:
-        return SolidColor(start_index, end_index, color)
+    @feedback
+    def get_current_state(self):
+        return self.current_state
 
-    def _set_rainbow(
-        self, start_index=LED_START, end_index=LED_END
-    ) -> RainbowAnimation:
-        return RainbowAnimation(start_index, end_index)
-
-    def _get_desired_command(self, state: States) -> SolidColor | RainbowAnimation:
-        if state == States.HOOD_RETRACTED:
-            return self._set_static(Colors.green)
-        if state == States.HOOD_NOT_RETRACTED:
-            return self._set_static(Colors.red)
-        if state == States.IDLE:
-            return self._set_rainbow()
+    @feedback
+    def get_desired_state(self):
+        return self.desired_state
 
     def hood_is_retracted(self) -> None:
         self.desired_state = States.HOOD_RETRACTED
+        self.desired_command = SolidColor(self.LED_START, self.LED_END, Colors.green)
 
     def hood_is_not_retracted(self) -> None:
         self.desired_state = States.HOOD_NOT_RETRACTED
-        self.desired_command = self._set_static(Colors.red)
+        self.desired_command = SolidColor(self.LED_START, self.LED_END, Colors.red)
 
     def execute(self) -> None:
         if self.desired_state == self.current_state:
             return
 
         self.current_state = self.desired_state
-        desired_command = self._get_desired_command(self.current_state)
-
-        self.candle.set_control(desired_command)
+        self.candle.set_control(self.desired_command)
