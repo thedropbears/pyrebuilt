@@ -19,8 +19,6 @@ from ids import TalonId
 class HopperComponent:
     leds: LEDComponent
 
-    desired_surface_speed: units.meters_per_second = 12.0
-
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
     INDEXER_WHEEL_DIAMETER: units.meters = 0.137
 
@@ -79,9 +77,6 @@ class HopperComponent:
             .with_slot0(injector_gains_config)
         )
 
-    def set_desired_surface_speed(self, desired_speed: units.meters_per_second) -> None:
-        self.desired_surface_speed = desired_speed
-
     @feedback
     def get_target_indexer_rps(self) -> float:
         return self.target_indexer_rps
@@ -112,14 +107,9 @@ class HopperComponent:
             or self.get_injector_error() > self.ALLOWABLE_INJECTOR_ERROR
         )
 
-    def feed(self) -> None:
-
-        self.target_indexer_rps = self.desired_surface_speed / (
-            pi * self.INDEXER_WHEEL_DIAMETER
-        )
-        self.target_injector_rps = self.desired_surface_speed / (
-            pi * self.INJECTOR_WHEEL_DIAMETER
-        )
+    def feed(self, feed_rate: units.meters_per_second) -> None:
+        self.target_indexer_rps = feed_rate / (pi * self.INDEXER_WHEEL_DIAMETER)
+        self.target_injector_rps = feed_rate / (pi * self.INJECTOR_WHEEL_DIAMETER)
 
     def execute(self) -> None:
         if self.is_jammed():

@@ -315,7 +315,7 @@ class BallisticsComponent:
             self.leds.driving_faster_than_shoot_speed()
 
         if self.should_energise_hopper:
-            self.hopper.set_desired_surface_speed(target_hopper_surface_speed)
+            self.hopper.feed(target_hopper_surface_speed)
 
         self.is_shooting = False
 
