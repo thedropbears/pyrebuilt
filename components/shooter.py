@@ -109,12 +109,9 @@ class ShooterComponent:
     @feedback
     def flywheel_is_at_speed(self) -> bool:
         return (
-            math.isclose(
-                self.flywheel_motor.get_closed_loop_reference().value,
-                self.target_shooter_rps,
-                abs_tol=1e-3,
-            )
-            and self.get_flywheel_error() < self.FLYWHEEL_SETPOINT_TOLERANCE
+            self.flywheel_motor.get_closed_loop_reference().value != 0.0
+            and abs(self.flywheel_motor.get_closed_loop_error().value)
+            < self.FLYWHEEL_SETPOINT_TOLERANCE
         )
 
     def pitch_relative(self, angle: units.radians):

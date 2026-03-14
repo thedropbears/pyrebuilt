@@ -22,7 +22,7 @@ class Conductor(StateMachine):
         return self.ballistics.log_shot()
 
     def shoot(self) -> None:
-        self.engage()
+        self.engage(self.energising_shooter)
         self.keep_shooting = True
 
     def activate_full_ballistics(self) -> None:
