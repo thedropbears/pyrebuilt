@@ -115,7 +115,6 @@ class BallisticsComponent:
                 10,
                 "Score Table 25",
             ),
-            """
             LookupTable(
                 DISTANCE_LOOKUP_45,
                 SPEED_LOOKUP_45,
@@ -132,7 +131,6 @@ class BallisticsComponent:
                 12,
                 "Pass Table",
             ),
-            """,
         )
         self.active_table = self.tables[0]
 
@@ -249,10 +247,28 @@ class BallisticsComponent:
                 to_goal, turret_base_velocity
             )
 
-            effective_distance = max(
-                self.active_table.dist.min(),
-                min(effective_distance, self.active_table.dist.max()),
-            )
+            # if not self.active_table.is_within_range(effective_distance):
+            #     # Try other tables
+            #     for table in self.tables:
+            #         if table.is_within_range(effective_distance):
+            #             self.active_table = table
+            #             # recalc effective distance with new table if needed
+            #             effective_distance, turret_angle = (
+            #                 self.compute_range_bearing_for(
+            #                     to_goal, turret_base_velocity
+            #                 )
+            #             )
+            #             break
+            #     else:
+            #         # No table fits: clamp to closest table
+            #         if effective_distance < self.tables[0].dist.min():
+            #             self.active_table = self.tables[0]
+            #         else:
+            #             self.active_table = self.tables[-1]
+            #         effective_distance = max(
+            #             self.active_table.dist.min(),
+            #             min(effective_distance, self.active_table.dist.max()),
+            #         )
 
             required_rpm = self.active_table.speed_for(effective_distance)
 
@@ -284,7 +300,7 @@ class BallisticsComponent:
             self.shooter.pitch_min()
             self.leds.too_close_to_trench_to_shoot()
         else:
-            self.shooter.pitch_min()
+            self.shooter.pitch_to(target_hood_angle)
 
         self.turret.slew_to(target_turret_angle)
 
