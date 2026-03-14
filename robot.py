@@ -181,7 +181,6 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
-        self.leds.execute()
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
 
@@ -227,6 +226,8 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
+
+        self.leds.execute()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
@@ -315,34 +316,6 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision.execute()
         self.chassis.update_odometry()
         self.leds.execute()
-
-        self._set_prematch_status_lights()
-
-    def _set_prematch_status_lights(self) -> None:
-        if not self.port_vision.sees_multi_tag_target():
-            self.leds.no_multitag_solution()
-            return
-
-        selected_auto = self._automodes.chooser.getSelected()
-        if not isinstance(selected_auto, AutoBase):
-            self.leds.no_auto()
-            return
-
-        intended_start_pose = selected_auto.get_starting_pose()
-        current_pose = self.chassis.get_pose()
-        if intended_start_pose is not None:
-            self.field.getObject("Intended start pos").setPose(intended_start_pose)
-            relative_translation = intended_start_pose.relativeTo(
-                current_pose
-            ).translation()
-            if relative_translation.norm() > self.START_POS_TOLERANCE:
-                self.leds.mispositioned_start(
-                    relative_translation, self.START_POS_TOLERANCE
-                )
-            else:
-                self.leds.idle()
-        else:
-            self.leds.no_auto()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
