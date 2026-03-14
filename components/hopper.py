@@ -12,13 +12,10 @@ from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
 from wpimath import units
 
-from components.leds import LEDComponent
 from ids import TalonId
 
 
 class HopperComponent:
-    leds: LEDComponent
-
     INJECTOR_WHEEL_DIAMETER: units.meters = 0.05
     INDEXER_WHEEL_DIAMETER: units.meters = 0.137
 
@@ -106,8 +103,6 @@ class HopperComponent:
         self.feed_rate = feed_rate
 
     def execute(self) -> None:
-        if self.is_jammed():
-            self.leds.hopper_jammed()
 
         if not isclose(self.feed_rate, 0.0, abs_tol=0.1):
             target_indexer_rps = self.feed_rate / (pi * self.INDEXER_WHEEL_DIAMETER)

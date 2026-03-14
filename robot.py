@@ -316,34 +316,6 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.update_odometry()
         self.leds.execute()
 
-        self._set_prematch_status_lights()
-
-    def _set_prematch_status_lights(self) -> None:
-        if not self.port_vision.sees_multi_tag_target():
-            self.leds.no_multitag_solution()
-            return
-
-        selected_auto = self._automodes.chooser.getSelected()
-        if not isinstance(selected_auto, AutoBase):
-            self.leds.no_auto()
-            return
-
-        intended_start_pose = selected_auto.get_starting_pose()
-        current_pose = self.chassis.get_pose()
-        if intended_start_pose is not None:
-            self.field.getObject("Intended start pos").setPose(intended_start_pose)
-            relative_translation = intended_start_pose.relativeTo(
-                current_pose
-            ).translation()
-            if relative_translation.norm() > self.START_POS_TOLERANCE:
-                self.leds.mispositioned_start(
-                    relative_translation, self.START_POS_TOLERANCE
-                )
-            else:
-                self.leds.idle()
-        else:
-            self.leds.no_auto()
-
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()

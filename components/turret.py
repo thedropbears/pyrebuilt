@@ -24,14 +24,11 @@ from phoenix6.signals import (
 from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
 
-from components.leds import LEDComponent
 from ids import CancoderId, TalonId
 from utilities.functions import clamp
 
 
 class TurretComponent:
-    leds: LEDComponent
-
     MOTOR_TO_TURRET_GEARING = (1 / 5) * (40 / 200)
     TURRET_TO_ENCODER_GEARING = (200 / 56) * (14 / 50)
 
@@ -173,10 +170,6 @@ class TurretComponent:
         self.desired_angle = self.clamp_rotation(angle)
 
     def execute(self) -> None:
-        if self.is_close_to_rotation_limit():
-            self.leds.turret_close_to_rotation_limit()
-        if not self.can_rotate_to_target():
-            self.leds.turret_at_rotation_limit()
         self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:

@@ -1,7 +1,7 @@
 import math
 
 import wpilib
-from magicbot import feedback, will_reset_to
+from magicbot import feedback, tunable, will_reset_to
 from phoenix6 import configs, controls, signals
 from phoenix6.configs import CANcoderConfiguration, MagnetSensorConfigs
 from phoenix6.hardware import CANcoder, TalonFX
@@ -10,6 +10,7 @@ from wpilib import PWM
 from wpimath import units
 from wpimath.controller import PIDController
 
+from components.leds import LEDComponent
 from ids import CancoderId, PwmChannel, TalonId
 from utilities.functions import clamp
 
@@ -19,6 +20,7 @@ wpilib.SmartDashboard.putData("Hood PID", hood_controller)
 
 
 class ShooterComponent:
+    leds: LEDComponent
     target_shooter_rps = will_reset_to(0.0)
 
     hood_error_tolerance = 1.0 / 360.0
@@ -33,6 +35,8 @@ class ShooterComponent:
     HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
         55.0 / 60.0
     )  # rot/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
+
+    fudge = tunable(0.0)
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
@@ -99,6 +103,12 @@ class ShooterComponent:
         return (self.target_hood_angle - self.get_hood_angle_rotations()) * 360.0
 
     @feedback
+    def is_hood_retracted(self) -> bool:
+        return math.isclose(
+            self.get_hood_angle(), self.MIN_HOOD_ANGLE, abs_tol=self.fudge
+        )
+
+    @feedback
     def get_flywheel_error(self) -> units.turns_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
 
@@ -135,6 +145,8 @@ class ShooterComponent:
         self.target_shooter_rps = speed
 
     def execute(self) -> None:
+        self.leds.hood_is_retracted() if self.is_hood_retracted() else self.leds.hood_is_not_retracted()
+
         if self.target_shooter_rps != 0.0:
             self.flywheel_motor.set_control(
                 controls.VelocityVoltage(self.target_shooter_rps)

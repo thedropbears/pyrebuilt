@@ -11,7 +11,6 @@ from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
-from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.turret import TurretComponent
 from utilities.game import is_in_transition_zone
@@ -86,7 +85,6 @@ class BallisticsComponent:
     chassis: ChassisComponent
     shooter: ShooterComponent
     turret: TurretComponent
-    leds: LEDComponent
     hopper: HopperComponent
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
@@ -189,11 +187,6 @@ class BallisticsComponent:
         shot_vector = target_vector - robot_velocity
 
         return shot_vector
-
-    def is_driving_faster_than_max_shoot_speed(self) -> bool:
-        chassis_speed = self.chassis.get_velocity()
-        current_velocity = math.sqrt(chassis_speed.vx**2 + chassis_speed.vy**2)
-        return current_velocity > self.MAX_DRIVE_SPEED_FOR_SHOOTING
 
     def get_distance_to_target(self) -> units.meters:
         return self.distance_to_target
@@ -305,14 +298,10 @@ class BallisticsComponent:
             .translation()
         ):
             self.shooter.pitch_min()
-            self.leds.too_close_to_trench_to_shoot()
         else:
             self.shooter.pitch_to(target_hood_angle)
 
         self.turret.slew_to(target_turret_angle)
-
-        if self.is_driving_faster_than_max_shoot_speed():
-            self.leds.driving_faster_than_shoot_speed()
 
         if self.should_energise_hopper:
             self.hopper.feed(target_hopper_surface_speed)

@@ -3,7 +3,6 @@ from magicbot import StateMachine, default_state, state, will_reset_to
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.intake import IntakeComponent
-from components.leds import LEDComponent
 from components.targeter import Targeter
 from controllers.gobbler import Gobbler
 
@@ -14,7 +13,6 @@ class Conductor(StateMachine):
     gobbler: Gobbler
     chassis: ChassisComponent
     targeter: Targeter
-    leds: LEDComponent
 
     keep_shooting = will_reset_to(False)
 
@@ -40,13 +38,11 @@ class Conductor(StateMachine):
     def priming(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
-        self.leds.conductor_state_machine_tracking()
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
         self.gobbler.gobble()
         self.activate_full_ballistics()
-        self.leds.conducter_state_machine_active()
 
         if not self.keep_shooting:
             self.next_state(self.purging)
@@ -55,7 +51,6 @@ class Conductor(StateMachine):
     def caged_shooting(self) -> None:
         self.gobbler.cage()
         self.activate_full_ballistics()
-        self.leds.conducter_state_machine_active()
 
         if not self.keep_shooting:
             self.next_state(self.purging)
