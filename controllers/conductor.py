@@ -26,6 +26,11 @@ class Conductor(StateMachine):
             self.engage(self.shooting)
         self.keep_shooting = True
 
+    def caged_shoot(self) -> None:
+        if self.ballistics.shooter_is_ready():
+            self.engage(self.caged_shooting)
+        self.keep_shooting = True
+
     def activate_full_ballistics(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.feed_shooter()
@@ -40,6 +45,15 @@ class Conductor(StateMachine):
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
         self.gobbler.gobble()
+        self.activate_full_ballistics()
+        self.leds.conducter_state_machine_active()
+
+        if not self.keep_shooting:
+            self.next_state(self.purging)
+
+    @state(must_finish=True)
+    def caged_shooting(self) -> None:
+        self.gobbler.cage()
         self.activate_full_ballistics()
         self.leds.conducter_state_machine_active()
 
