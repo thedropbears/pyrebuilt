@@ -1,6 +1,7 @@
 import wpilib
 
 from autonomous.auto_base import AutoBase
+from autonomous.auto_stationary import AutoStationary
 from ids import RioSerialNumber
 
 
@@ -28,3 +29,12 @@ class Spin3mandreturn(AutoBase):
                 "spin3m_andreturn",
             ]
         )
+
+
+class StationaryShoot(AutoStationary):
+    MODE_NAME = "stationary shoot"
+    if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT:
+        DISABLED = True
+
+    def __init__(self):
+        super().__init__()
