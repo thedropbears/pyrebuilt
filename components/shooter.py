@@ -30,7 +30,7 @@ class ShooterComponent:
     MIN_HOOD_ANGLE: units.turns = 25.0 / 360.0
     MAX_HOOD_ANGLE: units.turns = 52.0 / 360.0
 
-    ENCODER_ZERO_OFFSET = -(0.22783) + (25 / 360.0)
+    ENCODER_ZERO_OFFSET = (0.441650) + (25 / 360.0)
 
     HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
         55.0 / 60.0
