@@ -22,7 +22,8 @@ class Conductor(StateMachine):
         return self.ballistics.log_shot()
 
     def shoot(self) -> None:
-        self.engage(self.energising_shooter)
+        if self.ballistics.shooter_is_ready():
+            self.engage(self.shooting)
         self.keep_shooting = True
 
     def activate_full_ballistics(self) -> None:
@@ -31,20 +32,12 @@ class Conductor(StateMachine):
         self.ballistics.energise_flywheels()
 
     @default_state
-    def tracking(self) -> None:
-        self.ballistics.solve_for(self.targeter.get_target())
-        self.leds.conductor_state_machine_tracking()
-
-    @state(first=True)
-    def energising_shooter(self) -> None:
+    def priming(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
         self.ballistics.energise_flywheels()
         self.leds.conductor_state_machine_tracking()
 
-        if self.ballistics.shooter_is_ready():
-            self.next_state(self.shooting)
-
-    @state(must_finish=True)
+    @state(first=True, must_finish=True)
     def shooting(self) -> None:
         self.gobbler.gobble()
         self.activate_full_ballistics()
