@@ -216,6 +216,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
 
+        if self.gamepad.getRightBumperButton():
+            self.conductor.caged_shoot()
+
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
 
