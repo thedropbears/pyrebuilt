@@ -109,7 +109,9 @@ class ShooterComponent:
     @feedback
     def flywheel_is_at_speed(self) -> bool:
         return (
-            self.flywheel_motor.get_closed_loop_reference().value != 0.0
+            not math.isclose(
+                self.flywheel_motor.get_closed_loop_reference().value, 0.0, abs_tol=0.1
+            )
             and abs(self.flywheel_motor.get_closed_loop_error().value)
             < self.FLYWHEEL_SETPOINT_TOLERANCE
         )
