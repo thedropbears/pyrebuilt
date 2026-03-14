@@ -181,7 +181,6 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.set_coast_in_neutral(False)
 
     def teleopPeriodic(self) -> None:
-        self.leds.execute()
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
 
@@ -227,6 +226,8 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
+
+        self.leds.execute()
 
     def testInit(self) -> None:
         self.chassis.set_coast_in_neutral(True)
