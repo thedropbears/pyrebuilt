@@ -21,7 +21,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
-from ids import DioChannel, PwmChannel, RioSerialNumber
+from ids import DioChannel, PwmChannel
 from utilities.game import is_red
 from utilities.scalers import rescale_js
 
@@ -100,81 +100,42 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
         self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
 
-        if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT:
-            self.chassis_swerve_config = SwerveConfig(
-                drive_ratio=(14.0 / 50.0) * (25.0 / 19.0) * (15.0 / 45.0),
-                drive_gains=Slot0Configs()
-                .with_k_p(1.0868)
-                .with_k_i(0)
-                .with_k_d(0)
-                .with_k_s(0.15172)
-                .with_k_v(2.8305)
-                .with_k_a(0.082659),
-                steer_ratio=(14 / 50) * (10 / 60),
-                steer_gains=Slot0Configs()
-                .with_k_p(30.234)
-                .with_k_i(0)
-                .with_k_d(0.62183)
-                .with_k_s(0.1645),
-                reverse_drive=False,
-            )
-            # metres between centre of left and right wheels
-            self.chassis_track_width = 0.467
-            # metres between centre of front and back wheels
-            self.chassis_wheel_base = 0.467
+        self.chassis_swerve_config = SwerveConfig(
+            drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
+            drive_gains=Slot0Configs()
+            .with_k_p(2.891)
+            .with_k_i(0)
+            .with_k_d(0)
+            .with_k_s(0.12159)
+            .with_k_v(2.5673)
+            .with_k_a(26.249),
+            steer_ratio=(16 / 50) * (10 / 60),
+            steer_gains=Slot0Configs()
+            .with_k_p(174.6)
+            .with_k_i(0)
+            .with_k_d(3.5359)
+            .with_k_s(0.1264)
+            .with_k_v(2.199)
+            .with_k_a(0.044934),
+            reverse_drive=True,
+        )
+        self.chassis_track_width = 0.517
+        self.chassis_wheel_base = 0.517
 
-            self.port_vision_name = "port_turret"
-            self.port_vision_turret_pos = Translation3d(0.000, -0.240, 0.300)
-            self.port_vision_turret_rot = Rotation2d.fromDegrees(350.0)
-            self.port_vision_camera_offset = Translation3d(0.021, 0, 0)
-            self.port_vision_camera_pitch = math.radians(-10.0)
-            self.port_vision_encoder_offset = Rotation2d(6.103)
-            self.port_vision_servo_offsets = ServoOffsets(
-                neutral=Rotation2d(1.052),
-                full_range=Rotation2d(3.121),
-            )
-            self.port_vision_rotation_range = (
-                Rotation2d(4.59),
-                Rotation2d(1.25),
-            )
-
-        else:  # assume comp bot
-            self.chassis_swerve_config = SwerveConfig(
-                drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
-                drive_gains=Slot0Configs()
-                .with_k_p(2.891)
-                .with_k_i(0)
-                .with_k_d(0)
-                .with_k_s(0.12159)
-                .with_k_v(2.5673)
-                .with_k_a(26.249),
-                steer_ratio=(16 / 50) * (10 / 60),
-                steer_gains=Slot0Configs()
-                .with_k_p(174.6)
-                .with_k_i(0)
-                .with_k_d(3.5359)
-                .with_k_s(0.1264)
-                .with_k_v(2.199)
-                .with_k_a(0.044934),
-                reverse_drive=True,
-            )
-            self.chassis_track_width = 0.517
-            self.chassis_wheel_base = 0.517
-
-            self.port_vision_name = "port_turret"
-            self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
-            self.port_vision_turret_rot = Rotation2d()
-            self.port_vision_camera_offset = Translation3d(0.01078, 0, 0.0013)
-            self.port_vision_camera_pitch = math.radians(-10.0)
-            self.port_vision_encoder_offset = Rotation2d(2.055)
-            self.port_vision_servo_offsets = ServoOffsets(
-                neutral=Rotation2d(1.928),
-                full_range=Rotation2d(3.960),
-            )
-            self.port_vision_rotation_range = (
-                Rotation2d(0.952),
-                Rotation2d(3.482),
-            )
+        self.port_vision_name = "port_turret"
+        self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
+        self.port_vision_turret_rot = Rotation2d()
+        self.port_vision_camera_offset = Translation3d(0.01078, 0, 0.0013)
+        self.port_vision_camera_pitch = math.radians(-10.0)
+        self.port_vision_encoder_offset = Rotation2d(2.055)
+        self.port_vision_servo_offsets = ServoOffsets(
+            neutral=Rotation2d(1.928),
+            full_range=Rotation2d(3.960),
+        )
+        self.port_vision_rotation_range = (
+            Rotation2d(0.952),
+            Rotation2d(3.482),
+        )
 
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
