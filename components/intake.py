@@ -113,7 +113,7 @@ class IntakeComponent:
             Slot1Configs()
             .with_k_p(120.63)
             .with_k_i(0.00)
-            .with_k_d(3.05)
+            .with_k_d(4.55)
             .with_k_s(0.2220703125)
             .with_k_v(1.09)
             .with_k_a(0.26)
