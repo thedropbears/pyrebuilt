@@ -77,7 +77,6 @@ class AutoBase(AutonomousStateMachine):
     @state(first=True)
     def initialising(self) -> None:
         # Add any tasks that need doing first
-        self.chassis.do_smooth = False
         self.chassis.heading_controller.setPID(Kp=1.0, Ki=0.0, Kd=0.0)
         self.next_state("tracking_trajectory")
 
