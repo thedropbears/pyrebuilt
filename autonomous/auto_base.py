@@ -77,8 +77,7 @@ class AutoBase(AutonomousStateMachine):
     @state(first=True)
     def initialising(self) -> None:
         # Add any tasks that need doing first
-        self.chassis.do_smooth = False
-        self.chassis.heading_controller.setPID(Kp=1.0, Ki=0.0, Kd=0.0)
+        # self.chassis.heading_controller.setPID(Kp=1.0, Ki=0.0, Kd=0.0) TODO reimplement this with holonomic drive controller
         self.next_state("tracking_trajectory")
 
     @state
@@ -121,10 +120,10 @@ class AutoBase(AutonomousStateMachine):
         speeds = ChassisSpeeds(
             sample.vx + x_controller.calculate(pose.X(), sample.x),
             sample.vy + y_controller.calculate(pose.Y(), sample.y),
-            sample.omega
-            + self.chassis.heading_controller.calculate(
-                pose.rotation().radians(), sample.heading
-            ),
+            sample.omega,
+            # + self.chassis.heading_controller.calculate(
+            #     pose.rotation().radians(), sample.heading
+            # ),
         )
 
         # Apply the generated speeds
