@@ -40,7 +40,7 @@ class TurretComponent:
     MAX_ACCELERATION = 6.0
     MAX_JERK = 18
 
-    desired_angle = tunable(0.0).with_properties(unit="radians")
+    desired_angle = tunable(0.0)
 
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)

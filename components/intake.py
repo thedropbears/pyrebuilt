@@ -20,7 +20,7 @@ from phoenix6.signals import (
     FeedbackSensorSourceValue,
     GravityTypeValue,
     InvertedValue,
-    MotorAlignmentValue,
+    # MotorAlignmentValue,
     MotorArrangementValue,
     NeutralModeValue,
     SensorDirectionValue,
@@ -105,7 +105,7 @@ class IntakeComponent:
             .with_k_v(1.09)
             .with_k_a(0.26)
             .with_k_g(0.6)
-            .with_gravity_arm_position_offset(0.00)
+            # .with_gravity_arm_position_offset(0.00)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
@@ -118,7 +118,7 @@ class IntakeComponent:
             .with_k_v(1.09)
             .with_k_a(0.26)
             .with_k_g(0.6)
-            .with_gravity_arm_position_offset(0.00)
+            # .with_gravity_arm_position_offset(0.00)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
@@ -193,7 +193,7 @@ class IntakeComponent:
         self.deployer_motor_right.set_control(
             Follower(
                 TalonId.INTAKE_DEPLOYER_LEFT,
-                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
+                oppose_master_direction=True,
             )
         )
 

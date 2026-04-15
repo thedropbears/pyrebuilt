@@ -219,7 +219,7 @@ class BallisticsComponent:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
 
-        chassis_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
+        chassis_velocity = ChassisSpeeds.toRobotRelative(
             self.chassis.get_velocity(), chassis_rotation
         )
 
@@ -291,7 +291,7 @@ class BallisticsComponent:
         if is_in_transition_zone(
             self.chassis.get_pose()
             .exp(
-                ChassisSpeeds.fromRobotRelativeSpeeds(
+                ChassisSpeeds.toRobotRelative(
                     self.chassis.get_velocity(), chassis_pose.rotation()
                 ).toTwist2d(self.EXTRAPOLATION_TIME_FOR_HOOD_SERVO)
             )

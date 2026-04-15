@@ -93,27 +93,27 @@ description = "The Drop Bears' FRC 2026 robot code"
 authors = [{ name = "The Drop Bears", email = "enquiries@thedropbears.org.au" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.14,<3.15"
+requires-python = ">=3.13,<3.14"
 
 dependencies = [
     "numpy~=2.3",
-    "phoenix6~=26.1.3",
-    "robotpy-ctre~=2026.1.0.1",
-    "robotpy[apriltag]==2026.2.2",
-    "robotpy-rev==2026.0.4",
-    "robotpy-wpilib-utilities~=2026.1.2",
-    "photonlibpy==2026.3.1",
-    "sleipnirgroup-choreolib~=2026.0.3",
+    "robotpy[apriltag]==2027.0.0a2",
+    "phoenix6==25.90.0a2",
+    "sleipnirgroup-choreolib",
+    "robotpy-wpilib-utilities",
+    # "robotpy-rev==2027.0.0a1",
+    # "photonlibpy",
+    "setuptools==81.0.0",
 ]
 
 [tool.robotpy]
 requires = [
-    "phoenix6~=26.1.3",
-    "robotpy-ctre~=2026.1.0.1",
-    "robotpy-rev==2026.0.4",
-    "robotpy-wpilib-utilities~=2026.1.2",
-    "photonlibpy==2026.3.1",
-    "sleipnirgroup-choreolib~=2026.0.3",
+    "phoenix6==25.90.0a2",
+    "robotpy-rev==2027.0.0a1",
+    "robotpy-wpilib-utilities",
+    # "photonlibpy",
+    "sleipnirgroup-choreolib",
+    "setuptools==81.0.0",
 ]
-robotpy_version = "2026.2.2"
+robotpy_version = "2027.0.0a2"
 components = ["apriltag"]

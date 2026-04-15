@@ -12,9 +12,7 @@ from wpimath.geometry import (
     Translation2d,
 )
 
-apriltag_layout = robotpy_apriltag.AprilTagFieldLayout.loadField(
-    robotpy_apriltag.AprilTagField.k2026RebuiltWelded
-)
+apriltag_layout = robotpy_apriltag.AprilTagFieldLayout(path="2026-rebuilt-welded.json")
 
 TagId = typing.Literal[
     1,

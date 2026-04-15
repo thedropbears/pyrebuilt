@@ -7,14 +7,12 @@ from collections.abc import Callable
 from typing import override
 
 import phoenix6
-import rev
-import wpilib
-from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
+
+# import rev
+# from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
     DCMotorSim,
-    DutyCycleEncoderSim,
-    PWMSim,
     SingleJointedArmSim,
 )
 from wpimath import units
@@ -22,8 +20,6 @@ from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from components.chassis import SwerveModule
-from utilities import game
-from utilities.functions import constrain_angle
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
@@ -115,36 +111,36 @@ class TalonFXMotorSim(MotorSim):
             sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
-class SparkMotorSim(MotorSim):
-    def __init__(
-        self,
-        gearbox_motor: Callable[[int], DCMotor],
-        *motors: rev.SparkMax,
-        # Reduction between motor and mechanism rotations, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        gearing: float,
-    ):
-        self.gearbox = gearbox_motor(len(motors))
-        self.gearing = gearing
-        self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
+# class SparkMotorSim(MotorSim):
+#     def __init__(
+#         self,
+#         gearbox_motor: Callable[[int], DCMotor],
+#         *motors: rev.SparkMax,
+#         # Reduction between motor and mechanism rotations, as output over input.
+#         # If the mechanism spins slower than the motor, this number should be greater than one.
+#         gearing: float,
+#     ):
+#         self.gearbox = gearbox_motor(len(motors))
+#         self.gearing = gearing
+#         self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
 
-    @override
-    def get_motor_voltage(self) -> units.volts:
-        sim_state = self.sim_states[0]
-        return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
+#     @override
+#     def get_motor_voltage(self) -> units.volts:
+#         sim_state = self.sim_states[0]
+#         return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
 
-    @override
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None:
-        for sim_state in self.sim_states:
-            sim_state.iterate(velocity, self.get_bus_voltage(), dt)
+#     @override
+#     def update_from_mechanism(
+#         self,
+#         position: units.radians,
+#         velocity: units.radians_per_second,
+#         dt: units.seconds,
+#     ) -> None:
+#         for sim_state in self.sim_states:
+#             sim_state.iterate(velocity, self.get_bus_voltage(), dt)
 
-    def get_bus_voltage(self) -> units.volts:
-        return self.sim_states[0].getBusVoltage()
+#     def get_bus_voltage(self) -> units.volts:
+#         return self.sim_states[0].getBusVoltage()
 
 
 class MechanismSim(typing.Protocol):
@@ -244,7 +240,10 @@ class TurretSim:
             self.motor_sim.gearbox, moi, self.motor_sim.gearing
         )
         self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
+        self.encoder_offset = encoder_offset
+        self.encoder_sim.set_raw_position(
+            self.mech_sim.get_angular_position() / math.tau - self.encoder_offset
+        )
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
@@ -273,7 +272,10 @@ class ArmSim:
     ) -> None:
         self.motor_sim = motor_sim
         self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
+        self.encoder_offset = encoder_offset
+        self.encoder_sim.set_raw_position(
+            starting_angle / math.tau - self.encoder_offset
+        )
         self.encoder_sim.set_raw_position(starting_angle / math.tau)
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
@@ -350,7 +352,7 @@ class PhysicsEngine:
 
         self.turret_sim = TurretSim(
             TalonFXMotorSim(
-                DCMotor.minion,
+                DCMotor.NEO550,
                 robot.turret.motor,
                 gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
             ),
@@ -361,22 +363,22 @@ class PhysicsEngine:
 
         self.imu = robot.chassis.imu.sim_state
 
-        self.vision_sim = VisionSystemSim("main")
-        self.vision_sim.addAprilTags(game.apriltag_layout)
-        properties = SimCameraProperties.OV9281_1280_720()
-        self.port_camera = PhotonCameraSim(robot.port_vision.camera, properties)
-        self.port_camera.setMaxSightRange(5.0)
-        self.port_visual_localiser = robot.port_vision
-        self.vision_sim.addCamera(
-            self.port_camera,
-            self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
-        )
-        self.vision_sim_counter = 0
+        # self.vision_sim = VisionSystemSim("main")
+        # self.vision_sim.addAprilTags(game.apriltag_layout)
+        # properties = SimCameraProperties.OV9281_1280_720()
+        # self.port_camera = PhotonCameraSim(robot.port_vision.camera, properties)
+        # self.port_camera.setMaxSightRange(5.0)
+        # self.port_visual_localiser = robot.port_vision
+        # self.vision_sim.addCamera(
+        #     self.port_camera,
+        #     self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
+        # )
+        # self.vision_sim_counter = 0
 
-        self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
-        self.port_vision_encoder_sim = DutyCycleEncoderSim(
-            self.port_visual_localiser.encoder
-        )
+        # self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
+        # self.port_vision_encoder_sim = DutyCycleEncoderSim(
+        #     self.port_visual_localiser.encoder
+        # )
 
         self.intake_arm_sim = ArmSim(
             TalonFXMotorSim(
@@ -416,27 +418,27 @@ class PhysicsEngine:
         self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
-        self.port_vision_encoder_sim.set(
-            constrain_angle(
-                (
-                    (
-                        self.port_visual_localiser.servo_offsets.full_range
-                        - self.port_visual_localiser.servo_offsets.neutral
-                    )
-                    * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
-                    + self.port_visual_localiser.servo_offsets.neutral
-                ).radians()
-            )
-        )
+        # self.port_vision_encoder_sim.set(
+        #     constrain_angle(
+        #         (
+        #             (
+        #                 self.port_visual_localiser.servo_offsets.full_range
+        #                 - self.port_visual_localiser.servo_offsets.neutral
+        #             )
+        #             * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
+        #             + self.port_visual_localiser.servo_offsets.neutral
+        #         ).radians()
+        #     )
+        # )
 
-        # Simulate slow vision updates.
-        self.vision_sim_counter += 1
-        if self.vision_sim_counter == 10:
-            self.vision_sim.adjustCamera(
-                self.port_camera,
-                self.port_visual_localiser.robot_to_camera(
-                    wpilib.Timer.getFPGATimestamp()
-                ),
-            )
-            self.vision_sim.update(self.physics_controller.get_pose())
-            self.vision_sim_counter = 0
+        # # Simulate slow vision updates.
+        # self.vision_sim_counter += 1
+        # if self.vision_sim_counter == 10:
+        #     self.vision_sim.adjustCamera(
+        #         self.port_camera,
+        #         self.port_visual_localiser.robot_to_camera(
+        #             wpilib.Timer.getFPGATimestamp()
+        #         ),
+        #     )
+        #     self.vision_sim.update(self.physics_controller.get_pose())
+        #     self.vision_sim_counter = 0

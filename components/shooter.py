@@ -69,8 +69,6 @@ class ShooterComponent:
         )
 
         self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
-        self.hood_servo.setBounds(2000, 1550, 1500, 1450, 1000)
-        self.hood_servo.setPeriodMultiplier(PWM.PeriodMultiplier.kPeriodMultiplier_1X)
 
         self.hood_encoder = CANcoder(CancoderId.HOOD)
         self.hood_encoder.configurator.apply(
@@ -166,4 +164,4 @@ class ShooterComponent:
             )
             / ShooterComponent.HOOD_SERVO_MAX_SPEED
         )
-        self.hood_servo.setSpeed(self.hood_output)
+        # self.hood_servo.setSpeed(self.hood_output)
