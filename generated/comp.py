@@ -1,10 +1,7 @@
-from typing import TYPE_CHECKING, overload
+from typing import overload
 
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
 from wpimath.units import inchesToMeters
-
-if TYPE_CHECKING:
-    from sysid.subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
 
 
 class TunerConstants:
@@ -110,12 +107,12 @@ class TunerConstants:
         .with_pigeon2_configs(_pigeon_configs)
     )
 
-    _constants_creator: swerve.SwerveModuleConstantsFactory[
-        configs.TalonFXConfiguration,
-        configs.TalonFXConfiguration,
-        configs.CANcoderConfiguration,
-    ] = (
-        swerve.SwerveModuleConstantsFactory()
+    _constants_creator = (
+        swerve.SwerveModuleConstantsFactory[
+            configs.TalonFXConfiguration,
+            configs.TalonFXConfiguration,
+            configs.CANcoderConfiguration,
+        ]()
         .with_drive_motor_gear_ratio(_drive_gear_ratio)
         .with_steer_motor_gear_ratio(_steer_gear_ratio)
         .with_coupling_gear_ratio(_couple_ratio)
@@ -226,24 +223,6 @@ class TunerConstants:
         _back_right_steer_motor_inverted,
         _back_right_encoder_inverted,
     )
-
-    @classmethod
-    def create_drivetrain(cls) -> CommandSwerveDrivetrain:
-        """
-        Creates a CommandSwerveDrivetrain instance.
-        This should only be called once in your robot program.
-        """
-        from sysid.subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
-
-        return CommandSwerveDrivetrain(
-            cls.drivetrain_constants,
-            [
-                cls.front_left,
-                cls.front_right,
-                cls.back_left,
-                cls.back_right,
-            ],
-        )
 
 
 class TunerSwerveDrivetrain(

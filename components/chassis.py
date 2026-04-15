@@ -5,10 +5,11 @@ import wpilib
 from magicbot import feedback, tunable
 from phoenix6.swerve import requests
 from phoenix6.swerve.swerve_module import ChassisSpeeds
+from phoenix6.utils import fpga_to_current_time
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
-from wpimath.units import rotationsToRadians
+from wpimath.units import rotationsToRadians, seconds
 
 from generated.comp import TunerConstants, TunerSwerveDrivetrain
 from utilities.game import is_red
@@ -148,6 +149,35 @@ class ChassisComponent:
     def stop(self) -> None:
         self.set_request_velocities(requests.RobotCentric(), 0.0, 0.0, 0.0)
         self.stop_snapping()
+
+    def add_vision_measurement(
+        self,
+        vision_robot_pose: Pose2d,
+        timestamp: seconds,
+        vision_measurement_std_devs: tuple[float, float, float] | None = None,
+    ):
+        """
+        Adds a vision measurement to the Kalman Filter. This will correct the
+        odometry pose estimate while still accounting for measurement noise.
+
+        Note that the vision measurement standard deviations passed into this method
+        will continue to apply to future measurements until a subsequent call to
+        set_vision_measurement_std_devs or this method.
+
+        :param vision_robot_pose:           The pose of the robot as measured by the vision camera.
+        :type vision_robot_pose:            Pose2d
+        :param timestamp:                   The timestamp of the vision measurement in seconds.
+        :type timestamp:                    second
+        :param vision_measurement_std_devs: Standard deviations of the vision pose measurement
+                                            in the form [x, y, theta]ᵀ, with units in meters
+                                            and radians.
+        :type vision_measurement_std_devs:  tuple[float, float, float] | None
+        """
+        self.phoenix_swerve.add_vision_measurement(
+            vision_robot_pose,
+            fpga_to_current_time(timestamp),
+            vision_measurement_std_devs,
+        )
 
     def set_request_velocities(
         self,
