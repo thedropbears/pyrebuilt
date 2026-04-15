@@ -101,7 +101,7 @@ dependencies = [
     "phoenix6==25.90.0a2",
     "sleipnirgroup-choreolib",
     "robotpy-wpilib-utilities",
-    # "robotpy-rev==2027.0.0a1",
+    "robotpy-rev==2027.0.0a1",
     # "photonlibpy",
     "setuptools==81.0.0",
 ]

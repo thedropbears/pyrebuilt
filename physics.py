@@ -7,8 +7,8 @@ from collections.abc import Callable
 from typing import override
 
 import phoenix6
+import rev
 
-# import rev
 # from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
@@ -111,36 +111,36 @@ class TalonFXMotorSim(MotorSim):
             sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
-# class SparkMotorSim(MotorSim):
-#     def __init__(
-#         self,
-#         gearbox_motor: Callable[[int], DCMotor],
-#         *motors: rev.SparkMax,
-#         # Reduction between motor and mechanism rotations, as output over input.
-#         # If the mechanism spins slower than the motor, this number should be greater than one.
-#         gearing: float,
-#     ):
-#         self.gearbox = gearbox_motor(len(motors))
-#         self.gearing = gearing
-#         self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
+class SparkMotorSim(MotorSim):
+    def __init__(
+        self,
+        gearbox_motor: Callable[[int], DCMotor],
+        *motors: rev.SparkMax,
+        # Reduction between motor and mechanism rotations, as output over input.
+        # If the mechanism spins slower than the motor, this number should be greater than one.
+        gearing: float,
+    ):
+        self.gearbox = gearbox_motor(len(motors))
+        self.gearing = gearing
+        self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
 
-#     @override
-#     def get_motor_voltage(self) -> units.volts:
-#         sim_state = self.sim_states[0]
-#         return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
+    @override
+    def get_motor_voltage(self) -> units.volts:
+        sim_state = self.sim_states[0]
+        return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
 
-#     @override
-#     def update_from_mechanism(
-#         self,
-#         position: units.radians,
-#         velocity: units.radians_per_second,
-#         dt: units.seconds,
-#     ) -> None:
-#         for sim_state in self.sim_states:
-#             sim_state.iterate(velocity, self.get_bus_voltage(), dt)
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
+        for sim_state in self.sim_states:
+            sim_state.iterate(velocity, self.get_bus_voltage(), dt)
 
-#     def get_bus_voltage(self) -> units.volts:
-#         return self.sim_states[0].getBusVoltage()
+    def get_bus_voltage(self) -> units.volts:
+        return self.sim_states[0].getBusVoltage()
 
 
 class MechanismSim(typing.Protocol):
