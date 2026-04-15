@@ -7,6 +7,7 @@ from phoenix6.swerve import requests
 from phoenix6.swerve.swerve_module import ChassisSpeeds
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.units import rotationsToRadians
 
 from generated.comp import TunerConstants, TunerSwerveDrivetrain
@@ -26,7 +27,7 @@ class ChassisComponent:
         self.snapping_to_heading = False
 
         self.tuner_constants = TunerConstants()
-        self.modules = [
+        modules = [
             self.tuner_constants.front_left,
             self.tuner_constants.front_right,
             self.tuner_constants.back_left,
@@ -35,11 +36,14 @@ class ChassisComponent:
 
         self.phoenix_swerve = TunerSwerveDrivetrain(
             self.tuner_constants.drivetrain_constants,
-            self.modules,
+            modules,
         )
 
         self.imu = self.phoenix_swerve.pigeon2
-        self.kinematics = self.phoenix_swerve.kinematics
+
+        kinematics = self.phoenix_swerve.kinematics
+        assert isinstance(kinematics, SwerveDrive4Kinematics)
+        self.kinematics = kinematics
 
         self.heading_controller = PIDController(3.0, 0.0, 0.0)
         self.heading_controller.enableContinuousInput(-math.pi, math.pi)
@@ -54,12 +58,13 @@ class ChassisComponent:
         self.request: requests.SwerveRequest = requests.Idle()
 
     def setup(self) -> None:
-        self.set_pose(TeamPoses.RED_TEST_POSE if is_red() else TeamPoses.BLUE_TEST_POSE)
+        self.modules = self.phoenix_swerve.modules
 
         self.phoenix_swerve.set_state_std_devs((0.05, 0.05, 0.01))
         self.phoenix_swerve.set_vision_measurement_std_devs((0.4, 0.4, 0.03))
 
         self.field_obj = self.field.getObject("fused_pose")
+        self.set_pose(TeamPoses.RED_TEST_POSE if is_red() else TeamPoses.BLUE_TEST_POSE)
 
     def on_enable(self) -> None:
         self.update_alliance()
