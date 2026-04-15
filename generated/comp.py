@@ -4,7 +4,7 @@ from phoenix6 import CANBus, configs, hardware, signals, swerve, units
 from wpimath.units import inchesToMeters
 
 if TYPE_CHECKING:
-    from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
+    from sysid.subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
 
 
 class TunerConstants:
@@ -19,12 +19,12 @@ class TunerConstants:
     # output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     _steer_gains = (
         configs.Slot0Configs()
-        .with_k_p(100)
+        .with_k_p(174.6)
         .with_k_i(0)
-        .with_k_d(0.5)
-        .with_k_s(0.1)
-        .with_k_v(2.33)
-        .with_k_a(0)
+        .with_k_d(3.5359)
+        .with_k_s(0.1264)
+        .with_k_v(2.199)
+        .with_k_a(0.044934)
         .with_static_feedforward_sign(
             signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN
         )
@@ -33,11 +33,12 @@ class TunerConstants:
     # output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     _drive_gains = (
         configs.Slot0Configs()
-        .with_k_p(0.1)
+        .with_k_p(2.891)
         .with_k_i(0)
         .with_k_d(0)
-        .with_k_s(0)
-        .with_k_v(0.124)
+        .with_k_s(0.12159)
+        .with_k_v(2.5673)
+        .with_k_a(26.249)
     )
 
     # The closed-loop output type to use for the steer motors;
@@ -54,7 +55,7 @@ class TunerConstants:
 
     # The remote sensor feedback type to use for the steer motors;
     # When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
-    _steer_feedback_type = swerve.SteerFeedbackType.FUSED_CANCODER
+    _steer_feedback_type = swerve.SteerFeedbackType.REMOTE_CANCODER
 
     # The stator current at which the wheels start to slip;
     # This needs to be tuned to your individual robot
@@ -232,7 +233,7 @@ class TunerConstants:
         Creates a CommandSwerveDrivetrain instance.
         This should only be called once in your robot program.
         """
-        from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
+        from sysid.subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
 
         return CommandSwerveDrivetrain(
             cls.drivetrain_constants,

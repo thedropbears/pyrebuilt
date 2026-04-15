@@ -4,11 +4,12 @@ from typing import overload
 
 from commands2 import Command, Subsystem
 from commands2.sysid import SysIdRoutine
-from generated.tuner_constants import TunerSwerveDrivetrain
 from phoenix6 import SignalLogger, swerve, units, utils
 from wpilib import DriverStation, Notifier, RobotController
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.geometry import Pose2d, Rotation2d
+
+from generated.comp import TunerSwerveDrivetrain
 
 
 class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
