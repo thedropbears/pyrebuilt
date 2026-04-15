@@ -66,6 +66,8 @@ select = [
     "T20",
     # perflint
     "PERF",
+    # refurb
+    "FURB",
     # ruff specific
     "RUF021", # parenthesise chained and/or
 ]
