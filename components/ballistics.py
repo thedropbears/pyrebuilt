@@ -89,7 +89,7 @@ class BallisticsComponent:
 
     forced_solution = will_reset_to[ForcedSolution | None](None)
     should_energise_flywheels = will_reset_to(False)
-    should_energise_hopper = will_reset_to(False)
+    # should_energise_hopper = will_reset_to(False)
 
     EXTRAPOLATION_TIME_FOR_HOOD_SERVO: units.seconds = 2
 
@@ -141,13 +141,13 @@ class BallisticsComponent:
     def get_active_table(self) -> str:
         return self.active_table.name
 
-    def energise_flywheels(self) -> None:
-        # assuming that we dont want to have the flywheel spun up all the time,
-        # but the hood and turret should always run
-        self.should_energise_flywheels = True
+    # def energise_flywheels(self) -> None:
+    # assuming that we dont want to have the flywheel spun up all the time,
+    # but the hood and turret should always run
+    # self.should_energise_flywheels = True
 
-    def feed_shooter(self) -> None:
-        self.should_energise_hopper = True
+    # def feed_shooter(self) -> None:
+    # self.should_energise_hopper = True
 
     def shooter_is_ready(self) -> bool:
         return self.shooter.flywheel_is_at_speed()
@@ -273,20 +273,20 @@ class BallisticsComponent:
             required_rpm = self.active_table.speed_for(effective_distance)
 
             target_turret_angle = (turret_angle - chassis_rotation).radians()
-            target_flywheel_speed = required_rpm
+            self.target_flywheel_speed = required_rpm
             target_hood_angle = self.active_table.hood_angle
-            target_hopper_surface_speed = self.active_table.hopper_surface_speed
+            self.target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
         else:
             (
-                target_flywheel_speed,
+                self.target_flywheel_speed,
                 target_turret_angle,
                 target_hood_angle,
                 target_hopper_surface_speed,
             ) = self.forced_solution
 
-        if self.should_energise_flywheels:
-            self.shooter.set_flywheel(target_flywheel_speed)
+        # if self.should_energise_flywheels:
+        # self.shooter.set_flywheel(target_flywheel_speed)
 
         if is_in_transition_zone(
             self.chassis.get_pose()
@@ -303,8 +303,8 @@ class BallisticsComponent:
 
         self.turret.slew_to(target_turret_angle)
 
-        if self.should_energise_hopper:
-            self.hopper.feed(target_hopper_surface_speed)
+        # if self.should_energise_hopper:
+        # self.hopper.feed(target_hopper_surface_speed)
 
         self.is_shooting = False
 

@@ -2,7 +2,9 @@ from magicbot import StateMachine, default_state, state, will_reset_to
 
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
+from components.hopper import HopperComponent
 from components.intake import IntakeComponent
+from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from controllers.gobbler import Gobbler
 
@@ -13,11 +15,18 @@ class Conductor(StateMachine):
     gobbler: Gobbler
     chassis: ChassisComponent
     targeter: Targeter
-
+    hopper: HopperComponent
+    shooter: ShooterComponent
     keep_shooting = will_reset_to(False)
 
     def log_shot(self) -> None:
         return self.ballistics.log_shot()
+
+    def get_target_hopper_surface_speed(self) -> float:
+        return self.ballistics.target_hopper_surface_speed
+
+    def get_target_flywheel_speed(self) -> float:
+        return self.ballistics.target_flywheel_speed
 
     def shoot(self) -> None:
         if self.ballistics.shooter_is_ready():
@@ -31,13 +40,13 @@ class Conductor(StateMachine):
 
     def activate_full_ballistics(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
-        self.ballistics.feed_shooter()
-        self.ballistics.energise_flywheels()
+        self.hopper.feed_rate = self.get_target_hopper_surface_speed()
+        self.shooter.set_flywheel(self.get_target_flywheel_speed())
 
     @default_state
     def priming(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
-        self.ballistics.energise_flywheels()
+        self.shooter.set_flywheel(self.get_target_flywheel_speed())
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
