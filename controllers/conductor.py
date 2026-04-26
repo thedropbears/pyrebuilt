@@ -28,6 +28,12 @@ class Conductor(StateMachine):
     def get_target_flywheel_speed(self) -> float:
         return self.ballistics.target_flywheel_speed
 
+    def energise_flywheels(self):
+        self.shooter.set_flywheel(self.get_target_flywheel_speed())
+
+    def feed_shooter(self):
+        self.hopper.feed_rate = self.get_target_hopper_surface_speed()
+
     def shoot(self) -> None:
         if self.ballistics.shooter_is_ready():
             self.engage(self.shooting)
@@ -39,14 +45,16 @@ class Conductor(StateMachine):
         self.keep_shooting = True
 
     def activate_full_ballistics(self) -> None:
-        self.ballistics.solve_for(self.targeter.get_target())
-        self.hopper.feed_rate = self.get_target_hopper_surface_speed()
-        self.shooter.set_flywheel(self.get_target_flywheel_speed())
+        self.ballistics.solve_for(
+            self.targeter.get_target(),
+        )
+        self.feed_shooter()
+        self.energise_flywheels()
 
     @default_state
     def priming(self) -> None:
         self.ballistics.solve_for(self.targeter.get_target())
-        self.shooter.set_flywheel(self.get_target_flywheel_speed())
+        self.energise_flywheels()
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:

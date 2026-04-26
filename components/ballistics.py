@@ -152,10 +152,19 @@ class BallisticsComponent:
     def shooter_is_ready(self) -> bool:
         return self.shooter.flywheel_is_at_speed()
 
-    def solve_for(self, target_position: Translation2d) -> None:
+    def solve_for(
+        self,
+        target_position: Translation2d,
+        robot_velocity: Translation2d,
+        robot_pos: Translation2d,
+    ):
+        self.target_position = target_position
+        self.robot_velocity = robot_velocity
+        self.robot_pos = robot_pos
+        target_position = self.future_position
+
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
-        self.target_position = target_position
 
     def force_solution(
         self,
@@ -183,8 +192,8 @@ class BallisticsComponent:
 
         target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
 
-        robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
-        shot_vector = target_vector - robot_velocity
+        self.robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
+        shot_vector = target_vector - self.robot_velocity
 
         return shot_vector
 
@@ -237,11 +246,11 @@ class BallisticsComponent:
         if self.forced_solution is None:
             # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
             # See heading full integration example
-            future_position = (
+            self.future_position = (
                 turret_base_pose.translation()
                 + turret_base_velocity * self.LATENCY_FACTOR
             )
-            to_goal = self.target_position - future_position
+            to_goal = self.target_position - self.future_position
 
             effective_distance, turret_angle = self.compute_range_bearing_for(
                 to_goal, turret_base_velocity
@@ -272,17 +281,17 @@ class BallisticsComponent:
 
             required_rpm = self.active_table.speed_for(effective_distance)
 
-            target_turret_angle = (turret_angle - chassis_rotation).radians()
+            self.target_turret_angle = (turret_angle - chassis_rotation).radians()
             self.target_flywheel_speed = required_rpm
-            target_hood_angle = self.active_table.hood_angle
+            self.target_hood_angle = self.active_table.hood_angle
             self.target_hopper_surface_speed = self.active_table.hopper_surface_speed
 
         else:
             (
                 self.target_flywheel_speed,
-                target_turret_angle,
-                target_hood_angle,
-                target_hopper_surface_speed,
+                self.target_turret_angle,
+                self.target_hood_angle,
+                self.target_hopper_surface_speed,
             ) = self.forced_solution
 
         # if self.should_energise_flywheels:
@@ -299,9 +308,9 @@ class BallisticsComponent:
         ):
             self.shooter.pitch_min()
         else:
-            self.shooter.pitch_to(target_hood_angle)
+            self.shooter.pitch_to(self.target_hood_angle)
 
-        self.turret.slew_to(target_turret_angle)
+        self.turret.slew_to(self.target_turret_angle)
 
         # if self.should_energise_hopper:
         # self.hopper.feed(target_hopper_surface_speed)

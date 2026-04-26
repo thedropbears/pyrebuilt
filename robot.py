@@ -253,8 +253,8 @@ class MyRobot(magicbot.MagicRobot):
                 self.test_hopper_surface_speed,
             )
 
-            self.ballistics.energise_flywheels()
-            self.ballistics.feed_shooter()
+            self.conductor.energise_flywheels()
+            self.conductor.feed_shooter()
             self.ballistics.execute()
 
         self.gobbler.execute()
