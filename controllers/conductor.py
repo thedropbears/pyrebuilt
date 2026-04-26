@@ -20,9 +20,8 @@ class Conductor(StateMachine):
     hopper: HopperComponent
     shooter: ShooterComponent
     chassis: ChassisComponent
-    turret: TurretComponent
     targeter: Targeter
-    field: Field2d
+
     keep_shooting = will_reset_to(False)
     keep_deploying = will_reset_to(False)
     TURRET_OFFSET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())

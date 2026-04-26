@@ -105,21 +105,19 @@ class HopperComponent:
         self.feed_rate = feed_rate
 
     def backdrive(self, feed_rate: units.meters_per_second) -> None:
-        self.target_indexer_rps = -feed_rate
+        target_indexer_rps = -feed_rate
 
-        self.target_injector_rps = -feed_rate
+        target_injector_rps = -feed_rate
+        self.indexer_motor.set_control(VelocityVoltage(target_indexer_rps))
+        self.injector_motor.set_control(VelocityVoltage(target_injector_rps))
 
     def execute(self) -> None:
         if not isclose(self.feed_rate, 0.0, abs_tol=0.1):
-            self.target_indexer_rps = self.feed_rate / (
-                pi * self.INDEXER_WHEEL_DIAMETER
-            )
-            self.target_injector_rps = self.feed_rate / (
-                pi * self.INJECTOR_WHEEL_DIAMETER
-            )
+            target_indexer_rps = self.feed_rate / (pi * self.INDEXER_WHEEL_DIAMETER)
+            target_injector_rps = self.feed_rate / (pi * self.INJECTOR_WHEEL_DIAMETER)
 
-            self.indexer_motor.set_control(VelocityVoltage(self.target_indexer_rps))
-            self.injector_motor.set_control(VelocityVoltage(self.target_injector_rps))
+            self.indexer_motor.set_control(VelocityVoltage(target_indexer_rps))
+            self.injector_motor.set_control(VelocityVoltage(target_injector_rps))
         else:
             self.indexer_motor.set_control(CoastOut())
             self.injector_motor.set_control(CoastOut())
