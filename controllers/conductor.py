@@ -35,6 +35,9 @@ class Conductor(StateMachine):
     def feed_shooter(self):
         self.hopper.feed_rate = 6
 
+    def log_shot(self) -> None:
+        return self.ballistics.log_shot()
+
     def shoot(self) -> None:
         if self.ballistics.shooter_is_ready():
             self.engage(self.shooting)
@@ -46,13 +49,13 @@ class Conductor(StateMachine):
         self.keep_shooting = True
 
     def activate_full_ballistics(self) -> None:
-        (self.get_target(),)
+        self.get_target()
         self.feed_shooter()
         self.energise_flywheels()
 
     @default_state
     def priming(self) -> None:
-        self.get_target
+        self.get_target()
         self.energise_flywheels()
 
     @state(first=True, must_finish=True)
