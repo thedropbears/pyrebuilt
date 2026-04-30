@@ -158,10 +158,26 @@ class BallisticsComponent:
         robot_velocity: Translation2d,
         robot_pos: Translation2d,
     ):
+        self.effective_distance, self.turret_angle = self.compute_range_bearing_for(
+            target_position - robot_pos, robot_velocity
+        )
         self.target_position = target_position
         self.robot_velocity = robot_velocity
         self.robot_pos = robot_pos
+        turret_angle = self.turret_angle
         target_position = self.future_position
+        target_hopper_surface_speed = self.active_table.hopper_surface_speed
+        target_flywheel_speed = self.active_table.speed_for(self.effective_distance)
+
+        @dataclass
+        class Solution:
+            target_hopper_surface_speed: units.meters_per_second
+            target_flywheel_speed: units.turns_per_second
+            turret_angle: units.radians
+
+        return Solution(
+            target_hopper_surface_speed, target_flywheel_speed, turret_angle
+        )
 
         # like components with hardware attached we dont want to perform the
         # calculation here. Just set the required vars and wait for execute.
@@ -202,6 +218,9 @@ class BallisticsComponent:
 
     def log_shot(self) -> None:
         self.is_shooting = True
+
+    def get_robot_velocity(self) -> Translation2d:
+        return self.robot_velocity
 
     def compute_range_bearing_for(
         self, base_to_goal: Translation2d, base_velocity: Translation2d

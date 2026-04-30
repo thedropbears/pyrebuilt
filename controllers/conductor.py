@@ -19,20 +19,21 @@ class Conductor(StateMachine):
     shooter: ShooterComponent
     keep_shooting = will_reset_to(False)
 
-    def log_shot(self) -> None:
-        return self.ballistics.log_shot()
+    def get_solution(self):
+        self.solution = self.ballistics.solve_for(
+            self.targeter.get_target(),
+            self.ballistics.get_robot_velocity(),
+            self.chassis.get_pose().translation(),
+        )
 
-    def get_target_hopper_surface_speed(self) -> float:
-        return self.ballistics.target_hopper_surface_speed
-
-    def get_target_flywheel_speed(self) -> float:
-        return self.ballistics.target_flywheel_speed
+    def get_target(self):
+        self.target = self.targeter.get_target()
 
     def energise_flywheels(self):
-        self.shooter.set_flywheel(self.get_target_flywheel_speed())
+        self.shooter.set_flywheel(self.solution.target_flywheel_speed)
 
     def feed_shooter(self):
-        self.hopper.feed_rate = self.get_target_hopper_surface_speed()
+        self.hopper.feed_rate = 6
 
     def shoot(self) -> None:
         if self.ballistics.shooter_is_ready():
@@ -45,15 +46,13 @@ class Conductor(StateMachine):
         self.keep_shooting = True
 
     def activate_full_ballistics(self) -> None:
-        self.ballistics.solve_for(
-            self.targeter.get_target(),
-        )
+        (self.get_target(),)
         self.feed_shooter()
         self.energise_flywheels()
 
     @default_state
     def priming(self) -> None:
-        self.ballistics.solve_for(self.targeter.get_target())
+        self.get_target
         self.energise_flywheels()
 
     @state(first=True, must_finish=True)
