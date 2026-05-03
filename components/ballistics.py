@@ -103,6 +103,10 @@ class BallisticsComponent:
 
     is_shooting = tunable(False)
 
+    target_feed_surface_speed = float
+    target_flywheel_speed = int
+    target_hood_angle = units.radians
+
     def __init__(self, field: Field2d) -> None:
         self.target_position = Translation2d()
         self.tables = (
@@ -164,19 +168,22 @@ class BallisticsComponent:
         self.target_position = target_position
         self.robot_velocity = robot_velocity
         self.robot_pos = robot_pos
-        turret_angle = self.turret_angle
-        target_position = self.future_position
-        target_hopper_surface_speed = self.active_table.hopper_surface_speed
+        turret_angle = turret_angle = self.shot_velocity.angle()
+        effective_distance = self.active_table.velocity_to_effective_distance(
+            self.required_velocity
+        )
+
+        self.target_feed_surface_speed = self.active_table.hopper_surface_speed
         target_flywheel_speed = self.active_table.speed_for(self.effective_distance)
 
         @dataclass
         class Solution:
-            target_hopper_surface_speed: units.meters_per_second
+            self.target_feed_surface_speed: units.meters_per_second
             target_flywheel_speed: units.turns_per_second
             turret_angle: units.radians
 
         return Solution(
-            target_hopper_surface_speed, target_flywheel_speed, turret_angle
+            self.target_feed_surface_speed, target_flywheel_speed, turret_angle
         )
 
         # like components with hardware attached we dont want to perform the
@@ -232,13 +239,13 @@ class BallisticsComponent:
         baseline_vel = distance_to_target / baseline_tof
 
         target_velocity = base_to_goal_direction * baseline_vel
-        shot_velocity = target_velocity - base_velocity
+        self.shot_velocity = target_velocity - base_velocity
 
-        required_velocity = shot_velocity.norm()
+        self.required_velocity = self.shot_velocity.norm()
 
-        turret_angle = shot_velocity.angle()
+        turret_angle = self.shot_velocity.angle()
         effective_distance = self.active_table.velocity_to_effective_distance(
-            required_velocity
+            self.required_velocity
         )
 
         return effective_distance, turret_angle
