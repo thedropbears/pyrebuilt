@@ -2,16 +2,10 @@ from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
-from magicbot import tunable, will_reset_to
-from wpilib import Field2d
+from magicbot import tunable
 from wpimath import units
-from wpimath.geometry import Rotation2d, Transform2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
-
-from components.chassis import ChassisComponent
-from components.hopper import HopperComponent
-from components.shooter import ShooterComponent
-from components.turret import TurretComponent
 
 # fmt: off
 DISTANCE_LOOKUP = np.array([2.5,   3.0,   3.5,   4.0,   4.5,   5.0], dtype=float)
@@ -67,86 +61,22 @@ class LookupTable:
         return (self.speed_for(distance), self.flight_time_for(distance))
 
 
-class BallisticsComponent:
-    chassis: ChassisComponent
-    shooter: ShooterComponent
-    turret: TurretComponent
-    hopper: HopperComponent
+@dataclass
+class BallisticsSolution:
+    feed_speed: units.meters_per_second
+    flywheel_speed: units.meters_per_second
+    bearing: units.radians
 
-    forced_solution = will_reset_to[ForcedSolution | None](None)
-    should_energise_flywheels = will_reset_to(False)
-    should_energise_hopper = will_reset_to(False)
 
+class BallisticsSolver:
+    LATENCY_FACTOR = tunable(0.052)
     LEAD_SHOT_ITERATIONS = tunable(2)
 
-    MINIMUM_LEAD_DISTANCE = 2.0
-    LATENCY_FACTOR = tunable(0.052)  # if shooting too far, decrease
-
-    TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
-    MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
-
-    is_shooting = tunable(False)
-
-    def __init__(self, field: Field2d) -> None:
+    def __init__(self):
         self.target_position = Translation2d()
         self.active_table = LookupTable(
             DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, 10, "Score Table"
         )
-
-        self.distance_to_target = 0.0
-
-        self.turret_pose = field.getObject("Turret Pose")
-
-    def energise_flywheels(self) -> None:
-        # assuming that we dont want to have the flywheel spun up all the time,
-        # but the turret should always run
-        self.should_energise_flywheels = True
-
-    def feed_shooter(self) -> None:
-        self.should_energise_hopper = True
-
-    def shooter_is_ready(self) -> bool:
-        return self.shooter.flywheel_is_at_speed()
-
-    def solve_for(self, target_position: Translation2d) -> None:
-        # like components with hardware attached we dont want to perform the
-        # calculation here. Just set the required vars and wait for execute.
-        self.target_position = target_position
-
-    def force_solution(
-        self,
-        desired_flywheel_speed: units.turns_per_second,
-        desired_turret_bearing: units.radians,
-        desired_hopper_surface_speed: units.meters_per_second,
-    ) -> None:
-        self.forced_solution = (
-            desired_flywheel_speed,
-            desired_turret_bearing,
-            desired_hopper_surface_speed,
-        )
-
-    def calculate_shot_velocity(
-        self,
-        relative_target_translation: Translation2d,
-        current_velocity: ChassisSpeeds,
-    ) -> Translation2d:
-        distance_to_shot = relative_target_translation.norm()
-        ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
-
-        ideal_speed_mps = self.active_table.rps_to_mps(ideal_flywheel_speed)
-
-        target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
-
-        robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
-        shot_vector = target_vector - robot_velocity
-
-        return shot_vector
-
-    def get_distance_to_target(self) -> units.meters:
-        return self.distance_to_target
-
-    def log_shot(self) -> None:
-        self.is_shooting = True
 
     def compute_range_bearing_for(
         self, base_to_goal: Translation2d, base_velocity: Translation2d
@@ -169,64 +99,47 @@ class BallisticsComponent:
 
         return effective_distance, turret_angle
 
-    def execute(self) -> None:
-        chassis_pose = self.chassis.get_pose()
-        chassis_rotation = chassis_pose.rotation()
+    def calculate_shot_vector(
+        self,
+        relative_target_translation: Translation2d,
+        current_velocity: ChassisSpeeds,
+    ) -> Translation2d:
+        distance_to_shot = relative_target_translation.norm()
+        ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
 
-        chassis_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
-            self.chassis.get_velocity(), chassis_rotation
+        ideal_speed_mps = self.active_table.rps_to_mps(ideal_flywheel_speed)
+
+        target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
+
+        self.robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
+        shot_vector = target_vector - self.robot_velocity
+
+        return shot_vector
+
+    def solve_for(
+        self,
+        initial_pose: Pose2d,
+        initial_velocity: Translation2d,
+        target_position: Translation2d,
+    ):
+        # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
+        # See heading full integration example
+        future_position = (
+            initial_pose.translation() + initial_velocity * self.LATENCY_FACTOR
+        )
+        to_goal = target_position - future_position
+
+        effective_distance, absolute_bearing = self.compute_range_bearing_for(
+            to_goal, initial_velocity
+        )
+        current_rotation = initial_pose.rotation()
+        to_goal = target_position - future_position
+        required_rpm = self.active_table.speed_for(effective_distance)
+        return BallisticsSolution(
+            self.active_table.hopper_surface_speed,
+            required_rpm,
+            (absolute_bearing - current_rotation).radians(),
         )
 
-        turret_base_pose = chassis_pose.transformBy(self.TURRET_OFFSET)
-
-        turret_offset_field = (
-            turret_base_pose.translation() - chassis_pose.translation()
-        )
-
-        turret_base_velocity = Translation2d(
-            chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
-            chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
-        )
-
-        if self.forced_solution is None:
-            # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
-            # See heading full integration example
-            future_position = (
-                turret_base_pose.translation()
-                + turret_base_velocity * self.LATENCY_FACTOR
-            )
-            to_goal = self.target_position - future_position
-
-            effective_distance, turret_angle = self.compute_range_bearing_for(
-                to_goal, turret_base_velocity
-            )
-
-            required_rpm = self.active_table.speed_for(effective_distance)
-
-            target_turret_angle = (turret_angle - chassis_rotation).radians()
-            target_flywheel_speed = required_rpm
-            target_hopper_surface_speed = self.active_table.hopper_surface_speed
-
-        else:
-            (
-                target_flywheel_speed,
-                target_turret_angle,
-                target_hopper_surface_speed,
-            ) = self.forced_solution
-
-        if self.should_energise_flywheels:
-            self.shooter.set_flywheel(target_flywheel_speed)
-
-        self.turret.slew_to(target_turret_angle)
-
-        if self.should_energise_hopper:
-            self.hopper.feed(target_hopper_surface_speed)
-
-        self.is_shooting = False
-
-        self.turret_pose.setPose(
-            turret_base_pose.rotateAround(
-                turret_base_pose.translation(),
-                Rotation2d(self.turret.get_current_angle()),
-            )
-        )
+    def execute(self):
+        pass
