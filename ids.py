@@ -99,6 +99,15 @@ class CandleId(enum.IntEnum):
 
 
 @enum.unique
+class CanBusId(enum.StrEnum):
+    """CAN bus #"""
+
+    SWERVE = "can_s2"  # swerves, cancoders and pidgeon
+
+    MISC = "can_s3"  # PDHPE
+
+
+@enum.unique
 class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 

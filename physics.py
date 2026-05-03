@@ -15,9 +15,7 @@ from wpilib.simulation import (
     DCMotorSim,
     SingleJointedArmSim,
 )
-from wpimath import units
-from wpimath.kinematics import SwerveDrive4Kinematics
-from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath import DCMotor, LinearSystemId, SwerveDrive4Kinematics, units
 
 from components.chassis import SwerveModule
 
@@ -402,7 +400,7 @@ class PhysicsEngine:
         for steer in self.steer:
             steer.update(tm_diff)
 
-        speeds = self.kinematics.toChassisSpeeds(
+        speeds = self.kinematics.toChassisVelocities(
             (
                 self.swerve_modules[0].get(),
                 self.swerve_modules[1].get(),

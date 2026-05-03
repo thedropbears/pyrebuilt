@@ -2,10 +2,11 @@
 
 import dataclasses
 import typing
+from pathlib import Path
 
 import robotpy_apriltag
 import wpilib
-from wpimath.geometry import (
+from wpimath import (
     Pose2d,
     Pose3d,
     Rotation2d,
@@ -13,7 +14,7 @@ from wpimath.geometry import (
 )
 
 apriltag_layout = robotpy_apriltag.AprilTagFieldLayout(
-    path=wpilib.getOperatingDirectory() + "/2026-rebuilt-welded.json"
+    path=str(Path(__file__).parent.parent / "2026-rebuilt-welded.json") #idk if this works on systemcore
 )
 
 TagId = typing.Literal[
@@ -197,23 +198,23 @@ def alliance_shoot_line(is_red: bool) -> float:
 
 
 def is_alliance_hub_active() -> bool:
-    alliance = wpilib.DriverStation.getAlliance()
+    alliance = wpilib.DriverStationBackend.getAlliance()
 
     # If we have no alliance, we cannot be enabled, therefore no hub.
     if alliance is None:
         return False
 
     # Hub is always enabled in autonomous.
-    if wpilib.DriverStation.isAutonomousEnabled():
+    if wpilib.DriverStationBackend.isAutonomousEnabled():
         return True
 
     # If we're not teleop enabled, there is no hub.
-    if not wpilib.DriverStation.isTeleopEnabled():
+    if not wpilib.DriverStationBackend.isTeleopEnabled():
         return False
 
     # We're teleop enabled, compute.
-    match_time = wpilib.DriverStation.getMatchTime()
-    game_data = wpilib.DriverStation.getGameSpecificMessage()
+    match_time = wpilib.DriverStationBackend.getMatchTime()
+    game_data = wpilib.DriverStationBackend.getGameData()
 
     match game_data:
         case "R":
@@ -227,7 +228,7 @@ def is_alliance_hub_active() -> bool:
     # Shift 1 is active for blue if red won auto, or red if blue won auto.
     shift1_active = (
         not red_inactive_first
-        if alliance == wpilib.DriverStation.Alliance.kRed
+        if alliance == wpilib.Alliance.RED
         else red_inactive_first
     )
 
@@ -247,4 +248,4 @@ def is_alliance_hub_active() -> bool:
 
 # This will default to the blue alliance if a proper link to the driver station has not yet been established
 def is_red() -> bool:
-    return wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed
+    return wpilib.DriverStationBackend.getAlliance() == wpilib.Alliance.RED

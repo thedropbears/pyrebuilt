@@ -3,7 +3,6 @@ import math
 import magicbot
 import ntcore
 import wpilib
-import wpilib.event
 from magicbot import tunable
 from phoenix6.configs import Slot0Configs
 
@@ -63,7 +62,7 @@ class MyRobot(magicbot.MagicRobot):
     START_POS_TOLERANCE = 0.2
 
     def createObjects(self) -> None:
-        self.event_loop = wpilib.event.EventLoop()
+        self.event_loop = wpilib.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
 
         # Log driver station data
@@ -80,7 +79,7 @@ class MyRobot(magicbot.MagicRobot):
         meta_table.putString("runtime_type", self.getRuntimeType().name[1:])
         meta_table.putString("rio_serial", wpilib.RobotController.getSerialNumber())
 
-        self.gamepad = wpilib.XboxController(0)
+        self.gamepad = wpilib.NiDsXboxController(0)
         self.codriver_joystick = wpilib.Joystick(1)
         self.left_trigger_reset = True
 

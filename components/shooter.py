@@ -7,8 +7,7 @@ from phoenix6.configs import CANcoderConfiguration, MagnetSensorConfigs
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import SensorDirectionValue
 from wpilib import PWM
-from wpimath import units
-from wpimath.controller import PIDController
+from wpimath import PIDController, units
 
 from components.leds import LEDComponent
 from ids import CancoderId, PwmChannel, TalonId

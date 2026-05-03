@@ -1,7 +1,7 @@
 import wpilib
 from magicbot import feedback
 from wpilib import Field2d
-from wpimath.geometry import Rotation2d, Translation2d
+from wpimath import Rotation2d, Translation2d
 
 from components.chassis import ChassisComponent
 from utilities.game import (

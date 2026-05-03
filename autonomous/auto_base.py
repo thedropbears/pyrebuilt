@@ -3,9 +3,7 @@ import wpilib
 from choreo.trajectory import SwerveSample, SwerveTrajectory
 from magicbot import AutonomousStateMachine, state
 from wpilib import RobotBase
-from wpimath.controller import PIDController
-from wpimath.geometry import Pose2d
-from wpimath.kinematics import ChassisSpeeds
+from wpimath import ChassisVelocities, PIDController, Pose2d
 
 from components.chassis import ChassisComponent
 from utilities import game
@@ -118,7 +116,7 @@ class AutoBase(AutonomousStateMachine):
         pose = self.chassis.get_pose()
 
         # Generate the next speeds for the robot
-        speeds = ChassisSpeeds(
+        speeds = ChassisVelocities(
             sample.vx + x_controller.calculate(pose.X(), sample.x),
             sample.vy + y_controller.calculate(pose.Y(), sample.y),
             sample.omega
