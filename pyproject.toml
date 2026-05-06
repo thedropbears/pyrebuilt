@@ -100,7 +100,7 @@ dependencies = [
     "robotpy[apriltag]==2027.0.0a5.post1",
     "phoenix6==25.90.0a2",
     "sleipnirgroup-choreolib==2027.0.0a1",
-    "robotpy-wpilib-utilities==2027.0.0a3",
+    "robotpy-wpilib-utilities",
     # "robotpy-rev==2027.0.0a1",
     # "photonlibpy",
     "setuptools==81.0.0",
@@ -110,7 +110,7 @@ dependencies = [
 requires = [
     "phoenix6==25.90.0a2",
     # "robotpy-rev==2027.0.0a1",
-    "robotpy-wpilib-utilities==2027.0.0a3",
+    "robotpy-wpilib-utilities",
     # "photonlibpy",
     "sleipnirgroup-choreolib==2027.0.0a1",
     "setuptools==81.0.0",

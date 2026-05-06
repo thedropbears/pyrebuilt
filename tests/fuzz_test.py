@@ -24,20 +24,23 @@ def rand_axis() -> float:
     return random.random() * 2 - 1
 
 
-def rand_pov() -> int:
-    """Pick a random POV hat value."""
-    return random.choice((-1, 0, 45, 90, 135, 180, 225, 270, 315))
+def rand_pov() -> wpilib.POVDirection:
+    """Pick a random POV hat direction."""
+    import wpilib
+    return random.choice(list(wpilib.POVDirection.__members__.values()))
 
 
 class AllTheThings:
     """Fuzzer for robot hardware inputs."""
 
     def __init__(self) -> None:
+        # 2027: getNumDigitalChannels removed; use fixed channel range
+        num_dio = getattr(wpilib.SensorUtil, "getNumDigitalChannels", lambda: 26)()
         self.dios = [
             dio
             for dio in map(
                 wpilib.simulation.DIOSim,
-                range(wpilib.SensorUtil.getNumDigitalChannels()),
+                range(num_dio),
             )
             if dio.getInitialized()
         ]
@@ -52,7 +55,9 @@ class DSInputs:
     """Fuzzer for HIDs attached to the driver station."""
 
     def __init__(self) -> None:
-        self.gamepad = wpilib.simulation.XboxControllerSim(0)
+        # 2027: XboxControllerSim renamed to NiDsXboxControllerSim
+        XboxSim = getattr(wpilib.simulation, "XboxControllerSim", None) or wpilib.simulation.NiDsXboxControllerSim
+        self.gamepad = XboxSim(0)
         self.joystick = wpilib.simulation.JoystickSim(1)
 
     def fuzz(self) -> None:
@@ -104,7 +109,10 @@ def get_alliance_stations() -> list[str]:
 
 @pytest.mark.parametrize("station", get_alliance_stations())
 def test_fuzz(control: TestController, station: str) -> None:
-    station_id = getattr(hal.AllianceStationID, f"k{station}")
+    # 2027: AllianceStationID enum uses BLUE_1/RED_3 instead of kBlue1/kRed3
+    import re
+    enum_name = re.sub(r"(\D)(\d)", r"\1_\2", station).upper()
+    station_id = getattr(hal.AllianceStationID, enum_name)
 
     with control.run_robot():
         things = AllTheThings()
@@ -135,7 +143,7 @@ def test_fuzz(control: TestController, station: str) -> None:
             hids.fuzz()
             control.step_timing(seconds=0.1, autonomous=False, enabled=True)
 
-        DriverStationSim.setAllianceStationId(hal.AllianceStationID.kUnknown)
+        DriverStationSim.setAllianceStationId(hal.AllianceStationID.UNKNOWN)
 
 
 def test_fuzz_test(control: TestController) -> None:

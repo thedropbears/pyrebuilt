@@ -458,7 +458,7 @@ requires-dist = [
     { name = "robotpy", extras = ["apriltag"], specifier = "==2027.0.0a5.post1" },
     { name = "robotpy-wpilib-utilities" },
     { name = "setuptools", specifier = "==81.0.0" },
-    { name = "sleipnirgroup-choreolib" },
+    { name = "sleipnirgroup-choreolib", specifier = "==2027.0.0a1" },
 ]
 
 [package.metadata.requires-dev]
