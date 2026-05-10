@@ -141,12 +141,7 @@ class ClimberComponent:
         self.try_index()
 
         if self.last_index == LastIndex.NONE:
-            self.climber_motor.set_control(
-                VoltageOut(
-                    -ClimberComponent.MOTION_VOLTAGE, ignore_software_limits=True
-                )
-            )
-            return
+            self.climber_motor.set_control(VoltageOut(-ClimberComponent.MOTION_VOLTAGE))
 
         self.climber_motor.set_control(VoltageOut(self.target_output))
 

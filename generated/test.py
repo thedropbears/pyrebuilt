@@ -1,7 +1,7 @@
 from typing import overload
+
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
 from wpimath.units import inchesToMeters
-from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
 
 
 class TunerConstants:
@@ -224,24 +224,6 @@ class TunerConstants:
         _back_right_steer_motor_inverted,
         _back_right_encoder_inverted,
     )
-
-    @classmethod
-    def create_drivetrain(cls) -> "CommandSwerveDrivetrain":
-        """
-        Creates a CommandSwerveDrivetrain instance.
-        This should only be called once in your robot program.
-        """
-        from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
-
-        return CommandSwerveDrivetrain(
-            cls.drivetrain_constants,
-            [
-                cls.front_left,
-                cls.front_right,
-                cls.back_left,
-                cls.back_right,
-            ],
-        )
 
 
 class TunerSwerveDrivetrain(

@@ -10,7 +10,7 @@ import phoenix6
 import rev
 import wpilib
 from phoenix6.swerve.sim_swerve_drivetrain import SimSwerveDrivetrain
-from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
+# from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
     DCMotorSim,
@@ -246,7 +246,7 @@ class TurretSim:
             self.motor_sim.gearbox, moi, self.motor_sim.gearing
         )
         self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
+        # self.encoder_sim.sensor_offset = encoder_offset
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
@@ -275,7 +275,7 @@ class ArmSim:
     ) -> None:
         self.motor_sim = motor_sim
         self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
+        # self.encoder_sim.sensor_offset = encoder_offset
         self.encoder_sim.set_raw_position(starting_angle / math.tau)
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
@@ -343,7 +343,7 @@ class PhysicsEngine:
 
         self.turret_sim = TurretSim(
             TalonFXMotorSim(
-                DCMotor.minion,
+                DCMotor.krakenX60, #CHANGE TS 
                 robot.turret.motor,
                 gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
             ),
@@ -352,22 +352,22 @@ class PhysicsEngine:
             robot.turret.ENCODER_OFFSET,
         )
 
-        self.vision_sim = VisionSystemSim("main")
-        self.vision_sim.addAprilTags(game.apriltag_layout)
-        properties = SimCameraProperties.OV9281_1280_720()
-        self.port_camera = PhotonCameraSim(robot.port_vision.camera, properties)
-        self.port_camera.setMaxSightRange(5.0)
-        self.port_visual_localiser = robot.port_vision
-        self.vision_sim.addCamera(
-            self.port_camera,
-            self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
-        )
-        self.vision_sim_counter = 0
+        # self.vision_sim = VisionSystemSim("main")
+        # self.vision_sim.addAprilTags(game.apriltag_layout)
+        # properties = SimCameraProperties.OV9281_1280_720()
+        # self.port_camera = PhotonCameraSim(robot.port_vision.camera, properties)
+        # self.port_camera.setMaxSightRange(5.0)
+        # self.port_visual_localiser = robot.port_vision
+        # self.vision_sim.addCamera(
+        #     self.port_camera,
+        #     self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
+        # )
+        # self.vision_sim_counter = 0
 
-        self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
-        self.port_vision_encoder_sim = DutyCycleEncoderSim(
-            self.port_visual_localiser.encoder
-        )
+        # self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
+        # self.port_vision_encoder_sim = DutyCycleEncoderSim(
+        #     self.port_visual_localiser.encoder
+        # )
 
         self.intake_arm_sim = ArmSim(
             TalonFXMotorSim(
@@ -401,27 +401,27 @@ class PhysicsEngine:
         self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
-        self.port_vision_encoder_sim.set(
-            constrain_angle(
-                (
-                    (
-                        self.port_visual_localiser.servo_offsets.full_range
-                        - self.port_visual_localiser.servo_offsets.neutral
-                    )
-                    * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
-                    + self.port_visual_localiser.servo_offsets.neutral
-                ).radians()
-            )
-        )
+        # self.port_vision_encoder_sim.set(
+        #     constrain_angle(
+        #         (
+        #             (
+        #                 self.port_visual_localiser.servo_offsets.full_range
+        #                 - self.port_visual_localiser.servo_offsets.neutral
+        #             )
+        #             * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
+        #             + self.port_visual_localiser.servo_offsets.neutral
+        #         ).radians()
+        #     )
+        # )
 
-        # Simulate slow vision updates.
-        self.vision_sim_counter += 1
-        if self.vision_sim_counter == 10:
-            self.vision_sim.adjustCamera(
-                self.port_camera,
-                self.port_visual_localiser.robot_to_camera(
-                    wpilib.Timer.getFPGATimestamp()
-                ),
-            )
-            self.vision_sim.update(self.physics_controller.get_pose())
-            self.vision_sim_counter = 0
+        # # Simulate slow vision updates.
+        # self.vision_sim_counter += 1
+        # if self.vision_sim_counter == 10:
+        #     self.vision_sim.adjustCamera(
+        #         self.port_camera,
+        #         self.port_visual_localiser.robot_to_camera(
+        #             wpilib.Timer.getFPGATimestamp()
+        #         ),
+        #     )
+        #     self.vision_sim.update(self.physics_controller.get_pose())
+        #     self.vision_sim_counter = 0
