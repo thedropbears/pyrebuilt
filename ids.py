@@ -103,3 +103,10 @@ class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 
     CLIMBER_SENSOR = 2
+
+
+@enum.unique
+class CanbusId(enum.StrEnum):
+    """CAN bus names for CTRE devices."""
+
+    SWERVES = "s4"

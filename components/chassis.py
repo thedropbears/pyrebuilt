@@ -28,7 +28,7 @@ from wpimath.kinematics import (
 
 import utilities
 import utilities.scalers
-from ids import CancoderId, TalonId
+from ids import CanbusId, CancoderId, TalonId
 from utilities.ctre import FALCON_FREE_RPS
 from utilities.functions import rate_limit_module
 from utilities.game import is_red
@@ -57,6 +57,7 @@ class SwerveModule:
         drive_id: int,
         steer_id: int,
         encoder_id: int,
+        can_bus_id: str = "",
     ):
         """
         x, y: where the module is relative to the center of the robot
@@ -67,9 +68,9 @@ class SwerveModule:
         self.do_smooth = True
 
         # Create Motor and encoder objects
-        self.steer = TalonFX(steer_id)
-        self.drive = TalonFX(drive_id)
-        self.encoder = CANcoder(encoder_id)
+        self.steer = TalonFX(steer_id, can_bus_id)
+        self.drive = TalonFX(drive_id, can_bus_id)
+        self.encoder = CANcoder(encoder_id, can_bus_id)
 
         # Reduce CAN status frame rates before configuring
         self.steer.get_fault_field().set_update_frequency(
@@ -279,6 +280,7 @@ class ChassisComponent:
             drive_id=TalonId.DRIVE_FL,
             steer_id=TalonId.STEER_FL,
             encoder_id=CancoderId.SWERVE_FL,
+            can_bus_id=CanbusId.SWERVES,
         )
         # Rear Left
         self.module_rl = SwerveModule(
@@ -287,6 +289,7 @@ class ChassisComponent:
             drive_id=TalonId.DRIVE_RL,
             steer_id=TalonId.STEER_RL,
             encoder_id=CancoderId.SWERVE_RL,
+            can_bus_id=CanbusId.SWERVES,
         )
         # Rear Right
         self.module_rr = SwerveModule(
@@ -295,6 +298,7 @@ class ChassisComponent:
             drive_id=TalonId.DRIVE_RR,
             steer_id=TalonId.STEER_RR,
             encoder_id=CancoderId.SWERVE_RR,
+            can_bus_id=CanbusId.SWERVES,
         )
         # Front Right
         self.module_fr = SwerveModule(
@@ -303,6 +307,7 @@ class ChassisComponent:
             drive_id=TalonId.DRIVE_FR,
             steer_id=TalonId.STEER_FR,
             encoder_id=CancoderId.SWERVE_FR,
+            can_bus_id=CanbusId.SWERVES,
         )
 
         self.modules = (
