@@ -6,6 +6,7 @@ import typing
 
 import hal
 import pytest
+import wpilib
 import wpilib.simulation
 from wpilib.simulation import DriverStationSim
 
@@ -24,9 +25,9 @@ def rand_axis() -> float:
     return random.random() * 2 - 1
 
 
-def rand_pov() -> int:
-    """Pick a random POV hat value."""
-    return random.choice((-1, 0, 45, 90, 135, 180, 225, 270, 315))
+def rand_pov() -> wpilib.DriverStation.POVDirection:
+    """Pick a random POV hat direction."""
+    return random.choice(list(wpilib.DriverStation.POVDirection.__members__.values()))
 
 
 class AllTheThings:
