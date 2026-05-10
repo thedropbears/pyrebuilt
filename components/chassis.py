@@ -1,6 +1,7 @@
 import math
 from logging import Logger
 
+import ntcore
 import wpilib
 from magicbot import feedback, tunable
 from phoenix6.swerve import requests
@@ -8,7 +9,11 @@ from phoenix6.swerve.swerve_module import ChassisSpeeds
 from phoenix6.utils import fpga_to_current_time
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
-from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.kinematics import (
+    SwerveDrive4Kinematics,
+    SwerveModulePosition,
+    SwerveModuleState,
+)
 from wpimath.units import rotationsToRadians, seconds
 
 from generated.comp import TunerConstants, TunerSwerveDrivetrain
@@ -57,6 +62,30 @@ class ChassisComponent:
         )
 
         self.request: requests.SwerveRequest = requests.Idle()
+
+        nt = ntcore.NetworkTableInstance.getDefault().getTable("/components/chassis")
+        self.drive_state_table = nt.getSubTable("module_states")
+        self.drive_pose = self.drive_state_table.getStructTopic(
+            "Pose", Pose2d
+        ).publish()
+        self.drive_speeds = self.drive_state_table.getStructTopic(
+            "Speeds", ChassisSpeeds
+        ).publish()
+        self.drive_module_states = self.drive_state_table.getStructArrayTopic(
+            "ModuleStates", SwerveModuleState
+        ).publish()
+        self.drive_module_targets = self.drive_state_table.getStructArrayTopic(
+            "ModuleTargets", SwerveModuleState
+        ).publish()
+        self.drive_module_positions = self.drive_state_table.getStructArrayTopic(
+            "ModulePositions", SwerveModulePosition
+        ).publish()
+        self.drive_timestamp = self.drive_state_table.getDoubleTopic(
+            "Timestamp"
+        ).publish()
+        self.drive_odometry_frequency = self.drive_state_table.getDoubleTopic(
+            "OdometryFrequency"
+        ).publish()
 
     def setup(self) -> None:
         self.modules = self.phoenix_swerve.modules
@@ -130,7 +159,9 @@ class ChassisComponent:
         self.field_obj.setPose(pose)
 
     def update_odometry(self) -> None:
-        self.field_obj.setPose(self.phoenix_swerve.get_state().pose)
+        drivetrain_state = self.phoenix_swerve.get_state()
+        self.field_obj.setPose(drivetrain_state.pose)
+        self.telemeterise(drivetrain_state)
 
     def reset_odometry(self) -> None:
         """Reset odometry to current team's podium"""
@@ -213,3 +244,16 @@ class ChassisComponent:
         )  # Safety so that robot stops if not commanded next cycle
 
         self.update_odometry()
+
+    def telemeterise(self, state: TunerSwerveDrivetrain.SwerveDriveState):
+        """
+        Accept the swerve drive state and telemeterise it to NetworkTables
+        """
+        # Telemeterise the swerve drive state
+        self.drive_pose.set(state.pose)
+        self.drive_speeds.set(state.speeds)
+        self.drive_module_states.set(state.module_states)
+        self.drive_module_targets.set(state.module_targets)
+        self.drive_module_positions.set(state.module_positions)
+        self.drive_timestamp.set(state.timestamp)
+        self.drive_odometry_frequency.set(1.0 / state.odometry_period)
