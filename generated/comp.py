@@ -16,26 +16,28 @@ class TunerConstants:
     # output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     _steer_gains = (
         configs.Slot0Configs()
-        .with_k_p(174.6)
+        .with_k_p(34.876)
         .with_k_i(0)
-        .with_k_d(3.5359)
-        .with_k_s(0.1264)
-        .with_k_v(2.199)
-        .with_k_a(0.044934)
+        .with_k_d(2.5167)
+        .with_k_s(0.17715)
+        .with_k_v(2.1227)
+        .with_k_a(0.10327)
         .with_static_feedforward_sign(
             signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN
         )
+        # .with_gain_sched_behavior(signals.GainSchedBehaviorValue.ZERO_OUTPUT)
     )
+
     # When using closed-loop control, the drive motor uses the control
     # output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     _drive_gains = (
         configs.Slot0Configs()
-        .with_k_p(2.891)
-        .with_k_i(0)
+        .with_k_p(0.023983)
         .with_k_d(0)
-        .with_k_s(0.12159)
-        .with_k_v(2.5673)
-        .with_k_a(26.249)
+        .with_k_i(0)
+        .with_k_s(0.14118)
+        .with_k_v(0.11548)
+        .with_k_a(0.0099061)
     )
 
     # The closed-loop output type to use for the steer motors;
@@ -58,15 +60,22 @@ class TunerConstants:
     # This needs to be tuned to your individual robot
     _slip_current: units.ampere = 120.0
 
+    _steer_dampening_threshold: units.rotation = 0.05
+
     # Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     # Some configs will be overwritten; check the `with_*_initial_configs()` API documentation.
     _drive_initial_configs = configs.TalonFXConfiguration()
-    _steer_initial_configs = configs.TalonFXConfiguration().with_current_limits(
-        configs.CurrentLimitsConfigs()
-        # Swerve azimuth does not require much torque output, so we can set a relatively low
-        # stator current limit to help avoid brownouts without impacting performance.
-        .with_stator_current_limit(60.0)
-        .with_stator_current_limit_enable(True)
+    _steer_initial_configs = (
+        configs.TalonFXConfiguration().with_current_limits(
+            configs.CurrentLimitsConfigs()
+            # Swerve azimuth does not require much torque output, so we can set a relatively low
+            # stator current limit to help avoid brownouts without impacting performance.
+            .with_stator_current_limit(60.0)
+            .with_stator_current_limit_enable(True)
+        )
+        # .with_closed_loop_general(
+        #    configs.ClosedLoopGeneralConfigs().with_gain_sched_error_threshold(0.05)
+        # )
     )
     _encoder_initial_configs = configs.CANcoderConfiguration()
     # Configs for the Pigeon 2; leave this None to skip applying Pigeon 2 configs
@@ -107,7 +116,7 @@ class TunerConstants:
         .with_pigeon2_configs(_pigeon_configs)
     )
 
-    _constants_creator = (
+    _constants_creator = (  # rot 0.002
         swerve.SwerveModuleConstantsFactory[
             configs.TalonFXConfiguration,
             configs.TalonFXConfiguration,
