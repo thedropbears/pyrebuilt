@@ -1,7 +1,6 @@
 from typing import overload
 
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
-from wpimath.units import inchesToMeters
 
 
 class TunerConstants:
@@ -95,7 +94,7 @@ class TunerConstants:
 
     _drive_gear_ratio = 5.902777777777778
     _steer_gear_ratio = 18.75
-    _wheel_radius: units.meter = inchesToMeters(2)
+    _wheel_radius: units.meter = 0.0508
 
     _invert_left_side = False
     _invert_right_side = True
@@ -152,8 +151,8 @@ class TunerConstants:
     _front_left_steer_motor_inverted = True
     _front_left_encoder_inverted = False
 
-    _front_left_x_pos: units.meter = inchesToMeters(10.1771655)
-    _front_left_y_pos: units.meter = inchesToMeters(10.1771655)
+    _front_left_x_pos: units.meter = 0.2585
+    _front_left_y_pos: units.meter = 0.2585
 
     # Front Right
     _front_right_drive_motor_id = 4
@@ -163,8 +162,8 @@ class TunerConstants:
     _front_right_steer_motor_inverted = True
     _front_right_encoder_inverted = False
 
-    _front_right_x_pos: units.meter = inchesToMeters(10.1771655)
-    _front_right_y_pos: units.meter = inchesToMeters(-10.1771655)
+    _front_right_x_pos: units.meter = 0.2585
+    _front_right_y_pos: units.meter = -0.2585
 
     # Back Left
     _back_left_drive_motor_id = 2
@@ -174,8 +173,8 @@ class TunerConstants:
     _back_left_steer_motor_inverted = True
     _back_left_encoder_inverted = False
 
-    _back_left_x_pos: units.meter = inchesToMeters(-10.1771655)
-    _back_left_y_pos: units.meter = inchesToMeters(10.1771655)
+    _back_left_x_pos: units.meter = -0.2585
+    _back_left_y_pos: units.meter = 0.2585
 
     # Back Right
     _back_right_drive_motor_id = 3
@@ -185,8 +184,8 @@ class TunerConstants:
     _back_right_steer_motor_inverted = True
     _back_right_encoder_inverted = False
 
-    _back_right_x_pos: units.meter = inchesToMeters(-10.1771655)
-    _back_right_y_pos: units.meter = inchesToMeters(-10.1771655)
+    _back_right_x_pos: units.meter = -0.2585
+    _back_right_y_pos: units.meter = -0.2585
 
     front_left = _constants_creator.create_module_constants(
         _front_left_steer_motor_id,
