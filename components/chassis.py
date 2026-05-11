@@ -5,7 +5,7 @@ import ntcore
 import wpilib
 from magicbot import feedback, tunable
 from phoenix6.swerve import requests
-from phoenix6.swerve.swerve_module import ChassisSpeeds
+from phoenix6.swerve.swerve_module import ChassisSpeeds, SwerveModule
 from phoenix6.utils import fpga_to_current_time
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
@@ -223,7 +223,7 @@ class ChassisComponent:
         # 10% deadband
         request.deadband = self.max_speed * 0.02
         request.rotational_deadband = self.max_angular_rate * 0.02
-
+        request.drive_request_type = SwerveModule.DriveRequestType.VELOCITY
         self.set_control(request)
 
     def at_desired_heading(self) -> bool:
