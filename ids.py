@@ -30,6 +30,8 @@ class TalonId(enum.IntEnum):
 
     TURRET = 20
 
+    INTAKE_PROTO = 30
+
 
 @enum.unique
 class CancoderId(enum.IntEnum):

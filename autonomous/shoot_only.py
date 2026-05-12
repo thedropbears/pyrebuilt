@@ -1,13 +1,11 @@
-from magicbot import AutonomousStateMachine, timed_state
-
-from controllers.conductor import Conductor
+# from magicbot import AutonomousStateMachine
 
 
-class ShootOnly(AutonomousStateMachine):
-    MODE_NAME = "Shoot only"
+# class ShootOnly(AutonomousStateMachine):
+#     MODE_NAME = "Shoot only"
 
-    conductor: Conductor
+# conductor: Conductor
 
-    @timed_state(duration=10, first=True)
-    def caged_shooting(self) -> None:
-        self.conductor.caged_shoot()
+# @timed_state(duration=10, first=True)
+# def caged_shooting(self) -> None:
+#     self.conductor.caged_shoot()

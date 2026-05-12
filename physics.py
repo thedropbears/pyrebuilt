@@ -341,25 +341,25 @@ class PhysicsEngine:
             for module in robot.chassis.modules
         ]
 
-        self.flywheel_sim = SteerModuleSim(
-            TalonFXMotorSim(
-                DCMotor.krakenX60,
-                robot.shooter.flywheel_motor,
-                gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
-            ),
-            796.0 * 1e-6,
-        )
+        # self.flywheel_sim = SteerModuleSim(
+        #     TalonFXMotorSim(
+        #         DCMotor.krakenX60,
+        #         robot.shooter.flywheel_motor,
+        #         gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
+        #     ),
+        #     796.0 * 1e-6,
+        # )
 
-        self.turret_sim = TurretSim(
-            TalonFXMotorSim(
-                DCMotor.NEO550,
-                robot.turret.motor,
-                gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
-            ),
-            0.02890532995,
-            robot.turret.absolute_encoder,
-            robot.turret.ENCODER_OFFSET,
-        )
+        # self.turret_sim = TurretSim(
+        #     TalonFXMotorSim(
+        #         DCMotor.NEO550,
+        #         robot.turret.motor,
+        #         gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
+        #     ),
+        #     0.02890532995,
+        #     robot.turret.absolute_encoder,
+        #     robot.turret.ENCODER_OFFSET,
+        # )
 
         self.imu = robot.chassis.imu.sim_state
 
@@ -380,21 +380,21 @@ class PhysicsEngine:
         #     self.port_visual_localiser.encoder
         # )
 
-        self.intake_arm_sim = ArmSim(
-            TalonFXMotorSim(
-                DCMotor.falcon500,
-                robot.intake.deployer_motor_left,
-                robot.intake.deployer_motor_right,
-                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
-            ),
-            robot.intake.ARM_MOI,
-            robot.intake.ARM_LENGTH,
-            robot.intake.deployer_encoder,
-            robot.intake.ENCODER_ZERO_OFFSET,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
-        )
+        # self.intake_arm_sim = ArmSim(
+        #     TalonFXMotorSim(
+        #         DCMotor.falcon500,
+        #         robot.intake.deployer_motor_left,
+        #         robot.intake.deployer_motor_right,
+        #         gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
+        #     ),
+        #     robot.intake.ARM_MOI,
+        #     robot.intake.ARM_LENGTH,
+        #     robot.intake.deployer_encoder,
+        #     robot.intake.ENCODER_ZERO_OFFSET,
+        #     robot.intake.DEPLOYED_INTAKE_ANGLE,
+        #     robot.intake.RETRACTED_INTAKE_ANGLE,
+        #     robot.intake.DEPLOYED_INTAKE_ANGLE,
+        # )
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
         for wheel in self.wheels:
@@ -411,13 +411,13 @@ class PhysicsEngine:
             )
         )
 
-        self.flywheel_sim.update(tm_diff)
+        # self.flywheel_sim.update(tm_diff)
 
         self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
 
-        self.intake_arm_sim.update(tm_diff)
+        # self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
-        self.turret_sim.update(tm_diff)
+        # self.turret_sim.update(tm_diff)
         # self.port_vision_encoder_sim.set(
         #     constrain_angle(
         #         (
