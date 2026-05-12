@@ -19,6 +19,7 @@ from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
+from controllers.autoclimber import AutoClimber
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
 from ids import DioChannel, PwmChannel
@@ -35,6 +36,8 @@ class MyRobot(magicbot.MagicRobot):
     # Controllers
     conductor: Conductor
     gobbler: Gobbler
+    shooter_state_machine: Conductor
+    climber_state_machine: AutoClimber
 
     # Components
     ballistics: BallisticsComponent
@@ -140,6 +143,7 @@ class MyRobot(magicbot.MagicRobot):
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
         self.chassis.set_coast_in_neutral(False)
+        self.climber_state_machine.ground()
 
     def teleopPeriodic(self) -> None:
         drive_speed = self.max_speed
@@ -257,6 +261,9 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.feed_shooter()
             self.ballistics.execute()
 
+        if self.gamepad.getXButton():
+            self.climber_state_machine.autoclimb()
+
         self.gobbler.execute()
         self.shooter.execute()
         self.climber.execute()
@@ -264,6 +271,7 @@ class MyRobot(magicbot.MagicRobot):
         self.leds.execute()
         self.turret.execute()
         self.hopper.execute()
+        self.climber_state_machine.execute()
 
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()

@@ -117,6 +117,9 @@ BLUE_TRENCH_SHOOT_POS_2 = Translation2d(
 
 BLUE_SHOOT_LINE = get_fiducial_pose(26).x - SHOOT_POINT_OFFSET
 
+BLUE_TOWER_CLIMB_POLE = Translation2d(
+    get_fiducial_pose(31).x + 1.055624, get_fiducial_pose(31).y
+)
 
 RED_HUB_POS = field_flip_translation2d(BLUE_HUB_POS)
 
@@ -127,6 +130,12 @@ RED_TRENCH_SHOOT_POS_1 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_1)
 RED_TRENCH_SHOOT_POS_2 = field_flip_translation2d(BLUE_TRENCH_SHOOT_POS_2)
 
 RED_SHOOT_LINE = FIELD_LENGTH - BLUE_SHOOT_LINE
+
+RED_TOWER_CLIMB_POLE = field_flip_translation2d(BLUE_TOWER_CLIMB_POLE)
+
+FIELD_CENTRE_POS = Translation2d(FIELD_WIDTH / 2, FIELD_LENGTH / 2)
+
+ALLOWABLE_DISTANCE_FROM_TOWER = 1
 
 
 def is_in_alliance_zone(robot_pos: Translation2d) -> bool:
@@ -159,6 +168,33 @@ def is_in_neutral_zone(robot_pos: Translation2d) -> bool:
         < robot_pos.x
         < (FIELD_LENGTH - INTERSECT_OF_NEUTRAL_TRANSITION_ZONE_FROM_ALLIANCE_WALL)
     )
+
+
+def is_close_to_tower(robot_pos: Translation2d) -> bool:
+    return (
+        robot_pos.distance(BLUE_TOWER_CLIMB_POLE) <= ALLOWABLE_DISTANCE_FROM_TOWER
+        or robot_pos.distance(RED_TOWER_CLIMB_POLE) <= ALLOWABLE_DISTANCE_FROM_TOWER
+    )
+
+
+def is_in_upper_field_half(robot_pos: Translation2d) -> bool:
+    return robot_pos.y > FIELD_WIDTH / 2
+
+
+def get_movement_to_tower(robot_pos: Translation2d) -> Rotation2d:
+    y_direction = -1 if is_in_upper_field_half(robot_pos) else 1
+    x_direction = -1 if is_red() else 1
+
+    return Rotation2d(
+        x_direction, y_direction
+    )  # Negative because coordinate system on field is inversed i.e. top right is (0, 0)
+
+
+def alliance_tower_pos(is_red: bool) -> Translation2d:
+    if is_red:
+        return get_fiducial_pose(15).translation().toTranslation2d()
+    else:
+        return get_fiducial_pose(31).translation().toTranslation2d()
 
 
 def alliance_hub_pos(is_red: bool) -> Translation2d:
