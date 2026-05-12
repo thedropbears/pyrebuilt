@@ -111,4 +111,6 @@ class CandiId(enum.IntEnum):
 class CanbusId(enum.StrEnum):
     """CAN bus names for CTRE devices."""
 
-    SWERVES = "s4"
+    SWERVE = "can_s2"  # swerves, cancoders and pidgeon
+
+    MISC = "can_s3"  # PDHPE
