@@ -23,7 +23,7 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
 
-from generated.comp import TunerConstants
+from swerves.comp import TunerConstants
 from utilities import game
 from utilities.functions import constrain_angle
 
