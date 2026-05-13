@@ -28,6 +28,8 @@ class TalonId(enum.IntEnum):
     INTAKE_DEPLOYER_LEFT = 16
     INTAKE_DEPLOYER_RIGHT = 17
 
+    INTAKE_PROTO = 30
+
     TURRET = 20
 
 

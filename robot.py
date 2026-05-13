@@ -281,4 +281,4 @@ class MyRobot(magicbot.MagicRobot):
         super().robotPeriodic()
         self.port_vision._per_loop_cache.clear()
         self.turret.periodic()
-        self.intake.periodic()
+        # self.intake.periodic()

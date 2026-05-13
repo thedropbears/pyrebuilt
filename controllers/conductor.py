@@ -59,5 +59,5 @@ class Conductor(StateMachine):
     def purging(self) -> None:
         self.activate_full_ballistics()
 
-        if self.intake.is_retracted():
-            self.done()
+        # if self.intake.is_retracted():
+        self.done()
