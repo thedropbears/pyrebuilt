@@ -7,7 +7,6 @@ from magicbot import feedback, tunable
 from phoenix6.swerve import requests
 from phoenix6.swerve.swerve_module import ChassisSpeeds, SwerveModule
 from phoenix6.utils import fpga_to_current_time
-from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import (
     SwerveDrive4Kinematics,
@@ -26,11 +25,8 @@ class ChassisComponent:
     logger: Logger
     max_angular_rate = tunable(rotationsToRadians(0.75))
 
-    HEADING_TOLERANCE = math.radians(1)
-
     def __init__(self) -> None:
         self.on_red_alliance = is_red()
-        self.snapping_to_heading = False
 
         self.tuner_constants = TunerConstants()
         modules = [
@@ -51,15 +47,7 @@ class ChassisComponent:
         assert isinstance(kinematics, SwerveDrive4Kinematics)
         self.kinematics = kinematics
 
-        self.heading_controller = PIDController(3.0, 0.0, 0.0)
-        self.heading_controller.enableContinuousInput(-math.pi, math.pi)
-        self.heading_controller.setTolerance(self.HEADING_TOLERANCE)
-
         self.max_speed = self.tuner_constants.speed_at_12_volts  # TODO update this
-
-        wpilib.SmartDashboard.putData(
-            "Chassis heading_controller", self.heading_controller
-        )
 
         self.request: requests.SwerveRequest = requests.Idle()
 
@@ -116,15 +104,6 @@ class ChassisComponent:
     def get_velocity(self) -> ChassisSpeeds:
         return self.phoenix_swerve.get_state().speeds
 
-    def snap_to_heading(self, heading: float) -> None:
-        """set a heading target for the heading controller"""
-        self.snapping_to_heading = True
-        self.heading_controller.setSetpoint(heading)
-
-    def stop_snapping(self) -> None:
-        """stops the snapping controller"""
-        self.snapping_to_heading = False
-
     @feedback
     def is_stationary(self) -> bool:
         velocity = self.get_velocity()
@@ -179,7 +158,6 @@ class ChassisComponent:
 
     def stop(self) -> None:
         self.set_request_velocities(requests.RobotCentric(), 0.0, 0.0, 0.0)
-        self.stop_snapping()
 
     def add_vision_measurement(
         self,
@@ -226,18 +204,10 @@ class ChassisComponent:
         request.drive_request_type = SwerveModule.DriveRequestType.VELOCITY
         self.set_control(request)
 
-    def at_desired_heading(self) -> bool:
-        return abs(self.heading_controller.getError()) <= self.HEADING_TOLERANCE
-
     def set_control(self, request: requests.SwerveRequest) -> None:
         self.request = request
 
     def execute(self) -> None:
-        if self.snapping_to_heading:
-            self.heading_controller.calculate(self.get_rotation().radians())
-        else:
-            self.heading_controller.reset()
-
         self.phoenix_swerve.set_control(self.request)
         self.request = (
             requests.Idle()

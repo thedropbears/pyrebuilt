@@ -99,29 +99,6 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
         self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
 
-        # self.chassis_swerve_config = SwerveConfig(
-        #     drive_ratio=(16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0),
-        #     drive_gains=Slot0Configs()
-        #     .with_k_p(2.891)
-        #     .with_k_i(0)
-        #     .with_k_d(0)
-        #     .with_k_s(0.12159)
-        #     .with_k_v(2.5673)
-        #     .with_k_a(26.249),
-        #     steer_ratio=(16 / 50) * (10 / 60),
-        #     steer_gains=Slot0Configs()
-        #     .with_k_p(174.6)
-        #     .with_k_i(0)
-        #     .with_k_d(3.5359)
-        #     .with_k_s(0.1264)
-        #     .with_k_v(2.199)
-        #     .with_k_a(0.044934),
-        #     reverse_drive=True,
-        # )
-
-        self.chassis_track_width = 0.517
-        self.chassis_wheel_base = 0.517
-
         self.port_vision_name = "port_turret"
         self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
         self.port_vision_turret_rot = Rotation2d()
@@ -162,10 +139,7 @@ class MyRobot(magicbot.MagicRobot):
                 drive_x = -drive_x
                 drive_y = -drive_y
             self.chassis.drive_field(drive_x, drive_y, drive_z)
-
-        if drive_z != 0:
-            self.chassis.stop_snapping()
-
+            
         if self.gamepad.getYButton():
             self.climber.deploy()
 
