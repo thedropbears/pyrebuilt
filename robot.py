@@ -139,7 +139,7 @@ class MyRobot(magicbot.MagicRobot):
                 drive_x = -drive_x
                 drive_y = -drive_y
             self.chassis.drive_field(drive_x, drive_y, drive_z)
-            
+
         if self.gamepad.getYButton():
             self.climber.deploy()
 

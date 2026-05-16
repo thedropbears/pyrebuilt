@@ -372,7 +372,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_timestamp = timestamp
 
         pose = pipeline_result.estimatedPose.toPose2d()
-        self.chassis.phoenix_swerve.add_vision_measurement(
+        self.chassis.add_vision_measurement(
             pose,
             timestamp,
             (
