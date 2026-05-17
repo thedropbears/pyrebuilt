@@ -1,22 +1,33 @@
+from math import hypot, pi
+
 import choreo
 import wpilib
 from choreo.trajectory import SwerveSample, SwerveTrajectory
 from magicbot import AutonomousStateMachine, state
 from wpilib import RobotBase
-from wpimath.controller import PIDController
-from wpimath.geometry import Pose2d
-from wpimath.kinematics import ChassisSpeeds
+from wpimath.controller import (
+    HolonomicDriveController,
+    PIDController,
+    ProfiledPIDControllerRadians,
+)
+from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.trajectory import TrapezoidProfileRadians
 
 from components.chassis import ChassisComponent
 from utilities import game
 
-heading_controller = PIDController(1.0, 0.0, 0.0)
-x_controller = PIDController(2.0, 0.0, 0.0)
-y_controller = PIDController(2.0, 0.0, 0.0)
+controller = HolonomicDriveController(
+    PIDController(2.0, 0.0, 0.0),
+    PIDController(2.0, 0.0, 0.0),
+    ProfiledPIDControllerRadians(
+        1.0, 0.0, 0.0, TrapezoidProfileRadians.Constraints(2 * pi, pi)
+    ),
+)
+controller.setTolerance(Pose2d(0.01, 0.01, Rotation2d.fromDegrees(1)))
 
-wpilib.SmartDashboard.putData("Auto X PID", x_controller)
-wpilib.SmartDashboard.putData("Auto Y PID", y_controller)
-wpilib.SmartDashboard.putData("Auto Heading PID", heading_controller)
+wpilib.SmartDashboard.putData("Auto X PID", controller.getXController())
+wpilib.SmartDashboard.putData("Auto Y PID", controller.getYController())
+wpilib.SmartDashboard.putData("Auto Theta PID", controller.getThetaController())
 
 
 class AutoBase(AutonomousStateMachine):
@@ -118,11 +129,11 @@ class AutoBase(AutonomousStateMachine):
         pose = self.chassis.get_pose()
 
         # Generate the next speeds for the robot
-        speeds = ChassisSpeeds(
-            sample.vx + x_controller.calculate(pose.X(), sample.x),
-            sample.vy + y_controller.calculate(pose.Y(), sample.y),
-            sample.omega
-            + heading_controller.calculate(pose.rotation().radians(), sample.heading),
+        speeds = controller.calculate(
+            pose,
+            sample.get_pose(),
+            hypot(sample.vx, sample.vy),
+            Rotation2d(sample.heading),
         )
 
         # Apply the generated speeds
