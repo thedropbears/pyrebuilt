@@ -9,19 +9,21 @@ from typing import override
 import phoenix6
 import rev
 import wpilib
+from phoenix6.swerve.sim_swerve_drivetrain import SimSwerveDrivetrain
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
     DCMotorSim,
     DutyCycleEncoderSim,
     PWMSim,
+    RoboRioSim,
     SingleJointedArmSim,
 )
 from wpimath import units
-from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.geometry import Translation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
 
-from components.chassis import SwerveModule
+from swerves.comp import TunerConstants
 from utilities import game
 from utilities.functions import constrain_angle
 
@@ -312,32 +314,23 @@ class PhysicsEngine:
     def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
         self.physics_controller = physics_controller
 
-        self.kinematics: SwerveDrive4Kinematics = robot.chassis.kinematics
-        self.swerve_modules: tuple[
-            SwerveModule, SwerveModule, SwerveModule, SwerveModule
-        ] = robot.chassis.modules
+        self.rio = RoboRioSim()
+        self.robot = robot
+        self.imu = robot.chassis.imu.sim_state
+        swerve_constants = TunerConstants()
+        module_constants = [
+            swerve_constants.front_left,
+            swerve_constants.front_right,
+            swerve_constants.back_left,
+            swerve_constants.back_right,
+        ]
 
-        # Motors
-        self.wheels = [
-            SimpleTalonFXMotorSim(
-                module.drive,
-                units_per_rev=1 / robot.chassis.drive_motor_rev_to_meters,
-                kV=2.7,
-            )
-            for module in robot.chassis.modules
+        self.kinematics = self.robot.chassis.kinematics
+        swerve_positions = [
+            Translation2d(module.location_x, module.location_y)
+            for module in module_constants
         ]
-        self.steer = [
-            SteerModuleSim(
-                TalonFXMotorSim(
-                    DCMotor.krakenX60,
-                    module.steer,
-                    gearing=1 / robot.chassis.swerve_config.steer_ratio,
-                ),
-                # measured from MKCad CAD
-                0.0009972,
-            )
-            for module in robot.chassis.modules
-        ]
+        self.swerve = SimSwerveDrivetrain(swerve_positions, self.imu, module_constants)
 
         self.flywheel_sim = SteerModuleSim(
             TalonFXMotorSim(
@@ -358,8 +351,6 @@ class PhysicsEngine:
             robot.turret.absolute_encoder,
             robot.turret.ENCODER_OFFSET,
         )
-
-        self.imu = robot.chassis.imu.sim_state
 
         self.vision_sim = VisionSystemSim("main")
         self.vision_sim.addAprilTags(game.apriltag_layout)
@@ -395,20 +386,14 @@ class PhysicsEngine:
         )
 
     def update_sim(self, now: float, tm_diff: units.seconds) -> None:
-        for wheel in self.wheels:
-            wheel.update(tm_diff)
-        for steer in self.steer:
-            steer.update(tm_diff)
-
-        speeds = self.kinematics.toChassisSpeeds(
-            (
-                self.swerve_modules[0].get(),
-                self.swerve_modules[1].get(),
-                self.swerve_modules[2].get(),
-                self.swerve_modules[3].get(),
-            )
+        self.swerve.update(
+            tm_diff, self.rio.getVInVoltage(), self.robot.chassis.modules
         )
-
+        states = tuple(
+            [module.get_current_state() for module in self.robot.chassis.modules]
+        )
+        assert len(states) == 4
+        speeds = self.kinematics.toChassisSpeeds(states)
         self.flywheel_sim.update(tm_diff)
 
         self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
