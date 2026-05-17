@@ -1,3 +1,5 @@
+import math
+
 import choreo
 import wpilib
 from choreo.trajectory import SwerveSample, SwerveTrajectory
@@ -11,6 +13,7 @@ from components.chassis import ChassisComponent
 from utilities import game
 
 heading_controller = PIDController(1.0, 0.0, 0.0)
+heading_controller.enableContinuousInput(-math.pi, math.pi)
 x_controller = PIDController(2.0, 0.0, 0.0)
 y_controller = PIDController(2.0, 0.0, 0.0)
 
