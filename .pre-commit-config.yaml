@@ -22,7 +22,11 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
+<<<<<<< HEAD
     rev: v0.15.16
+=======
+    rev: v0.15.13
+>>>>>>> 8b0b37c ([pre-commit.ci] pre-commit autoupdate)
     hooks:
       - id: ruff-check
         args:

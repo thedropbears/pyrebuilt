@@ -54,11 +54,6 @@ class MyRobot(magicbot.MagicRobot):
     test_y = tunable(0.0)
     test_omega = tunable(0.0)
 
-<<<<<<< HEAD
-    is_command_driving = tunable(False)
-
-=======
->>>>>>> ef7646f (remap controller buttons + dpad up to drive commands)
     test_max_speed = tunable(1.5)
     test_spin_rate = tunable(1)
 
