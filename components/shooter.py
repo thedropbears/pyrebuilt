@@ -6,12 +6,13 @@ from phoenix6 import configs, controls, signals
 from phoenix6.configs import CANcoderConfiguration, MagnetSensorConfigs
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import SensorDirectionValue
+from rev import ServoChannel, ServoHub, ServoHubConfig
 from wpilib import PWM
 from wpimath import units
 from wpimath.controller import PIDController
 
 from components.leds import LEDComponent
-from ids import CancoderId, PwmChannel, TalonId
+from ids import CancoderId, PwmChannel, ServoHubId, TalonId
 from utilities.functions import clamp
 
 hood_controller = PIDController(180.0, 0.0, 0.0)
@@ -67,6 +68,17 @@ class ShooterComponent:
             .with_feedback(feedback_config)
             .with_motor_output(motor_output_config)
         )
+
+        servo_hub = ServoHub(ServoHubId.SERVO_HUB)
+        hood_servo_config = ServoHubConfig().channel0.pulseRange(
+            1000, 1500, 2000
+        )  # TODO update for new servo
+
+        servo_hub.configure(hood_servo_config, ServoHub.ResetMode.kResetSafeParameters)
+
+        self.hood_servo = servo_hub.getServoChannel(ServoChannel.ChannelId.kChannelId0)
+        self.hood_servo.setPowered(True)
+        self.hood_servo.setEnabled(True)
 
         self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
         self.hood_servo.setBounds(2000, 1550, 1500, 1450, 1000)

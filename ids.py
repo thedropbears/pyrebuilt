@@ -56,6 +56,18 @@ class SparkId(enum.IntEnum):
     TURRET = 2
 
 
+class ServoHubId(enum.IntEnum):
+    """CAN ID for REV Servo Hubs."""
+
+    SERVO_HUB = 0
+
+
+class ServoChannelId(enum.IntEnum):
+    """REV Servo Hub channel number."""
+
+    HOOD = 0
+
+
 @enum.unique
 class DioChannel(enum.IntEnum):
     """roboRIO Digital I/O channel number."""
