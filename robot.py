@@ -18,9 +18,10 @@ from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
-from components.vision import VisualLocalizer
+from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
+from ids import DioChannel, PwmChannel
 from utilities.game import is_red
 from utilities.scalers import rescale_js
 
