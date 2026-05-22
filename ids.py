@@ -42,8 +42,6 @@ class CancoderId(enum.IntEnum):
 
     TURRET = 6
 
-    HOOD = 7
-
     INTAKE = 8
 
 
@@ -66,7 +64,6 @@ class DioChannel(enum.IntEnum):
 
     CLIMBER_BREAKBEAM_SENSOR_FRONT = 2
     CLIMBER_BREAKBEAM_SENSOR_BACK = 4
-    HOOD_ENCODER = 3
 
 
 @enum.unique
@@ -74,8 +71,6 @@ class PwmChannel(enum.IntEnum):
     """roboRIO PWM output channel number."""
 
     PORT_VISION_SERVO = 0
-
-    HOOD_SERVO = 1
 
 
 @enum.unique

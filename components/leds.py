@@ -1,7 +1,6 @@
 from enum import IntEnum
 
 from magicbot import feedback
-from phoenix6.controls import SolidColor
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import RGBWColor
 
@@ -14,9 +13,6 @@ class Colors:
 
 
 class States(IntEnum):
-    HOOD_RETRACTED = 0
-    HOOD_NOT_RETRACTED = 1
-
     IDLE = 2
 
 
@@ -37,14 +33,6 @@ class LEDComponent:
     @feedback
     def get_desired_state(self):
         return self.desired_state
-
-    def hood_is_retracted(self) -> None:
-        self.desired_state = States.HOOD_RETRACTED
-        self.desired_command = SolidColor(self.LED_START, self.LED_END, Colors.green)
-
-    def hood_is_not_retracted(self) -> None:
-        self.desired_state = States.HOOD_NOT_RETRACTED
-        self.desired_command = SolidColor(self.LED_START, self.LED_END, Colors.red)
 
     def execute(self) -> None:
         if self.desired_state == self.current_state:
