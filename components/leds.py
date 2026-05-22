@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 from magicbot import feedback
+from phoenix6.controls import RainbowAnimation
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import RGBWColor
 
@@ -13,6 +14,7 @@ class Colors:
 
 
 class States(IntEnum):
+    TEMP = 1
     IDLE = 2
 
 
@@ -21,7 +23,9 @@ class LEDComponent:
     LED_END = 255
 
     desired_state = States.IDLE
-    current_state = States.IDLE
+    current_state = States.TEMP
+
+    desired_command = RainbowAnimation(LED_START, LED_END)
 
     def __init__(self) -> None:
         self.candle = CANdle(CandleId.LED)
