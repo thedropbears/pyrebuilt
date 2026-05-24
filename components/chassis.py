@@ -15,7 +15,12 @@ from wpimath.kinematics import (
 )
 from wpimath.units import rotationsToRadians, seconds
 
-from swerves.comp import TunerConstants, TunerSwerveDrivetrain
+from ids import RioSerialNumber
+
+if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT:
+    from swerves.test import TunerConstants, TunerSwerveDrivetrain
+else:
+    from swerves.comp import TunerConstants, TunerSwerveDrivetrain
 from utilities.game import is_red
 from utilities.position import TeamPoses
 

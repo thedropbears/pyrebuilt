@@ -79,7 +79,7 @@ class PwmChannel(enum.IntEnum):
 class RioSerialNumber(enum.StrEnum):
     """roboRIO serial number"""
 
-    TEST_BOT = "03062898"
+    TEST_BOT = "03058a60"
     COMP_BOT = "0305cc42"
 
 

@@ -23,7 +23,12 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
 
-from swerves.comp import TunerConstants
+from ids import RioSerialNumber
+
+if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT:
+    from swerves.test import TunerConstants
+else:
+    from swerves.comp import TunerConstants
 from utilities import game
 from utilities.functions import constrain_angle
 
