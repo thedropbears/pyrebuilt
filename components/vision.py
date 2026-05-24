@@ -2,6 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import ClassVar
 
+import rev
 import wpilib
 import wpiutil.log
 import wpiutil.wpistruct
@@ -87,7 +88,7 @@ class VisualLocalizer(HasPerLoopCache):
         camera_offset: Translation3d,
         # The camera pitch on the mount, relative to horizontal
         camera_pitch: float,
-        servo_id: int,
+        servo_channel: rev.ServoChannel,
         servo_offsets: ServoOffsets,
         encoder_id: int,
         encoder_offset: Rotation2d,
@@ -138,7 +139,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.min_rotation = max(relative_rotations[0], relative_servo_rotations[0])
         self.max_rotation = min(relative_rotations[1], relative_servo_rotations[1])
 
-        self.servo = wpilib.Servo(servo_id)
+        self.servo_channel = servo_channel
         self.pos = turret_pos
         self.robot_to_turret = Transform3d(turret_pos, Rotation3d(turret_rot))
         self.robot_to_turret_2d = Transform2d(turret_pos.toTranslation2d(), turret_rot)
@@ -302,9 +303,9 @@ class VisualLocalizer(HasPerLoopCache):
             self.turret_setpoint = new_turret_setpoint
 
         if self.should_override:
-            self.servo.set(self.override_setpoint)
+            self.servo_channel.set(self.override_setpoint)
         else:
-            self.servo.set(self.turret_setpoint)
+            self.servo_channel.set(self.turret_setpoint)
 
         now = wpilib.Timer.getFPGATimestamp()
         self.turret_rotation_buffer.addSample(now, self.turret_rotation)

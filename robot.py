@@ -20,7 +20,7 @@ from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
-from ids import DioChannel, PwmChannel
+from ids import CameraServoHub, DioChannel
 from utilities.game import is_red
 from utilities.scalers import rescale_js
 
@@ -96,8 +96,7 @@ class MyRobot(magicbot.MagicRobot):
         self.status_lights_strip_length = 112 * 4
 
         self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
-        self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
-
+        self.port_vision_servo_channel = CameraServoHub.CameraServoHubChannel
         self.port_vision_name = "port_turret"
         self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
         self.port_vision_turret_rot = Rotation2d()
@@ -110,7 +109,7 @@ class MyRobot(magicbot.MagicRobot):
         )
         self.port_vision_rotation_range = (
             Rotation2d(0.952),
-            Rotation2d(3.482),
+            Rotation2d(4.952),
         )
 
     def teleopInit(self) -> None:

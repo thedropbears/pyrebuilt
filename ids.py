@@ -98,3 +98,10 @@ class CandiId(enum.IntEnum):
     """CAN ID for CTRE CANdi devices"""
 
     CLIMBER_SENSOR = 2
+
+
+@enum.unique
+class CameraServoHub(enum.IntEnum):
+    "Servo Hub for cameras"
+
+    CameraServoHubChannel = 0
