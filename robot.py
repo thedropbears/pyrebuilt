@@ -50,6 +50,10 @@ class MyRobot(magicbot.MagicRobot):
 
     slowed_speed = tunable(1)
 
+    test_x = tunable(0.0)
+    test_y = tunable(0.0)
+    test_omega = tunable(0.0)
+
     test_max_speed = tunable(1.5)
     test_spin_rate = tunable(1)
 
@@ -193,14 +197,31 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.gobbler.gobble()
 
-        if self.gamepad.getAButton():
-            self.climber.deploy()
+        # if self.gamepad.getAButton():
+        #     self.climber.deploy()
 
-        if self.gamepad.getBButton():
-            self.climber.retract()
+        # if self.gamepad.getBButton():
+        #     self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
+
+        # if self.gamepad.getYButton():
+        #     self.shooter.pitch_to(math.radians(self.test_hood_angle))
+
+        if self.gamepad.getPOV() == 0:
+            self.test_drive_inverted = -1
+        else:
+            self.test_drive_inverted = 1
+
+        if self.gamepad.getXButton():
+            self.chassis.drive_field(self.test_x * self.test_drive_inverted, 0, 0)
+
+        if self.gamepad.getYButton():
+            self.chassis.drive_field(0, self.test_y * self.test_drive_inverted, 0)
+
+        if self.gamepad.getAButton():
+            self.chassis.drive_field(0, 0, self.test_omega * self.test_drive_inverted)
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
