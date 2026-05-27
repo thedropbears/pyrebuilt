@@ -106,6 +106,9 @@ class VisualLocalizer(HasPerLoopCache):
         # This has nothing to do with the servo - do it by hand!!
         self.encoder_offset = encoder_offset
 
+        self.servo = servo_channel
+        self.PulseRangeT = (500, 1500, 2500)
+        self.servo.setPulseWidth(self.PulseRangeT)
         # To find the servo offsets, command the servo to neutral in test mode and record the encoder value
         # Repeat for full range
         self.servo_offsets = servo_offsets
@@ -139,7 +142,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.min_rotation = max(relative_rotations[0], relative_servo_rotations[0])
         self.max_rotation = min(relative_rotations[1], relative_servo_rotations[1])
 
-        self.servo_channel = servo_channel
+        self.servo = servo_channel
         self.pos = turret_pos
         self.robot_to_turret = Transform3d(turret_pos, Rotation3d(turret_rot))
         self.robot_to_turret_2d = Transform2d(turret_pos.toTranslation2d(), turret_rot)
