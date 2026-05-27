@@ -55,7 +55,6 @@ class MyRobot(magicbot.MagicRobot):
 
     test_flywheel_speed = tunable(0.0)  # rotations/s
     test_turret_angle = tunable(0.0)  # degrees
-    test_hood_angle = tunable(45.0)  # degrees
     test_hopper_surface_speed = tunable(12.0)  # metres/s
 
     START_POS_TOLERANCE = 0.2
@@ -203,9 +202,6 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
 
-        if self.gamepad.getYButton():
-            self.shooter.pitch_to(math.radians(self.test_hood_angle))
-
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()
         elif self.gamepad.getRightStickButton():
@@ -219,7 +215,6 @@ class MyRobot(magicbot.MagicRobot):
             self.ballistics.force_solution(
                 self.test_flywheel_speed,
                 math.radians(self.test_turret_angle),
-                math.radians(self.test_hood_angle),
                 self.test_hopper_surface_speed,
             )
 

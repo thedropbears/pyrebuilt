@@ -1,42 +1,17 @@
 import math
 
-import wpilib
-from magicbot import feedback, tunable, will_reset_to
+from magicbot import feedback, will_reset_to
 from phoenix6 import configs, controls, signals
-from phoenix6.configs import CANcoderConfiguration, MagnetSensorConfigs
-from phoenix6.hardware import CANcoder, TalonFX
-from phoenix6.signals import SensorDirectionValue
-from wpilib import PWM
+from phoenix6.hardware import TalonFX
 from wpimath import units
-from wpimath.controller import PIDController
 
 from components.leds import LEDComponent
-from ids import CancoderId, PwmChannel, TalonId
-from utilities.functions import clamp
-
-hood_controller = PIDController(180.0, 0.0, 0.0)
-
-wpilib.SmartDashboard.putData("Hood PID", hood_controller)
+from ids import TalonId
 
 
 class ShooterComponent:
     leds: LEDComponent
     target_shooter_rps = will_reset_to(0.0)
-
-    hood_error_tolerance = 1.0 / 360.0
-    # 0 deg   = shooting straight up
-    # 90 deg  = shooting horizontal
-    # mechanical range is currently 23 - 50 deg in this frame
-    MIN_HOOD_ANGLE: units.turns = 25.0 / 360.0
-    MAX_HOOD_ANGLE: units.turns = 52.0 / 360.0
-
-    ENCODER_ZERO_OFFSET = (0.441650) + (25 / 360.0)
-
-    HOOD_SERVO_MAX_SPEED: units.turns_per_second = (
-        55.0 / 60.0
-    )  # rot/s https://www.amazon.com.au/Digital-Servo-Continuous-Rotation-Metal/dp/B0DNM1BFCR?source=ps-sl-shoppingads-lpcontext&psc=1&smid=A3LYAXKT5J9O5W
-
-    IS_RETRACTED_ALLOWABLE_ERROR = tunable(1.0)
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
@@ -68,48 +43,6 @@ class ShooterComponent:
             .with_motor_output(motor_output_config)
         )
 
-        self.hood_servo = PWM(PwmChannel.HOOD_SERVO)
-        self.hood_servo.setBounds(2000, 1550, 1500, 1450, 1000)
-        self.hood_servo.setPeriodMultiplier(PWM.PeriodMultiplier.kPeriodMultiplier_1X)
-
-        self.hood_encoder = CANcoder(CancoderId.HOOD)
-        self.hood_encoder.configurator.apply(
-            CANcoderConfiguration().with_magnet_sensor(
-                MagnetSensorConfigs()
-                .with_absolute_sensor_discontinuity_point(0.5)
-                .with_sensor_direction(SensorDirectionValue.CLOCKWISE_POSITIVE)
-                .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
-            )
-        )
-
-        self.target_hood_angle = self.get_hood_angle_rotations()
-
-        self.hood_output = 0.0
-
-    def on_enable(self) -> None:
-        self.target_hood_angle = self.get_hood_angle_rotations()
-
-    @feedback
-    def get_hood_angle_degrees(self) -> units.degrees:
-        return math.degrees(self.get_hood_angle())
-
-    def get_hood_angle(self) -> units.radians:
-        return self.get_hood_angle_rotations() * math.tau
-
-    def get_hood_angle_rotations(self) -> units.turns:
-        return self.hood_encoder.get_position().value
-
-    def get_hood_error_degrees(self) -> units.degrees:
-        return (self.target_hood_angle - self.get_hood_angle_rotations()) * 360.0
-
-    @feedback
-    def is_hood_retracted(self) -> bool:
-        return math.isclose(
-            self.get_hood_angle(),
-            self.MIN_HOOD_ANGLE * math.tau,
-            abs_tol=math.radians(self.IS_RETRACTED_ALLOWABLE_ERROR),
-        )
-
     @feedback
     def get_flywheel_error(self) -> units.turns_per_second:
         return self.flywheel_motor.get_closed_loop_error().value
@@ -128,42 +61,13 @@ class ShooterComponent:
             < self.FLYWHEEL_SETPOINT_TOLERANCE
         )
 
-    def pitch_relative(self, angle: units.radians):
-        self.target_hood_angle = clamp(
-            self.target_hood_angle + angle / math.tau,
-            self.MIN_HOOD_ANGLE,
-            self.MAX_HOOD_ANGLE,
-        )
-
-    def pitch_min(self):
-        self.target_hood_angle = self.MIN_HOOD_ANGLE
-
-    def pitch_to(self, angle: units.radians):
-        self.target_hood_angle = clamp(
-            angle / math.tau, self.MIN_HOOD_ANGLE, self.MAX_HOOD_ANGLE
-        )
-
     def set_flywheel(self, speed: units.turns_per_second):
         self.target_shooter_rps = speed
 
     def execute(self) -> None:
-        self.leds.hood_is_retracted() if self.is_hood_retracted() else self.leds.hood_is_not_retracted()
-
         if self.target_shooter_rps != 0.0:
             self.flywheel_motor.set_control(
                 controls.VelocityVoltage(self.target_shooter_rps)
             )
         else:
             self.flywheel_motor.set_control(controls.CoastOut())
-
-        self.hood_output = (
-            clamp(
-                hood_controller.calculate(
-                    self.get_hood_angle_rotations(), self.target_hood_angle
-                ),
-                -ShooterComponent.HOOD_SERVO_MAX_SPEED,
-                ShooterComponent.HOOD_SERVO_MAX_SPEED,
-            )
-            / ShooterComponent.HOOD_SERVO_MAX_SPEED
-        )
-        self.hood_servo.setSpeed(self.hood_output)
