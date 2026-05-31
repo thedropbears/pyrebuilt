@@ -28,7 +28,7 @@ from utilities.scalers import rescale_js
 
 class MyRobot(magicbot.MagicRobot):
     # These components have specific ordering concerns with data flow.
-    port_vision: VisualLocalizer
+    linear_vision: VisualLocalizer
     chassis: ChassisComponent
     targeter: Targeter
 
@@ -117,7 +117,7 @@ class MyRobot(magicbot.MagicRobot):
             neutral=Rotation2d(1.928),
             full_range=Rotation2d(3.960),
         )
-        self.port_vision_rotation_range = (
+        self.linear_vision_rotation_range = (
             Rotation2d(0.952),
             Rotation2d(3.482),
         )
@@ -164,7 +164,10 @@ class MyRobot(magicbot.MagicRobot):
             self.conductor.caged_shoot()
 
         if self.gamepad.getAButton():
-            self.port_vision.zero_servo_()
+            self.linear_vision.zero_servo_()
+
+        if self.gamepad.getLeftBumper():
+            self.conductor.outtake_intake()
 
         if self.gamepad.getLeftBumper():
             self.conductor.outtake_intake()
@@ -243,11 +246,11 @@ class MyRobot(magicbot.MagicRobot):
             self.hopper.feed(self.test_hopper_surface_speed)
 
         if self.gamepad.getLeftStickButton():
-            self.port_vision.zero_servo_()
+            self.linear_vision.zero_servo_()
         elif self.gamepad.getRightStickButton():
-            self.port_vision.full_range_servo_()
+            self.linear_vision.full_range_servo_()
 
-        self.port_vision.execute()
+        self.linear_vision.execute()
         self.chassis.execute()
         self.targeter.execute()
         if self.gamepad.getRightTriggerAxis() > 0.5:
@@ -309,7 +312,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.climber.try_index()
         self.chassis.update_alliance()
-        self.port_vision.execute()
+        self.linear_vision.execute()
         self.chassis.update_odometry()
         self.targeter.execute()
         self.conductor.dispatch_ballistics_setpoints()
@@ -318,6 +321,6 @@ class MyRobot(magicbot.MagicRobot):
     @override
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        self.port_vision._per_loop_cache.clear()  # pyright: ignore[reportPrivateUsage]
+        self.linear_vision._per_loop_cache.clear()
         self.turret.periodic()
         self.intake.periodic()
