@@ -211,9 +211,9 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.execute()
         self.targeter.execute()
         if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.hopper.feed(self.test_flywheel_speed)
+            self.hopper.feed(self.test_hopper_surface_speed)
             self.turret.slew_to(math.radians(self.test_turret_angle))
-            self.shooter.set_flywheel(self.test_hopper_surface_speed)
+            self.shooter.set_flywheel(self.test_flywheel_speed)
 
         self.gobbler.execute()
         self.shooter.execute()

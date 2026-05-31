@@ -60,7 +60,7 @@ class LookupTable:
 @dataclass
 class BallisticsSolution:
     feed_speed: units.meters_per_second
-    flywheel_speed: units.meters_per_second
+    flywheel_speed: units.turns_per_second
     bearing: units.radians
 
 

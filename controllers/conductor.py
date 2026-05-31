@@ -58,7 +58,7 @@ class Conductor(StateMachine):
 
         return turret_base_pose, turret_base_velocity
 
-    def dispatch_ballistics_setpoints(self):
+    def dispatch_ballistics_setpoints(self, feed_needed: bool = True):
 
         turret_base_pose, turret_base_velocity = self.get_current_turret_config()
 
@@ -75,7 +75,8 @@ class Conductor(StateMachine):
             self.targeter.get_target(),
         )
 
-        self.hopper.feed(solution.feed_speed)
+        if feed_needed:
+            self.hopper.feed(solution.feed_speed)
         self.turret.slew_to(solution.bearing)
         self.shooter.set_flywheel(solution.flywheel_speed)
 
@@ -98,7 +99,7 @@ class Conductor(StateMachine):
 
     @default_state
     def priming(self) -> None:
-        self.dispatch_ballistics_setpoints()
+        self.dispatch_ballistics_setpoints(False)
 
     @state(first=True, must_finish=True)
     def shooting(self) -> None:
