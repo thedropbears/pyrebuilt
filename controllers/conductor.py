@@ -27,7 +27,7 @@ class Conductor(StateMachine):
     keep_shooting = will_reset_to(False)
     TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
-    is_shooting = will_reset_to(False)
+    shot_succesful = will_reset_to(False)
 
     def setup(self) -> None:
         self.turret_pose = self.field.getObject("Turret Pose")
@@ -47,13 +47,13 @@ class Conductor(StateMachine):
             chassis_speeds, chassis_rotation
         )
 
-        self.turret_offset_field = (
+        turret_offset_field = (
             turret_base_pose.translation() - chassis_pose.translation()
         )
 
         turret_base_velocity = Translation2d(
-            chassis_velocity.vx - chassis_velocity.omega * self.turret_offset_field.Y(),
-            chassis_velocity.vy + chassis_velocity.omega * self.turret_offset_field.X(),
+            chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
+            chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
         )
 
         return turret_base_pose, turret_base_velocity
@@ -83,20 +83,18 @@ class Conductor(StateMachine):
         if self.shooter.flywheel_is_at_speed():
             self.engage(self.shooting)
         self.keep_shooting = True
-        self.is_shooting = True
 
     def log_shot(self) -> None:
-        self.is_shooting = True
+        self.shot_succesful = True
 
     @feedback
     def get_is_shooting(self) -> bool:
-        return self.is_shooting
+        return self.shot_succesful
 
     def caged_shoot(self) -> None:
         if self.shooter.flywheel_is_at_speed():
             self.engage(self.caged_shooting)
         self.keep_shooting = True
-        self.is_shooting = True
 
     @default_state
     def priming(self) -> None:

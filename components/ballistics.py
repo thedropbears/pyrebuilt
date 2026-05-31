@@ -107,8 +107,8 @@ class BallisticsSolver:
 
         target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
 
-        self.robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
-        shot_vector = target_vector - self.robot_velocity
+        robot_velocity = Translation2d(current_velocity.vx, current_velocity.vy)
+        shot_vector = target_vector - robot_velocity
 
         return shot_vector
 
