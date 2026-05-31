@@ -1,4 +1,4 @@
-from math import isclose, pi, tau
+from math import isclose, pi
 
 from magicbot import will_reset_to
 from phoenix6.configs import (
@@ -42,7 +42,11 @@ class HopperComponent:
         )
 
         indexer_gains_config = (
-            Slot0Configs().with_k_s(0.0050824).with_k_v(0.11395).with_k_a(0.01833)
+            Slot0Configs()
+            .with_k_s(0.0064613)
+            .with_k_v(0.11354)
+            .with_k_a(0.017913)
+            .with_k_p(0.015874)
         )
 
         self.indexer_motor.configurator.apply(
@@ -63,7 +67,11 @@ class HopperComponent:
         )
 
         injector_gains_config = (
-            Slot0Configs().with_k_s(0.074635).with_k_v(0.11359).with_k_a(0.0019126)
+            Slot0Configs()
+            .with_k_s(0.12926)
+            .with_k_v(0.11437)
+            .with_k_a(0.0018232)
+            .with_k_p(0.12691)
         )
 
         self.injector_motor.configurator.apply(
@@ -77,11 +85,11 @@ class HopperComponent:
         self.indexer_motor.set_control(CoastOut())
         self.injector_motor.set_control(CoastOut())
 
-    def get_indexer_error(self) -> units.radians_per_second:
-        return self.indexer_motor.get_closed_loop_error().value * tau
+    def get_indexer_error(self) -> units.turns_per_second:
+        return self.indexer_motor.get_closed_loop_error().value
 
-    def get_injector_error(self) -> units.radians_per_second:
-        return self.injector_motor.get_closed_loop_error().value * tau
+    def get_injector_error(self) -> units.turns_per_second:
+        return self.injector_motor.get_closed_loop_error().value
 
     def get_indexer_surface_speed(self) -> units.meters_per_second:
         return (
