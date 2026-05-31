@@ -209,4 +209,3 @@ class ChassisComponent:
         self.drive_module_targets.set(state.module_targets)
         self.drive_module_positions.set(state.module_positions)
         self.drive_timestamp.set(state.timestamp)
-        self.drive_odometry_frequency.set(1.0 / state.odometry_period)
