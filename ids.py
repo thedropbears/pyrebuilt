@@ -21,11 +21,11 @@ class TalonId(enum.IntEnum):
 
     CLIMBER = 12
 
-    INTAKE = 15
     INDEXER = 14
     INJECTOR = 18
 
-    INTAKE_DEPLOYER_LEFT = 16
+    INTAKE_ROLLER = 15
+    INTAKE_DEPLOYER = 16
 
     TURRET = 20
 

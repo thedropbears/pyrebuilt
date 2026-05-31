@@ -28,8 +28,8 @@ from ids import CancoderId, TalonId
 
 class IntakeComponent:
     # TODO tune all of these
-    target_intake_rps = will_reset_to(0.0)
-    desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
+    target_roller_rps = will_reset_to(0.0)
+    desired_roller_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
     RETRACTED_INTAKE_ANGLE = radians(107.0)
     DEPLOYED_INTAKE_ANGLE = radians(-8.0)
@@ -43,7 +43,7 @@ class IntakeComponent:
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
 
-    MOTOR_TO_INTAKE_GEARING = (1 / 3) * (36 / 26)
+    MOTOR_TO_ROLLER_GEARING = (1 / 3) * (36 / 26)
 
     ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
@@ -52,21 +52,21 @@ class IntakeComponent:
     ARM_MOI = 0.398668741
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
-        self.intake_motor = TalonFX(TalonId.INTAKE)
-        self.deployer_motor = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
+        self.roller_motor = TalonFX(TalonId.INTAKE_ROLLER)
+        self.deployer_motor = TalonFX(TalonId.INTAKE_DEPLOYER)
         self.deployer_encoder = CANcoder(CancoderId.INTAKE)
 
-        intake_motor_output_config = (
+        roller_motor_output_config = (
             MotorOutputConfigs()
-            .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
-        intake_motor_feedback_config = FeedbackConfigs().with_sensor_to_mechanism_ratio(
-            1 / self.MOTOR_TO_INTAKE_GEARING
+        roller_motor_feedback_config = FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            1 / self.MOTOR_TO_ROLLER_GEARING
         )
 
-        intake_gains_config = (
+        roller_gains_config = (
             Slot0Configs()
             .with_k_p(0.00067723)
             .with_k_i(0)
@@ -76,15 +76,15 @@ class IntakeComponent:
             .with_k_a(0.0046032)
         )
 
-        self.intake_motor.configurator.apply(
+        self.roller_motor.configurator.apply(
             TalonFXConfiguration()
-            .with_motor_output(intake_motor_output_config)
-            .with_slot0(intake_gains_config)
-            .with_feedback(intake_motor_feedback_config)
+            .with_motor_output(roller_motor_output_config)
+            .with_slot0(roller_gains_config)
+            .with_feedback(roller_motor_feedback_config)
         )
 
         # siq hand tuned gains
-        intake_deployer_deploy_config = (
+        deployer_deploy_config = (
             Slot0Configs()
             .with_k_p(30.63)
             .with_k_i(0.00)
@@ -97,7 +97,7 @@ class IntakeComponent:
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
-        intake_deployer_hold_config = (
+        deployer_hold_config = (
             Slot1Configs()
             .with_k_p(90.63)
             .with_k_i(0.00)
@@ -110,20 +110,20 @@ class IntakeComponent:
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
-        intake_deployer_output_config = (
+        deployer_output_config = (
             MotorOutputConfigs()
             .with_inverted(InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
-        intake_deployer_magic_config = (
+        deployer_magic_config = (
             MotionMagicConfigs()
             .with_motion_magic_acceleration(self.MAX_DEPLOYER_ACCEL)
             .with_motion_magic_cruise_velocity(self.MAX_DEPLOYER_VELOCITY)
             .with_motion_magic_jerk(self.MAX_DEPLOYER_JERK)
         )
 
-        intake_deployer_feedback_config = (
+        deployer_feedback_config = (
             FeedbackConfigs()
             .with_rotor_to_sensor_ratio(1 / (self.DEPLOYER_TO_CANCODER_GEARING))
             .with_sensor_to_mechanism_ratio(1 / self.CANCODER_TO_MECHANISM_GEARING)
@@ -133,11 +133,11 @@ class IntakeComponent:
 
         deployer_config = (
             TalonFXConfiguration()
-            .with_motor_output(intake_deployer_output_config)
-            .with_slot0(intake_deployer_deploy_config)
-            .with_slot1(intake_deployer_hold_config)
-            .with_feedback(intake_deployer_feedback_config)
-            .with_motion_magic(intake_deployer_magic_config)
+            .with_motor_output(deployer_output_config)
+            .with_slot0(deployer_deploy_config)
+            .with_slot1(deployer_hold_config)
+            .with_feedback(deployer_feedback_config)
+            .with_motion_magic(deployer_magic_config)
         )
 
         self.deployer_motor.configurator.apply(deployer_config)
@@ -167,10 +167,10 @@ class IntakeComponent:
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def backdrive(self) -> None:
-        self.target_intake_rps = -self.desired_intake_rps
+        self.target_roller_rps = -self.desired_roller_rps
 
     def drive(self) -> None:
-        self.target_intake_rps = self.desired_intake_rps
+        self.target_roller_rps = self.desired_roller_rps
 
     def execute(self) -> None:
         active_slot = 1 if self.should_use_holding_config() else 0
@@ -178,10 +178,10 @@ class IntakeComponent:
             MotionMagicVoltage(self.target_deployer_angle / tau, slot=active_slot)
         )
 
-        if self.target_intake_rps == 0.0:
-            self.intake_motor.set_control(NeutralOut())
+        if self.target_roller_rps == 0.0:
+            self.roller_motor.set_control(NeutralOut())
         else:
-            self.intake_motor.set_control(VelocityVoltage(self.target_intake_rps))
+            self.roller_motor.set_control(VelocityVoltage(self.target_roller_rps))
 
     def is_retracted(self) -> bool:
         return isclose(
