@@ -1,4 +1,4 @@
-from math import isclose, pi, tau
+from math import isclose, pi
 
 from magicbot import will_reset_to
 from phoenix6.configs import (
@@ -77,11 +77,11 @@ class HopperComponent:
         self.indexer_motor.set_control(CoastOut())
         self.injector_motor.set_control(CoastOut())
 
-    def get_indexer_error(self) -> units.radians_per_second:
-        return self.indexer_motor.get_closed_loop_error().value * tau
+    def get_indexer_error(self) -> units.turns_per_second:
+        return self.indexer_motor.get_closed_loop_error().value
 
-    def get_injector_error(self) -> units.radians_per_second:
-        return self.injector_motor.get_closed_loop_error().value * tau
+    def get_injector_error(self) -> units.turns_per_second:
+        return self.injector_motor.get_closed_loop_error().value
 
     def get_indexer_surface_speed(self) -> units.meters_per_second:
         return (
