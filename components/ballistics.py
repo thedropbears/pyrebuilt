@@ -13,10 +13,6 @@ SPEED_LOOKUP =    np.array([70.0,  74.0,  79.0,  88.0,  98.0, 112.0], dtype=floa
 TIME_LOOKUP =     np.array([1.003, 1.103, 1.147, 1.294, 1.348, 1.450], dtype=float)
 # fmt: on
 
-type ForcedSolution = tuple[
-    units.turns_per_second, units.radians, units.meters_per_second
-]
-
 
 @dataclass
 class LookupTable:
