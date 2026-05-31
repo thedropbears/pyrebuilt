@@ -215,10 +215,10 @@ class ChassisComponent:
             )
 
             current_gains = Slot0Configs()
-            motor.configurator.refresh(current_gains)
+            motor.configurator.refresh(current_gains)  # type: ignore
 
             motor.configurator.apply(
-                current_gains.with_k_p(dummy_controller.getP())
+                current_gains.with_k_p(dummy_controller.getP())  # type: ignore
                 .with_k_i(dummy_controller.getI())
                 .with_k_d(dummy_controller.getD())
             )
