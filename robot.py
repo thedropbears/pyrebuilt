@@ -209,19 +209,25 @@ class MyRobot(magicbot.MagicRobot):
         # if self.gamepad.getYButton():
         #     self.shooter.pitch_to(math.radians(self.test_hood_angle))
 
+        if self.gamepad.getPOV() == 90:
+            self.chassis.flash_gains(True)
+
+        if self.gamepad.getPOV() == 270:
+            self.chassis.flash_gains(False)
+
         if self.gamepad.getPOV() == 0:
             self.test_drive_inverted = -1
         else:
             self.test_drive_inverted = 1
 
         if self.gamepad.getXButton():
-            self.chassis.drive_field(self.test_x * self.test_drive_inverted, 0, 0)
+            self.chassis.drive_robot(self.test_x * self.test_drive_inverted, 0, 0)
 
         if self.gamepad.getYButton():
-            self.chassis.drive_field(0, self.test_y * self.test_drive_inverted, 0)
+            self.chassis.drive_robot(0, self.test_y * self.test_drive_inverted, 0)
 
         if self.gamepad.getAButton():
-            self.chassis.drive_field(0, 0, self.test_omega * self.test_drive_inverted)
+            self.chassis.drive_robot(0, 0, self.test_omega * self.test_drive_inverted)
 
         if self.gamepad.getLeftStickButton():
             self.port_vision.zero_servo_()

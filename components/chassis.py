@@ -4,9 +4,11 @@ from logging import Logger
 import ntcore
 import wpilib
 from magicbot import feedback, tunable
+from phoenix6.configs import Slot0Configs
 from phoenix6.swerve import requests
 from phoenix6.swerve.swerve_module import ChassisSpeeds, SwerveModule
 from phoenix6.utils import fpga_to_current_time
+from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import (
     SwerveDrive4Kinematics,
@@ -74,6 +76,24 @@ class ChassisComponent:
         self.drive_odometry_frequency = self.drive_state_table.getDoubleTopic(
             "OdometryFrequency"
         ).publish()
+
+        self.dummy_steer_controller = PIDController(
+            modules[0].steer_motor_gains.k_p,
+            modules[0].steer_motor_gains.k_i,
+            modules[0].steer_motor_gains.k_d,
+        )
+        self.dummy_drive_controller = PIDController(
+            modules[0].drive_motor_gains.k_p,
+            modules[0].drive_motor_gains.k_i,
+            modules[0].drive_motor_gains.k_d,
+        )
+
+        wpilib.SmartDashboard.putData(
+            "Dummy Steer Controller", self.dummy_steer_controller
+        )
+        wpilib.SmartDashboard.putData(
+            "Dummy Drive Controller", self.dummy_drive_controller
+        )
 
     def setup(self) -> None:
         self.modules = self.phoenix_swerve.modules
@@ -186,6 +206,22 @@ class ChassisComponent:
         request.rotational_deadband = self.max_angular_rate * 0.02
         request.drive_request_type = SwerveModule.DriveRequestType.VELOCITY
         self.set_control(request)
+
+    def flash_gains(self, is_steer: bool) -> None:
+        for module in self.modules:
+            motor = module.steer_motor if is_steer else module.drive_motor
+            dummy_controller = (
+                self.dummy_steer_controller if is_steer else self.dummy_drive_controller
+            )
+
+            current_gains = Slot0Configs()
+            motor.configurator.refresh(current_gains)
+
+            motor.configurator.apply(
+                current_gains.with_k_p(dummy_controller.getP())
+                .with_k_i(dummy_controller.getI())
+                .with_k_d(dummy_controller.getD())
+            )
 
     def set_control(self, request: requests.SwerveRequest) -> None:
         self.request = request
