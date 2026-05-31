@@ -99,21 +99,19 @@ dependencies = [
     "numpy~=2.3",
     "robotpy[apriltag]==2027.0.0a6",
     "phoenix6==25.90.0a2",
-    "sleipnirgroup-choreolib",
+    # "sleipnirgroup-choreolib==2027.0.0a1",
     "robotpy-wpilib-utilities",
-    "robotpy-rev==2027.0.0a1",
-    # "photonlibpy",
-    "setuptools==81.0.0",
+    "robotpy-rev",
+    "photonlibpy==2027.0.0a1",
 ]
 
 [tool.robotpy]
 requires = [
     "phoenix6==25.90.0a2",
-    # "robotpy-rev==2027.0.0a1",
+    "robotpy-rev",
     "robotpy-wpilib-utilities",
-    # "photonlibpy",
-    "sleipnirgroup-choreolib",
-    "setuptools==81.0.0",
+    "photonlibpy==2027.0.0a1",
+    # "sleipnirgroup-choreolib==2027.0.0a1",
 ]
-robotpy_version = "2027.0.0a6"
+robotpy_version = "2027.0.0a6.post1"
 components = ["apriltag"]

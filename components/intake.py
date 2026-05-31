@@ -25,7 +25,7 @@ from phoenix6.signals import (
     NeutralModeValue,
     SensorDirectionValue,
 )
-from wpilib import Color, Color8Bit, MechanismRoot2d
+from wpilib import MechanismRoot2d
 from wpimath import units
 
 from ids import CancoderId, TalonId
@@ -172,7 +172,6 @@ class IntakeComponent:
             length=0.8,
             angle=0.0,
             lineWidth=3,
-            color=Color8Bit(Color.kGreen),
         )
 
     def intake(self) -> None:

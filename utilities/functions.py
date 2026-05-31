@@ -1,7 +1,7 @@
 import math
 
-from wpimath.geometry import Rotation2d
-from wpimath.kinematics import SwerveModuleState
+from wpimath import Rotation2d
+from wpimath import SwerveModuleVelocity
 
 
 def constrain_angle(angle: float) -> float:
@@ -30,25 +30,25 @@ def rate_limit_2d(
 
 
 def rate_limit_module(
-    cur: SwerveModuleState,
-    target: SwerveModuleState,
+    cur: SwerveModuleVelocity,
+    target: SwerveModuleVelocity,
     rate_limit: float,
     dt: float = 0.02,
-) -> SwerveModuleState:
+) -> SwerveModuleVelocity:
     """
     Limit the change in a module state so that the acceleration dosent exceed rate_limit
     """
-    cur_vx = cur.angle.cos() * cur.speed
-    cur_vy = cur.angle.sin() * cur.speed
-    target_vx = target.angle.cos() * target.speed
-    target_vy = target.angle.sin() * target.speed
+    cur_vx = cur.angle.cos() * cur.velocity
+    cur_vy = cur.angle.sin() * cur.velocity
+    target_vx = target.angle.cos() * target.velocity
+    target_vy = target.angle.sin() * target.velocity
 
     new_vx, new_vy = rate_limit_2d(
         (cur_vx, cur_vy), (target_vx, target_vy), rate_limit, dt
     )
     new_speed = math.hypot(new_vx, new_vy)
     rot = cur.angle if new_speed == 0 else Rotation2d(new_vx, new_vy)
-    return SwerveModuleState(new_speed, rot)
+    return SwerveModuleVelocity(new_speed, rot)
 
 
 def clamp_2d(val: tuple[float, float], radius: float) -> tuple[float, float]:

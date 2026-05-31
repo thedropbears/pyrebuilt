@@ -2,12 +2,11 @@ import math
 
 import magicbot
 import ntcore
+import rev
 import wpilib
-import wpilib.event
 from magicbot import tunable
-from wpimath.geometry import Rotation2d, Translation3d
+from wpimath import Rotation2d, Translation3d
 
-from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsComponent
 from components.chassis import ChassisComponent
 from components.climber import ClimberComponent
@@ -17,17 +16,17 @@ from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
-# from components.vision import ServoOffsets, VisualLocalizer
+from components.vision import VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
-from ids import DioChannel, PwmChannel
+from ids import DioChannel, ServoHubCanId
 from utilities.game import is_red
 from utilities.scalers import rescale_js
 
 
 class MyRobot(magicbot.MagicRobot):
     # These components have specific ordering concerns with data flow.
-    # port_vision: VisualLocalizer
+    port_vision: VisualLocalizer
     chassis: ChassisComponent
     targeter: Targeter
 
@@ -61,7 +60,7 @@ class MyRobot(magicbot.MagicRobot):
     START_POS_TOLERANCE = 0.2
 
     def createObjects(self) -> None:
-        self.event_loop = wpilib.event.EventLoop()
+        self.event_loop = wpilib.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
 
         # Log driver station data
@@ -78,7 +77,7 @@ class MyRobot(magicbot.MagicRobot):
         meta_table.putString("runtime_type", self.getRuntimeType().name[1:])
         meta_table.putString("rio_serial", wpilib.RobotController.getSerialNumber())
 
-        self.gamepad = wpilib.XboxController(0)
+        self.gamepad = wpilib.NiDsXboxController(0)
         self.codriver_joystick = wpilib.Joystick(1)
         self.left_trigger_reset = True
 
@@ -96,23 +95,18 @@ class MyRobot(magicbot.MagicRobot):
 
         self.status_lights_strip_length = 112 * 4
 
-        # self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
-        # self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
+        self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
+        self.port_vision_servo_hub = rev.ServoHub(ServoHubCanId.PORT_VISION)
+        self.port_vision_servo = self.port_vision_servo_hub.getServoChannel(
+            rev.ServoChannel.ChannelId.kChannelId0
+        )
 
-        # self.port_vision_name = "port_turret"
-        # self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
-        # self.port_vision_turret_rot = Rotation2d()
-        # self.port_vision_camera_offset = Translation3d(0.01078, 0, 0.0013)
-        # self.port_vision_camera_pitch = math.radians(-10.0)
-        # self.port_vision_encoder_offset = Rotation2d(2.055)
-        # self.port_vision_servo_offsets = ServoOffsets(
-        #     neutral=Rotation2d(1.928),
-        #     full_range=Rotation2d(3.960),
-        # )
-        # self.port_vision_rotation_range = (
-        #     Rotation2d(0.952),
-        #     Rotation2d(3.482),
-        # )
+        self.port_vision_name = "port_turret"
+        self.port_vision_turret_pos = Translation3d(0.15424, 0.174645, 0.427393)
+        self.port_vision_turret_rot = Rotation2d()
+        self.port_vision_camera_offset = Translation3d(0.01078, 0, 0.0013)
+        self.port_vision_camera_pitch = math.radians(-10.0)
+        self.port_vision_encoder_offset = Rotation2d(2.055)
 
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
@@ -155,8 +149,8 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getRightBumperButton():
             self.conductor.caged_shoot()
 
-        # if self.gamepad.getAButton():
-        #    self.port_vision.zero_servo_()
+        if self.gamepad.getAButton():
+           self.port_vision.zero_servo_()
 
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
@@ -209,12 +203,12 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getYButton():
             self.shooter.pitch_to(math.radians(self.test_hood_angle))
 
-        # if self.gamepad.getLeftStickButton():
-        #     self.port_vision.zero_servo_()
-        # elif self.gamepad.getRightStickButton():
-        #     self.port_vision.full_range_servo_()
+        if self.gamepad.getLeftStickButton():
+            self.port_vision.zero_servo_()
+        elif self.gamepad.getRightStickButton():
+            self.port_vision.full_range_servo_()
 
-        # self.port_vision.execute()
+        self.port_vision.execute()
         self.chassis.execute()
         self.targeter.execute()
 
@@ -241,21 +235,21 @@ class MyRobot(magicbot.MagicRobot):
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
 
-        selected_auto = self._automodes.chooser.getSelected()
-        if isinstance(selected_auto, AutoBase):
-            intended_start_pose = selected_auto.get_starting_pose()
-            if intended_start_pose is not None:
-                self.field.getObject("Intended start pos").setPose(intended_start_pose)
+        # selected_auto = self._automodes.chooser.getSelected()
+        # if isinstance(selected_auto, AutoBase):
+        #     intended_start_pose = selected_auto.get_starting_pose()
+        #     if intended_start_pose is not None:
+        #         self.field.getObject("Intended start pos").setPose(intended_start_pose)
 
         self.climber.try_index()
 
         self.chassis.update_alliance()
-        # self.port_vision.execute()
+        self.port_vision.execute()
         self.chassis.update_odometry()
         self.leds.execute()
 
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        # self.port_vision._per_loop_cache.clear()
+        self.port_vision._per_loop_cache.clear()
         self.turret.periodic()
         self.intake.periodic()

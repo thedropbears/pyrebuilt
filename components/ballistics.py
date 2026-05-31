@@ -6,8 +6,8 @@ import numpy.typing as npt
 from magicbot import feedback, tunable, will_reset_to
 from wpilib import Field2d
 from wpimath import units
-from wpimath.geometry import Rotation2d, Transform2d, Translation2d
-from wpimath.kinematics import ChassisSpeeds
+from wpimath import Rotation2d, Transform2d, Translation2d
+from wpimath import ChassisVelocities
 
 from components.chassis import ChassisComponent
 from components.hopper import HopperComponent
@@ -174,7 +174,7 @@ class BallisticsComponent:
     def calculate_shot_velocity(
         self,
         relative_target_translation: Translation2d,
-        current_velocity: ChassisSpeeds,
+        current_velocity: ChassisVelocities,
     ) -> Translation2d:
         distance_to_shot = relative_target_translation.norm()
         ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
@@ -219,9 +219,10 @@ class BallisticsComponent:
         chassis_pose = self.chassis.get_pose()
         chassis_rotation = chassis_pose.rotation()
 
-        chassis_velocity = ChassisSpeeds.toRobotRelative(
-            self.chassis.get_velocity(), chassis_rotation
-        )
+        field_speeds = self.chassis.get_velocity()
+        chassis_velocity = ChassisVelocities(
+            field_speeds.vx, field_speeds.vy, field_speeds.omega
+        ).toRobotRelative(chassis_rotation)
 
         turret_base_pose = chassis_pose.transformBy(self.TURRET_OFFSET)
 
@@ -288,14 +289,13 @@ class BallisticsComponent:
         if self.should_energise_flywheels:
             self.shooter.set_flywheel(target_flywheel_speed)
 
+        extrapolation_twist = ChassisVelocities(
+            field_speeds.vx, field_speeds.vy, field_speeds.omega
+        ).toRobotRelative(chassis_rotation).toTwist2d(
+            self.EXTRAPOLATION_TIME_FOR_HOOD_SERVO
+        )
         if is_in_transition_zone(
-            self.chassis.get_pose()
-            .exp(
-                ChassisSpeeds.toRobotRelative(
-                    self.chassis.get_velocity(), chassis_pose.rotation()
-                ).toTwist2d(self.EXTRAPOLATION_TIME_FOR_HOOD_SERVO)
-            )
-            .translation()
+            chassis_pose.transformBy(extrapolation_twist.exp()).translation()
         ):
             self.shooter.pitch_min()
         else:

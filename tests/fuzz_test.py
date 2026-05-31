@@ -8,6 +8,7 @@ import hal
 import pytest
 import wpilib
 import wpilib.simulation
+from hal._wpiHal import _RobotMode as RobotMode
 from wpilib.simulation import DriverStationSim
 
 if typing.TYPE_CHECKING:
@@ -25,9 +26,9 @@ def rand_axis() -> float:
     return random.random() * 2 - 1
 
 
-def rand_pov() -> wpilib.DriverStation.POVDirection:
+def rand_pov() -> wpilib.POVDirection:
     """Pick a random POV hat direction."""
-    return random.choice(list(wpilib.DriverStation.POVDirection.__members__.values()))
+    return random.choice(list(wpilib.POVDirection.__members__.values()))
 
 
 class AllTheThings:
@@ -92,12 +93,15 @@ def get_alliance_stations() -> list[str]:
     stations = (1, 2, 3)
     if "CI" in os.environ:  # pragma: no branch
         choices = [
-            f"{alliance}{station}"
-            for alliance in ("Blue", "Red")
+            f"{alliance}_{station}"
+            for alliance in ("BLUE", "RED")
             for station in stations
         ]
     else:  # pragma: no cover
-        choices = [f"Blue{random.choice(stations)}", f"Red{random.choice(stations)}"]
+        choices = [
+            f"BLUE_{random.choice(stations)}",
+            f"RED_{random.choice(stations)}",
+        ]
 
     os.environ[choices_env_var] = ",".join(choices)
     return choices
@@ -105,7 +109,7 @@ def get_alliance_stations() -> list[str]:
 
 @pytest.mark.parametrize("station", get_alliance_stations())
 def test_fuzz(control: TestController, station: str) -> None:
-    station_id = getattr(hal.AllianceStationID, f"k{station}")
+    station_id = getattr(hal.AllianceStationID, station)
 
     with control.run_robot():
         things = AllTheThings()
@@ -136,7 +140,7 @@ def test_fuzz(control: TestController, station: str) -> None:
             hids.fuzz()
             control.step_timing(seconds=0.1, autonomous=False, enabled=True)
 
-        DriverStationSim.setAllianceStationId(hal.AllianceStationID.kUnknown)
+        DriverStationSim.setAllianceStationId(hal.AllianceStationID.UNKNOWN)
 
 
 def test_fuzz_test(control: TestController) -> None:
@@ -147,7 +151,7 @@ def test_fuzz_test(control: TestController) -> None:
         control.step_timing(seconds=0.5, autonomous=False, enabled=False)
 
         # ... in disabled test mode too
-        DriverStationSim.setTest(True)
+        DriverStationSim.setRobotMode(RobotMode.UTILITY)
         control.step_timing(seconds=0.5, autonomous=False, enabled=False)
 
         DriverStationSim.setEnabled(True)

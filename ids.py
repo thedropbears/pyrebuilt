@@ -73,9 +73,14 @@ class DioChannel(enum.IntEnum):
 class PwmChannel(enum.IntEnum):
     """roboRIO PWM output channel number."""
 
-    PORT_VISION_SERVO = 0
-
     HOOD_SERVO = 1
+
+
+@enum.unique
+class ServoHubCanId(enum.IntEnum):
+    """CAN ID for REV ServoHub."""
+
+    PORT_VISION = 1
 
 
 @enum.unique

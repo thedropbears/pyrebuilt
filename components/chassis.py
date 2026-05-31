@@ -6,9 +6,7 @@ from magicbot import feedback, tunable
 from phoenix6.swerve import requests
 from phoenix6.swerve.swerve_module import ChassisSpeeds
 from phoenix6.utils import fpga_to_current_time
-from wpimath.controller import PIDController
-from wpimath.geometry import Pose2d, Rotation2d
-from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath import PIDController, Pose2d, Rotation2d, SwerveDrive4Kinematics
 from wpimath.units import rotationsToRadians, seconds
 
 from generated.comp import TunerConstants, TunerSwerveDrivetrain

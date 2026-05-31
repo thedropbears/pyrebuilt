@@ -1,7 +1,7 @@
 import numpy as np
 from wpimath import units
-from wpimath.system import LinearSystem_2_1_1
-from wpimath.system.plant import DCMotor
+from wpimath import LinearSystem_2_1_1
+from wpimath import DCMotor
 
 
 def single_jointed_arm_system(
