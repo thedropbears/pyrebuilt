@@ -8,7 +8,7 @@ from magicbot import tunable
 from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
-from components.ballistics import BallisticsComponent
+from components.ballistics import BallisticsSolver
 from components.chassis import ChassisComponent
 from components.climber import ClimberComponent
 from components.hopper import HopperComponent
@@ -36,7 +36,7 @@ class MyRobot(magicbot.MagicRobot):
     gobbler: Gobbler
 
     # Components
-    ballistics: BallisticsComponent
+    ballistics: BallisticsSolver
     hopper: HopperComponent
     shooter: ShooterComponent
     climber: ClimberComponent
@@ -210,17 +210,10 @@ class MyRobot(magicbot.MagicRobot):
         self.port_vision.execute()
         self.chassis.execute()
         self.targeter.execute()
-
         if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.ballistics.force_solution(
-                self.test_flywheel_speed,
-                math.radians(self.test_turret_angle),
-                self.test_hopper_surface_speed,
-            )
-
-            self.ballistics.energise_flywheels()
-            self.ballistics.feed_shooter()
-            self.ballistics.execute()
+            self.hopper.feed(self.test_hopper_surface_speed)
+            self.turret.slew_to(math.radians(self.test_turret_angle))
+            self.shooter.set_flywheel(self.test_flywheel_speed)
 
         self.gobbler.execute()
         self.shooter.execute()
