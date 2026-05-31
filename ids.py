@@ -26,7 +26,6 @@ class TalonId(enum.IntEnum):
     INJECTOR = 18
 
     INTAKE_DEPLOYER_LEFT = 16
-    INTAKE_DEPLOYER_RIGHT = 17
 
     TURRET = 20
 

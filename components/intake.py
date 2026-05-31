@@ -3,8 +3,6 @@ from math import degrees, isclose, radians, tau
 from magicbot import MagicRobot, feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
-    CommutationConfigs,
-    ExternalFeedbackConfigs,
     FeedbackConfigs,
     MagnetSensorConfigs,
     MotionMagicConfigs,
@@ -12,16 +10,13 @@ from phoenix6.configs import (
     Slot0Configs,
     Slot1Configs,
     TalonFXConfiguration,
-    TalonFXSConfiguration,
 )
-from phoenix6.controls import Follower, MotionMagicVoltage, NeutralOut, VelocityVoltage
-from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
+from phoenix6.controls import MotionMagicVoltage, NeutralOut, VelocityVoltage
+from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import (
     FeedbackSensorSourceValue,
     GravityTypeValue,
     InvertedValue,
-    MotorAlignmentValue,
-    MotorArrangementValue,
     NeutralModeValue,
     SensorDirectionValue,
 )
@@ -32,6 +27,7 @@ from ids import CancoderId, TalonId
 
 
 class IntakeComponent:
+    # TODO tune all of these
     target_intake_rps = will_reset_to(0.0)
     desired_intake_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
@@ -56,9 +52,8 @@ class IntakeComponent:
     ARM_MOI = 0.398668741
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
-        self.intake_motor = TalonFXS(TalonId.INTAKE)
-        self.deployer_motor_left = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
-        self.deployer_motor_right = TalonFX(TalonId.INTAKE_DEPLOYER_RIGHT)
+        self.intake_motor = TalonFX(TalonId.INTAKE)
+        self.deployer_motor = TalonFX(TalonId.INTAKE_DEPLOYER_LEFT)
         self.deployer_encoder = CANcoder(CancoderId.INTAKE)
 
         intake_motor_output_config = (
@@ -67,10 +62,8 @@ class IntakeComponent:
             .with_neutral_mode(NeutralModeValue.COAST)
         )
 
-        intake_motor_feedback_config = (
-            ExternalFeedbackConfigs().with_sensor_to_mechanism_ratio(
-                1 / self.MOTOR_TO_INTAKE_GEARING
-            )
+        intake_motor_feedback_config = FeedbackConfigs().with_sensor_to_mechanism_ratio(
+            1 / self.MOTOR_TO_INTAKE_GEARING
         )
 
         intake_gains_config = (
@@ -83,16 +76,11 @@ class IntakeComponent:
             .with_k_a(0.0046032)
         )
 
-        intake_motor_commutation_config = CommutationConfigs().with_motor_arrangement(
-            MotorArrangementValue.MINION_JST
-        )
-
         self.intake_motor.configurator.apply(
-            TalonFXSConfiguration()
+            TalonFXConfiguration()
             .with_motor_output(intake_motor_output_config)
-            .with_commutation(intake_motor_commutation_config)
             .with_slot0(intake_gains_config)
-            .with_external_feedback(intake_motor_feedback_config)
+            .with_feedback(intake_motor_feedback_config)
         )
 
         # siq hand tuned gains
@@ -152,8 +140,7 @@ class IntakeComponent:
             .with_motion_magic(intake_deployer_magic_config)
         )
 
-        self.deployer_motor_left.configurator.apply(deployer_config)
-        self.deployer_motor_right.configurator.apply(deployer_config)
+        self.deployer_motor.configurator.apply(deployer_config)
 
         self.deployer_encoder.configurator.apply(
             CANcoderConfiguration().with_magnet_sensor(
@@ -187,14 +174,8 @@ class IntakeComponent:
 
     def execute(self) -> None:
         active_slot = 1 if self.should_use_holding_config() else 0
-        self.deployer_motor_left.set_control(
+        self.deployer_motor.set_control(
             MotionMagicVoltage(self.target_deployer_angle / tau, slot=active_slot)
-        )
-        self.deployer_motor_right.set_control(
-            Follower(
-                TalonId.INTAKE_DEPLOYER_LEFT,
-                MotorAlignmentValue(MotorAlignmentValue.OPPOSED),
-            )
         )
 
         if self.target_intake_rps == 0.0:

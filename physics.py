@@ -373,8 +373,7 @@ class PhysicsEngine:
         self.intake_arm_sim = ArmSim(
             TalonFXMotorSim(
                 DCMotor.falcon500,
-                robot.intake.deployer_motor_left,
-                robot.intake.deployer_motor_right,
+                robot.intake.deployer_motor,
                 gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
             ),
             robot.intake.ARM_MOI,
