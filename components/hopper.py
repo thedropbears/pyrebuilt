@@ -43,10 +43,10 @@ class HopperComponent:
 
         indexer_gains_config = (
             Slot0Configs()
-            .with_k_s(0.0037292)
-            .with_k_v(0.11371)
-            .with_k_a(0.017302)
-            .with_k_p(0.12623)
+            .with_k_s(0.0064613)
+            .with_k_v(0.11354)
+            .with_k_a(0.017913)
+            .with_k_p(0.015874)
         )
 
         self.indexer_motor.configurator.apply(
@@ -68,10 +68,10 @@ class HopperComponent:
 
         injector_gains_config = (
             Slot0Configs()
-            .with_k_s(0.1338)
-            .with_k_v(0.11407)
-            .with_k_a(0.002003)
-            .with_k_p(0.00019514)
+            .with_k_s(0.12926)
+            .with_k_v(0.11437)
+            .with_k_a(0.0018232)
+            .with_k_p(0.12691)
         )
 
         self.injector_motor.configurator.apply(
