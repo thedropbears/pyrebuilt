@@ -124,6 +124,7 @@ class MyRobot(magicbot.MagicRobot):
     @override
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
+        self.leds.teleoperated()
 
     @override
     def teleopPeriodic(self) -> None:
@@ -252,11 +253,37 @@ class MyRobot(magicbot.MagicRobot):
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
 
+<<<<<<< HEAD
         selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
         if isinstance(selected_auto, AutoBase):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
+=======
+>>>>>>> 18310a1 (Made commands be constructed in execute and made led updating be controlled by a variable)
+        if self.port_vision.sees_multi_tag_target():
+            selected_auto = self._automodes.chooser.getSelected()
+            if selected_auto is not None:
+                if isinstance(selected_auto, AutoBase):
+                    intended_start_pose = selected_auto.get_starting_pose()
+                    current_pose = self.chassis.get_pose()
+                    if intended_start_pose is not None:
+                        self.field.getObject("Intended start pos").setPose(
+                            intended_start_pose
+                        )
+                        relative_translation = intended_start_pose.relativeTo(
+                            current_pose
+                        ).translation()
+                        if relative_translation.norm() > self.START_POS_TOLERANCE:
+                            self.leds.mispositioned(relative_translation)
+                        else:
+                            self.leds.ready_to_run()
+                else:
+                    self.leds.ready_to_run()
+            else:
+                self.leds.no_auto()
+        else:
+            self.leds.no_multitag_solution()
 
         self.climber.try_index()
 
