@@ -4,7 +4,7 @@ import magicbot
 import ntcore
 import wpilib
 import wpilib.event
-from magicbot import tunable, will_reset_to
+from magicbot import tunable
 from wpimath.geometry import Rotation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
@@ -54,7 +54,7 @@ class MyRobot(magicbot.MagicRobot):
     test_y = tunable(0.0)
     test_omega = tunable(0.0)
 
-    is_command_driving = will_reset_to(False)
+    is_command_driving = tunable(False)
 
     test_max_speed = tunable(1.5)
     test_spin_rate = tunable(1)
