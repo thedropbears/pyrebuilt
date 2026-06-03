@@ -12,7 +12,9 @@ class Drive3m(AutoBase):
     def __init__(self):
         super().__init__(
             [
-                "drive3m",
+                "test/drive3m"
+                if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT
+                else "comp/drive3m"
             ]
         )
 
@@ -25,7 +27,9 @@ class Spin3m(AutoBase):
     def __init__(self):
         super().__init__(
             [
-                "spin3m",
+                "test/spin3m"
+                if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT
+                else "comp/spin3m"
             ]
         )
 
@@ -38,6 +42,8 @@ class Spin3mandreturn(AutoBase):
     def __init__(self):
         super().__init__(
             [
-                "spin3m_andreturn",
+                "test/spin3m_andreturn"
+                if wpilib.RobotController.getSerialNumber() == RioSerialNumber.TEST_BOT
+                else "comp/spin3m_andreturn"
             ]
         )
