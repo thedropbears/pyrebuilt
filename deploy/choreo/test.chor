@@ -4,55 +4,167 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
-   "MaxAcceleration":{
+   "accel":{
     "dimension":"LinAcc",
     "var":{
-     "exp":"3 m / s ^ 2",
-     "val":3.0
+     "exp":"2 m / s / s",
+     "val":2.0
     }
    },
-   "MaxVelocity":{
+   "precise_speed":{
     "dimension":"LinVel",
     "var":{
-     "exp":"1.3 m / s",
-     "val":1.3
+     "exp":"0.75 m / s",
+     "val":0.75
     }
    },
-   "RetreatDistance":{
-    "dimension":"Number",
+   "slower_traverse_speed":{
+    "dimension":"LinVel",
     "var":{
-     "exp":"0.4",
-     "val":0.4
+     "exp":"2 m / s",
+     "val":2.0
     }
    },
-   "cos60":{
-    "dimension":"Number",
+   "spin_speed":{
+    "dimension":"AngVel",
     "var":{
-     "exp":"0.5",
-     "val":0.5
+     "exp":"2 rad / s",
+     "val":2.0
     }
    },
-   "sin60":{
-    "dimension":"Number",
+   "traverse_speed":{
+    "dimension":"LinVel",
     "var":{
-     "exp":"0.86602540378",
-     "val":0.86602540378
+     "exp":"3 m / s",
+     "val":3.0
     }
    }
   },
   "poses":{
-   "start":{
+   "dp_climb":{
     "x":{
-     "exp":"2.448 m",
-     "val":2.448
+     "exp":"1.4 m",
+     "val":1.4
     },
     "y":{
-     "exp":"5.5 m",
-     "val":5.5
+     "exp":"4.8 m",
+     "val":4.8
     },
     "heading":{
-     "exp":"0 rad",
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "dp_pickup_done":{
+    "x":{
+     "exp":"0.5 m",
+     "val":0.5
+    },
+    "y":{
+     "exp":"5.8 m",
+     "val":5.8
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "dp_pickup_rdy":{
+    "x":{
+     "exp":"0.9 m",
+     "val":0.9
+    },
+    "y":{
+     "exp":"7.4 m",
+     "val":7.4
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "dp_start":{
+    "x":{
+     "exp":"3.6 m",
+     "val":3.6
+    },
+    "y":{
+     "exp":"7.65 m",
+     "val":7.65
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "mid_cage_done":{
+    "x":{
+     "exp":"2 m",
+     "val":2.0
+    },
+    "y":{
+     "exp":"5 m",
+     "val":5.0
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "mid_dp_pickup_rdy":{
+    "x":{
+     "exp":"0.5 m",
+     "val":0.5
+    },
+    "y":{
+     "exp":"5 m",
+     "val":5.0
+    },
+    "heading":{
+     "exp":"270 deg",
+     "val":4.71238898038469
+    }
+   },
+   "mid_start":{
+    "x":{
+     "exp":"3.45 m",
+     "val":3.45
+    },
+    "y":{
+     "exp":"4 m",
+     "val":4.0
+    },
+    "heading":{
+     "exp":"225 deg",
+     "val":3.9269908169872414
+    }
+   },
+   "ndp_climb":{
+    "x":{
+     "exp":"1.4 m",
+     "val":1.4
+    },
+    "y":{
+     "exp":"2.7 m",
+     "val":2.7
+    },
+    "heading":{
+     "exp":"0 deg",
      "val":0.0
+    }
+   },
+   "ndp_start":{
+    "x":{
+     "exp":"3.6 m",
+     "val":3.6
+    },
+    "y":{
+     "exp":"0.4 m",
+     "val":0.4
+    },
+    "heading":{
+     "exp":"270 deg",
+     "val":4.71238898038469
     }
    }
   }
