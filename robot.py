@@ -237,6 +237,8 @@ class MyRobot(magicbot.MagicRobot):
         self.chassis.update_alliance()
         self.port_vision.execute()
         self.chassis.update_odometry()
+        self.targeter.execute()
+        self.conductor.dispatch_ballistics_setpoints()
         self.leds.execute()
 
     def robotPeriodic(self) -> None:
