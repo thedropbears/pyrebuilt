@@ -2,11 +2,11 @@ import math
 
 from magicbot import feedback, will_reset_to
 from phoenix6 import configs, controls, signals
-from phoenix6.hardware import TalonFX
+from phoenix6.hardware import CANcoder, TalonFX
 from wpimath import units
 
 from components.leds import LEDComponent
-from ids import TalonId
+from ids import CancoderId, TalonId
 
 
 class ShooterComponent:
@@ -19,6 +19,7 @@ class ShooterComponent:
 
     def __init__(self) -> None:
         self.flywheel_motor = TalonFX(device_id=TalonId.FLYWHEEL)
+        self.hood_encoder = CANcoder(CancoderId.HOOD)
 
         motor_output_config = (
             configs.MotorOutputConfigs()
@@ -60,6 +61,10 @@ class ShooterComponent:
             and abs(self.flywheel_motor.get_closed_loop_error().value)
             < self.FLYWHEEL_SETPOINT_TOLERANCE
         )
+
+    @feedback
+    def get_hood_angle_degrees(self) -> units.degrees:
+        return self.hood_encoder.get_absolute_position().value * 360
 
     def set_flywheel(self, speed: units.turns_per_second):
         self.target_shooter_rps = speed
