@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
-from magicbot import tunable
+from magicbot import feedback, tunable
 from wpimath import units
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
@@ -72,6 +72,7 @@ class BallisticsSolver:
         self.active_table = LookupTable(
             DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, 10, "Score Table"
         )
+        self.distance_to_target = 0.0
 
     def compute_range_bearing_for(
         self, base_to_goal: Translation2d, base_velocity: Translation2d
@@ -93,6 +94,10 @@ class BallisticsSolver:
         )
 
         return effective_distance, turret_angle
+
+    @feedback
+    def final_distance_to_target(self) -> float:
+        return self.distance_to_target
 
     def calculate_shot_vector(
         self,
@@ -123,6 +128,7 @@ class BallisticsSolver:
             initial_pose.translation() + initial_velocity * self.LATENCY_FACTOR
         )
         to_goal = target_position - future_position
+        self.distance_to_target = to_goal.norm()
 
         effective_distance, absolute_bearing = self.compute_range_bearing_for(
             to_goal, initial_velocity
