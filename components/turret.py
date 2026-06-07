@@ -140,14 +140,14 @@ class TurretComponent:
         self.slew_to(self.get_current_angle())
 
     def get_current_angle(self) -> units.radians:
-        return self.motor.get_position().value * math.tau
+        return self.absolute_encoder.get_position().value * math.tau
 
     @feedback
     def get_current_angle_degrees(self) -> units.degrees:
         return math.degrees(self.get_current_angle())
 
     def get_current_velocity(self) -> units.radians_per_second:
-        return self.motor.get_velocity().value * math.tau
+        return self.absolute_encoder.get_velocity().value * math.tau
 
     @feedback
     def get_current_velocity_degrees_per_second(self) -> units.degrees_per_second:
