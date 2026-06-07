@@ -29,10 +29,9 @@ class ShooterComponent:
 
         flywheel_gains_cfg = (
             configs.Slot0Configs()
-            .with_k_s(0.19674)
-            .with_k_v(0.078402)
-            .with_k_a(0.0069887)
-            .with_k_p(0.33451)
+            .with_k_s(0.17338)
+            .with_k_v(0.078622)
+            .with_k_a(0.0067586)
         )
         feedback_config = configs.FeedbackConfigs().with_sensor_to_mechanism_ratio(
             self.FLYWHEEL_GEAR_RATIO
