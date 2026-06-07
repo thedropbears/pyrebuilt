@@ -8,9 +8,9 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 # fmt: off
-DISTANCE_LOOKUP = np.array([2.5,   3.0,   3.5,   4.0,   4.5,   5.0], dtype=float)
-SPEED_LOOKUP =    np.array([70.0,  74.0,  79.0,  88.0,  98.0, 112.0], dtype=float)
-TIME_LOOKUP =     np.array([1.003, 1.103, 1.147, 1.294, 1.348, 1.450], dtype=float)
+DISTANCE_LOOKUP = np.array([2.5,   3.0,   3.5,   4.0], dtype=float)
+SPEED_LOOKUP =    np.array([73.0,  83.0,  89.0,  94.0], dtype=float)
+TIME_LOOKUP =     np.array([1.02, 1.2676, 1.435, 1.63], dtype=float)
 # fmt: on
 
 
@@ -70,9 +70,10 @@ class BallisticsSolver:
     def __init__(self):
         self.target_position = Translation2d()
         self.active_table = LookupTable(
-            DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, 10, "Score Table"
+            DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, 12, "Score Table"
         )
         self.distance_to_target = 0.0
+        self.sent_rps = 0.0
 
     def compute_range_bearing_for(
         self, base_to_goal: Translation2d, base_velocity: Translation2d
@@ -116,6 +117,10 @@ class BallisticsSolver:
 
         return shot_vector
 
+    @feedback
+    def get_rps_val(self):
+        return self.sent_rps
+
     def solve_for(
         self,
         initial_pose: Pose2d,
@@ -128,17 +133,17 @@ class BallisticsSolver:
             initial_pose.translation() + initial_velocity * self.LATENCY_FACTOR
         )
         to_goal = target_position - future_position
-        self.distance_to_target = to_goal.norm()
 
         effective_distance, absolute_bearing = self.compute_range_bearing_for(
             to_goal, initial_velocity
         )
+        self.distance_to_target = effective_distance
         current_rotation = initial_pose.rotation()
         to_goal = target_position - future_position
-        required_rpm = self.active_table.speed_for(effective_distance)
+        self.sent_rps = self.active_table.speed_for(effective_distance)
         return BallisticsSolution(
             self.active_table.hopper_surface_speed,
-            required_rpm,
+            self.sent_rps,
             (absolute_bearing - current_rotation).radians(),
         )
 
