@@ -9,9 +9,12 @@ from wpimath.kinematics import ChassisSpeeds
 
 # fmt: off
 DISTANCE_LOOKUP = np.array([2.5,   3.0,   3.5,   4.0], dtype=float)
-SPEED_LOOKUP =    np.array([73.0,  83.0,  89.0,  94.0], dtype=float)
-TIME_LOOKUP =     np.array([1.02, 1.2676, 1.435, 1.63], dtype=float)
+SPEED_LOOKUP    = np.array([73.0,  83.0,  89.0,  94.0], dtype=float)
+TIME_LOOKUP     = np.array([1.025, 1.267, 1.435, 1.633], dtype=float)
+MUZZLE_VELOCITY_LOOKUP =  SPEED_LOOKUP * (np.pi * units.inchesToMeters(3))  # rps * pi * diameter
 # fmt: on
+
+HOPPER_SURFACE_SPEED: units.meters_per_second = 12
 
 
 @dataclass
@@ -29,8 +32,7 @@ class LookupTable:
     The time stamp for a goal shot should be once its inside the goal
     The flight time for a "pass shot" should be once its hit the ground
     """
-    hopper_surface_speed: units.meters_per_second
-    name: str
+    muzzle_velocity: npt.NDArray[np.float64]
 
     def speed_for(self, distance: float) -> float:
         return np.interp(distance, self.dist, self.speed)
@@ -39,22 +41,23 @@ class LookupTable:
         return np.interp(distance, self.dist, self.flight_time)
 
     def rps_to_mps(self, speed_rps: float) -> float:
-        return np.interp(speed_rps, self.speed, self.dist / self.flight_time)
+        return np.interp(speed_rps, self.speed, self.muzzle_velocity)
 
     def mps_to_rps(self, speed_mps: float) -> float:
-        return np.interp(speed_mps, self.dist / self.flight_time, self.speed)
+        return np.interp(speed_mps, self.muzzle_velocity, self.speed)
 
     def velocity_to_effective_distance(
         self, velocity: units.meters_per_second
     ) -> units.meters:
-
-        velocities = self.dist / self.flight_time
-        return float(np.interp(velocity, velocities, self.dist))
+        return float(np.interp(velocity, self.muzzle_velocity, self.dist))
 
     def solution_for(
         self, distance: units.meters
     ) -> tuple[units.turns_per_second, units.seconds]:
         return (self.speed_for(distance), self.flight_time_for(distance))
+
+
+TABLE = LookupTable(DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, MUZZLE_VELOCITY_LOOKUP)
 
 
 @dataclass
@@ -69,9 +72,6 @@ class BallisticsSolver:
 
     def __init__(self):
         self.target_position = Translation2d()
-        self.active_table = LookupTable(
-            DISTANCE_LOOKUP, SPEED_LOOKUP, TIME_LOOKUP, 12, "Score Table"
-        )
         self.distance_to_target = 0.0
         self.sent_rps = 0.0
 
@@ -80,9 +80,9 @@ class BallisticsSolver:
     ) -> tuple[units.meters, Rotation2d]:
         distance_to_target = base_to_goal.norm()
         base_to_goal_direction = base_to_goal / distance_to_target
-        baseline_rps, baseline_tof = self.active_table.solution_for(distance_to_target)
+        baseline_rps, baseline_tof = TABLE.solution_for(distance_to_target)
 
-        baseline_vel = distance_to_target / baseline_tof
+        baseline_vel = TABLE.rps_to_mps(baseline_rps)
 
         target_velocity = base_to_goal_direction * baseline_vel
         shot_velocity = target_velocity - base_velocity
@@ -90,14 +90,12 @@ class BallisticsSolver:
         required_velocity = shot_velocity.norm()
 
         turret_angle = shot_velocity.angle()
-        effective_distance = self.active_table.velocity_to_effective_distance(
-            required_velocity
-        )
+        effective_distance = TABLE.velocity_to_effective_distance(required_velocity)
 
         return effective_distance, turret_angle
 
     @feedback
-    def final_distance_to_target(self) -> float:
+    def raw_distance_to_target(self) -> float:
         return self.distance_to_target
 
     def calculate_shot_vector(
@@ -106,9 +104,9 @@ class BallisticsSolver:
         current_velocity: ChassisSpeeds,
     ) -> Translation2d:
         distance_to_shot = relative_target_translation.norm()
-        ideal_flywheel_speed = self.active_table.speed_for(distance_to_shot)
+        ideal_flywheel_speed = TABLE.speed_for(distance_to_shot)
 
-        ideal_speed_mps = self.active_table.rps_to_mps(ideal_flywheel_speed)
+        ideal_speed_mps = TABLE.rps_to_mps(ideal_flywheel_speed)
 
         target_vector = relative_target_translation / distance_to_shot * ideal_speed_mps
 
@@ -118,8 +116,12 @@ class BallisticsSolver:
         return shot_vector
 
     @feedback
-    def get_rps_val(self):
+    def sent_flywheel_speed(self):
         return self.sent_rps
+
+    @feedback
+    def interpolated_flywheel_speed(self) -> float:
+        return TABLE.speed_for(self.distance_to_target)
 
     def solve_for(
         self,
@@ -139,10 +141,9 @@ class BallisticsSolver:
         )
         self.distance_to_target = effective_distance
         current_rotation = initial_pose.rotation()
-        to_goal = target_position - future_position
-        self.sent_rps = self.active_table.speed_for(effective_distance)
+        self.sent_rps = TABLE.speed_for(effective_distance)
         return BallisticsSolution(
-            self.active_table.hopper_surface_speed,
+            HOPPER_SURFACE_SPEED,
             self.sent_rps,
             (absolute_bearing - current_rotation).radians(),
         )
