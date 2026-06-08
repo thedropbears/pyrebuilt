@@ -1,3 +1,5 @@
+from typing import Any
+
 import hal
 import pytest
 from robotpy_ext.autonomous.selector_tests import (  # type: ignore[import-untyped]
@@ -8,7 +10,7 @@ from wpilib.simulation import DriverStationSim
 
 @pytest.mark.slow_integration_test
 @pytest.mark.parametrize("alliance", ["Red", "Blue"])
-def test_all_autonomous(control, alliance):
+def test_all_autonomous(control: Any, alliance: str):
     station = getattr(hal.AllianceStationID, f"k{alliance}1")
     DriverStationSim.setAllianceStationId(station)
 

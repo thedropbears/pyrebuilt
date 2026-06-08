@@ -24,7 +24,7 @@ from utilities.game import APRILTAGS_2D, apriltag_layout
 from utilities.rev import configure_through_bore_encoder
 
 
-@wpiutil.wpistruct.make_wpistruct
+@wpiutil.wpistruct.make_wpistruct  # pyright: ignore[reportUnknownMemberType]
 @dataclass
 class VisibleTag:
     WPIStruct: ClassVar
@@ -208,7 +208,7 @@ class VisualLocalizer(HasPerLoopCache):
     @feedback
     @cache_per_loop
     def get_visible_tags(self) -> list[VisibleTag]:
-        tags_in_view = []
+        tags_in_view: list[VisibleTag] = []
 
         robot_pose = self.chassis.get_pose()
         turret_pose = robot_pose.transformBy(self.robot_to_turret_2d)

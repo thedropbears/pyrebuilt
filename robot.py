@@ -1,4 +1,5 @@
 import math
+from typing import override
 
 import magicbot
 import ntcore
@@ -65,6 +66,7 @@ class MyRobot(magicbot.MagicRobot):
 
     START_POS_TOLERANCE = 0.2
 
+    @override
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
@@ -119,9 +121,11 @@ class MyRobot(magicbot.MagicRobot):
             Rotation2d(3.482),
         )
 
+    @override
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
 
+    @override
     def teleopPeriodic(self) -> None:
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
@@ -171,6 +175,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.leds.execute()
 
+    @override
     def testPeriodic(self) -> None:
         allowed_to_drive = self.gamepad.getRightBumperButton()
 
@@ -243,10 +248,11 @@ class MyRobot(magicbot.MagicRobot):
         self.turret.execute()
         self.hopper.execute()
 
+    @override
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
 
-        selected_auto = self._automodes.chooser.getSelected()
+        selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
         if isinstance(selected_auto, AutoBase):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
@@ -261,8 +267,9 @@ class MyRobot(magicbot.MagicRobot):
         self.conductor.dispatch_ballistics_setpoints()
         self.leds.execute()
 
+    @override
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        self.port_vision._per_loop_cache.clear()
+        self.port_vision._per_loop_cache.clear()  # pyright: ignore[reportPrivateUsage]
         self.turret.periodic()
         self.intake.periodic()
