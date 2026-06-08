@@ -8,9 +8,9 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 
 # fmt: off
-DISTANCE_LOOKUP = np.array([2.5,   3.0,   3.5,   4.0], dtype=float)
-SPEED_LOOKUP    = np.array([73.0,  83.0,  89.0,  94.0], dtype=float)
-TIME_LOOKUP     = np.array([1.025, 1.267, 1.435, 1.633], dtype=float)
+DISTANCE_LOOKUP = np.array([1.75,  2.0,   2.5,   3.0,   3.5,   4.0], dtype=float)
+SPEED_LOOKUP    = np.array([67.0,  68.0,  73.0,  83.0,  89.0,  94.0], dtype=float)
+TIME_LOOKUP     = np.array([0.890, 0.945, 1.025, 1.267, 1.435, 1.633], dtype=float)
 MUZZLE_VELOCITY_LOOKUP =  SPEED_LOOKUP * (np.pi * units.inchesToMeters(3))  # rps * pi * diameter
 # fmt: on
 
