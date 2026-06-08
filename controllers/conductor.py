@@ -25,7 +25,7 @@ class Conductor(StateMachine):
     targeter: Targeter
     field: Field2d
     keep_shooting = will_reset_to(False)
-    TURRET_OFFSET = Transform2d(Translation2d(0.134, -0.166), Rotation2d())
+    TURRET_OFFSET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
     shot_succesful = will_reset_to(False)
 

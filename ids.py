@@ -44,6 +44,8 @@ class CancoderId(enum.IntEnum):
 
     INTAKE = 8
 
+    HOOD = 7
+
 
 @enum.unique
 class SparkId(enum.IntEnum):
