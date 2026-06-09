@@ -85,7 +85,6 @@ class TunerConstants:
     _back_right_y_pos: units.meter
 
     drivetrain_constants: swerve.SwerveDrivetrainConstants = field(init=False)
-    _constants_creator: swerve.SwerveModuleConstantsFactory = field(init=False)
     front_left: swerve.SwerveModuleConstants = field(init=False)
     front_right: swerve.SwerveModuleConstants = field(init=False)
     back_left: swerve.SwerveModuleConstants = field(init=False)
@@ -99,7 +98,7 @@ class TunerConstants:
             .with_pigeon2_configs(self._pigeon_configs)
         )
 
-        self._constants_creator = (
+        _constants_creator = (
             swerve.SwerveModuleConstantsFactory[
                 configs.TalonFXConfiguration,
                 configs.TalonFXConfiguration,
@@ -127,7 +126,7 @@ class TunerConstants:
             .with_drive_friction_voltage(self._drive_friction_voltage)
         )
 
-        self.front_left = self._constants_creator.create_module_constants(
+        self.front_left = _constants_creator.create_module_constants(
             self._front_left_steer_motor_id,
             self._front_left_drive_motor_id,
             self._front_left_encoder_id,
@@ -138,7 +137,7 @@ class TunerConstants:
             self._front_left_steer_motor_inverted,
             self._front_left_encoder_inverted,
         )
-        self.front_right = self._constants_creator.create_module_constants(
+        self.front_right = _constants_creator.create_module_constants(
             self._front_right_steer_motor_id,
             self._front_right_drive_motor_id,
             self._front_right_encoder_id,
@@ -149,7 +148,7 @@ class TunerConstants:
             self._front_right_steer_motor_inverted,
             self._front_right_encoder_inverted,
         )
-        self.back_left = self._constants_creator.create_module_constants(
+        self.back_left = _constants_creator.create_module_constants(
             self._back_left_steer_motor_id,
             self._back_left_drive_motor_id,
             self._back_left_encoder_id,
@@ -160,7 +159,7 @@ class TunerConstants:
             self._back_left_steer_motor_inverted,
             self._back_left_encoder_inverted,
         )
-        self.back_right = self._constants_creator.create_module_constants(
+        self.back_right = _constants_creator.create_module_constants(
             self._back_right_steer_motor_id,
             self._back_right_drive_motor_id,
             self._back_right_encoder_id,
