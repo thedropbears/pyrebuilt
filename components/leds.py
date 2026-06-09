@@ -15,6 +15,7 @@ class Colors:
     green = RGBWColor(0, 255, 0)
     blue = RGBWColor(0, 0, 255)
     purple = RGBWColor(128, 0, 128)
+    black = RGBWColor(0, 0, 0)
 
 
 class States(IntEnum):
@@ -28,13 +29,13 @@ class States(IntEnum):
 class LEDComponent:
     LED_START = 0
     LED_END = 256
-    X_SIGNAL_START = 8
-    X_SIGNAL_END = 28
-    Y_SIGNAL_START = 29
-    Y_SIGNAL_END = 50
+    Y_SIGNAL_START = 8
+    Y_SIGNAL_END = 28
+    X_SIGNAL_START = 29
+    X_SIGNAL_END = 50
 
-    POSITION_UPDATE_DISTANCE = units.meters(0.01)
-    ALLOWABLE_OFFSET = units.meters(0.01)
+    POSITION_UPDATE_DISTANCE: units.meters = 0.05
+    ALLOWABLE_OFFSET: units.meters = 0.05
 
     should_update_leds = will_reset_to(False)
 
@@ -48,7 +49,7 @@ class LEDComponent:
 
     @feedback
     def get_desired_state(self):
-        return self.desired_state
+        return self.desired_state.name
 
     def _update_led_state(self, state: States) -> None:
         if self.desired_state != state:
@@ -69,10 +70,20 @@ class LEDComponent:
 
     def mispositioned(self, position_error: Translation2d):
         if not (
-            self.position_error - position_error
-        ).norm() > self.POSITION_UPDATE_DISTANCE or (
-            self.position_error.norm() > self.POSITION_UPDATE_DISTANCE
-            and position_error.norm() < self.POSITION_UPDATE_DISTANCE
+            (self.position_error - position_error).norm()
+            > self.POSITION_UPDATE_DISTANCE
+            or (
+                (abs(self.position_error.X()) < self.ALLOWABLE_OFFSET)
+                != (abs(position_error.X()) < self.ALLOWABLE_OFFSET)
+                or (abs(self.position_error.Y()) < self.ALLOWABLE_OFFSET)
+                != (abs(position_error.Y()) < self.ALLOWABLE_OFFSET)
+            )
+            or (
+                (abs(self.position_error.X()) == 0.0)
+                != (abs(position_error.X()) == 0.0)
+                or (abs(self.position_error.Y()) == 0.0)
+                != (abs(position_error.Y()) == 0.0)
+            )
         ):
             return
         self.position_error = position_error
@@ -95,7 +106,7 @@ class LEDComponent:
                 if error > 0
                 else AnimationDirectionValue.BACKWARD
             )
-            animation_speed = 1 / error
+            animation_speed = (1 / error) * 10
             return ColorFlowAnimation(
                 start_index,
                 end_index,
@@ -109,6 +120,7 @@ class LEDComponent:
         if not self.should_update_leds:
             return
 
+        self.candle.set_control(SolidColor(self.LED_START, self.LED_END, Colors.black))
         self.candle.clear_all_animations()
 
         match self.desired_state:
@@ -123,7 +135,7 @@ class LEDComponent:
             case States.AUTO_MISALIGNED:
                 self.candle.set_control(
                     self._make_auto_alignment_animation_segment(
-                        self.position_error.X(),
+                        units.meters(self.position_error.X()),
                         self.X_SIGNAL_START,
                         self.X_SIGNAL_END,
                         0,
@@ -131,7 +143,7 @@ class LEDComponent:
                 )
                 self.candle.set_control(
                     self._make_auto_alignment_animation_segment(
-                        self.position_error.Y(),
+                        units.meters(self.position_error.Y()),
                         self.Y_SIGNAL_START,
                         self.Y_SIGNAL_END,
                         1,
