@@ -23,7 +23,7 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.system.plant import DCMotor, LinearSystemId
 
-from swerves.comp import TunerConstants
+from swerves.comp import tuner_constants
 from utilities import game
 from utilities.functions import constrain_angle
 
@@ -318,7 +318,7 @@ class PhysicsEngine:
         self.rio = RoboRioSim()
         self.robot = robot
         self.imu = robot.chassis.imu.sim_state
-        swerve_constants = TunerConstants()
+        swerve_constants = tuner_constants
         module_constants = [
             swerve_constants.front_left,
             swerve_constants.front_right,

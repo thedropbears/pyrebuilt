@@ -15,7 +15,7 @@ from wpimath.kinematics import (
 )
 from wpimath.units import rotationsToRadians, seconds
 
-from swerves.comp import TunerConstants, TunerSwerveDrivetrain
+from swerves.comp import TunerSwerveDrivetrain, tuner_constants
 from utilities.game import is_red
 from utilities.position import TeamPoses
 
@@ -28,7 +28,7 @@ class ChassisComponent:
     def __init__(self) -> None:
         self.on_red_alliance = is_red()
 
-        self.tuner_constants = TunerConstants()
+        self.tuner_constants = tuner_constants
         modules = [
             self.tuner_constants.front_left,
             self.tuner_constants.front_right,
