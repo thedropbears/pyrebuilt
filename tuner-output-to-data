@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+import argparse
+import ast
+import sys
+from collections.abc import Iterable
+from pathlib import Path
+
+DERIVED_CONSTANTS = {
+    "drivetrain_constants",
+    "_constants_creator",
+    "front_left",
+    "front_right",
+    "back_left",
+    "back_right",
+}
+
+
+def _read_source(path: str | None) -> str:
+    if path is None or path == "-":
+        return sys.stdin.read()
+    return Path(path).read_text()
+
+
+def _find_tuner_constants(module: ast.Module) -> ast.ClassDef:
+    for stmt in module.body:
+        if isinstance(stmt, ast.ClassDef) and stmt.name == "TunerConstants":
+            return stmt
+    msg = "could not find class TunerConstants"
+    raise SystemExit(msg)
+
+
+def _assignment_values(class_def: ast.ClassDef) -> Iterable[tuple[str, ast.expr]]:
+    for stmt in class_def.body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id not in DERIVED_CONSTANTS:
+                    yield target.id, stmt.value
+        elif (
+            isinstance(stmt, ast.AnnAssign)
+            and isinstance(stmt.target, ast.Name)
+            and stmt.value is not None
+            and stmt.target.id not in DERIVED_CONSTANTS
+        ):
+            yield stmt.target.id, stmt.value
+
+
+def tuner_constants_instantiation(source: str) -> str:
+    module = ast.parse(source)
+    class_def = _find_tuner_constants(module)
+    assignments = list(_assignment_values(class_def))
+    if not assignments:
+        msg = "class TunerConstants did not contain any convertible assignments"
+        raise SystemExit(msg)
+
+    lines = [
+        "from phoenix6 import CANBus, configs, signals, swerve",
+        "from swerves.tuner_constants import TunerConstants",
+        "",
+        "TunerConstants(",
+    ]
+    lines.extend(f"    {name}={ast.unparse(value)}," for name, value in assignments)
+    lines.append(")")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Convert a generated TunerConstants class into a swerves.tuner_constants "
+            "dataclass instantiation."
+        )
+    )
+    parser.add_argument(
+        "source",
+        nargs="?",
+        help="Generated Python file to read. Reads stdin when omitted or set to '-'.",
+    )
+    args = parser.parse_args()
+    sys.stdout.write(tuner_constants_instantiation(_read_source(args.source)))
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()
