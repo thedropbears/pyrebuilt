@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from phoenix6 import CANBus, configs, signals, swerve, units
+from phoenix6 import CANBus, configs, swerve, units
 
 
 @dataclass
@@ -13,121 +13,76 @@ class TunerConstants:
     """
 
     # Both sets of gains need to be tuned to your individual robot.
-    _steer_gains: configs.Slot0Configs = field(
-        default_factory=lambda: (
-            configs.Slot0Configs()
-            .with_k_p(34.876)
-            .with_k_i(0)
-            .with_k_d(2.5167)
-            .with_k_s(0.17715)
-            .with_k_v(2.1227)
-            .with_k_a(0.10327)
-            .with_static_feedforward_sign(
-                signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN
-            )
-        )
-    )
-    _drive_gains: configs.Slot0Configs = field(
-        default_factory=lambda: (
-            configs.Slot0Configs()
-            .with_k_p(0.023983)
-            .with_k_d(0)
-            .with_k_i(0)
-            .with_k_s(0.14118)
-            .with_k_v(0.11548)
-            .with_k_a(0.0099061)
-        )
-    )
+    _steer_gains: configs.Slot0Configs
+    _drive_gains: configs.Slot0Configs
 
-    _steer_closed_loop_output: swerve.ClosedLoopOutputType = (
-        swerve.ClosedLoopOutputType.VOLTAGE
-    )
-    _drive_closed_loop_output: swerve.ClosedLoopOutputType = (
-        swerve.ClosedLoopOutputType.VOLTAGE
-    )
-    _drive_motor_type: swerve.DriveMotorArrangement = (
-        swerve.DriveMotorArrangement.TALON_FX_INTEGRATED
-    )
-    _steer_motor_type: swerve.SteerMotorArrangement = (
-        swerve.SteerMotorArrangement.TALON_FX_INTEGRATED
-    )
-    _steer_feedback_type: swerve.SteerFeedbackType = (
-        swerve.SteerFeedbackType.REMOTE_CANCODER
-    )
+    _steer_closed_loop_output: swerve.ClosedLoopOutputType
+    _drive_closed_loop_output: swerve.ClosedLoopOutputType
+    _drive_motor_type: swerve.DriveMotorArrangement
+    _steer_motor_type: swerve.SteerMotorArrangement
+    _steer_feedback_type: swerve.SteerFeedbackType
 
-    _slip_current: units.ampere = 120.0
-    _steer_dampening_threshold: units.rotation = 0.05
+    _slip_current: units.ampere
+    _steer_dampening_threshold: units.rotation
 
-    _drive_initial_configs: configs.TalonFXConfiguration = field(
-        default_factory=configs.TalonFXConfiguration
-    )
-    _steer_initial_configs: configs.TalonFXConfiguration = field(
-        default_factory=lambda: (
-            configs.TalonFXConfiguration().with_current_limits(
-                configs.CurrentLimitsConfigs()
-                .with_stator_current_limit(60.0)
-                .with_stator_current_limit_enable(True)
-            )
-        )
-    )
-    _encoder_initial_configs: configs.CANcoderConfiguration = field(
-        default_factory=configs.CANcoderConfiguration
-    )
-    _pigeon_configs: configs.Pigeon2Configuration | None = None
+    _drive_initial_configs: configs.TalonFXConfiguration
+    _steer_initial_configs: configs.TalonFXConfiguration
+    _encoder_initial_configs: configs.CANcoderConfiguration
+    _pigeon_configs: configs.Pigeon2Configuration | None
 
-    canbus: CANBus = field(default_factory=lambda: CANBus("", "./logs/example.hoot"))
-    speed_at_12_volts: units.meters_per_second = 5.23
+    canbus: CANBus
+    speed_at_12_volts: units.meters_per_second
 
-    _couple_ratio: float = 3.125
-    _drive_gear_ratio: float = 5.902777777777778
-    _steer_gear_ratio: float = 18.75
-    _wheel_radius: units.meter = 0.0508
+    _couple_ratio: float
+    _drive_gear_ratio: float
+    _steer_gear_ratio: float
+    _wheel_radius: units.meter
 
-    _invert_left_side: bool = False
-    _invert_right_side: bool = True
+    _invert_left_side: bool
+    _invert_right_side: bool
 
-    _pigeon_id: int = 0
+    _pigeon_id: int
 
-    _steer_inertia: units.kilogram_square_meter = 0.01
-    _drive_inertia: units.kilogram_square_meter = 0.01
-    _steer_friction_voltage: units.volt = 0.2
-    _drive_friction_voltage: units.volt = 0.2
+    _steer_inertia: units.kilogram_square_meter
+    _drive_inertia: units.kilogram_square_meter
+    _steer_friction_voltage: units.volt
+    _drive_friction_voltage: units.volt
 
-    _front_left_drive_motor_id: int = 1
-    _front_left_steer_motor_id: int = 5
-    _front_left_encoder_id: int = 1
-    _front_left_encoder_offset: units.rotation = -0.177978515625
-    _front_left_steer_motor_inverted: bool = True
-    _front_left_encoder_inverted: bool = False
-    _front_left_x_pos: units.meter = 0.2585
-    _front_left_y_pos: units.meter = 0.2585
+    _front_left_drive_motor_id: int
+    _front_left_steer_motor_id: int
+    _front_left_encoder_id: int
+    _front_left_encoder_offset: units.rotation
+    _front_left_steer_motor_inverted: bool
+    _front_left_encoder_inverted: bool
+    _front_left_x_pos: units.meter
+    _front_left_y_pos: units.meter
 
-    _front_right_drive_motor_id: int = 4
-    _front_right_steer_motor_id: int = 8
-    _front_right_encoder_id: int = 4
-    _front_right_encoder_offset: units.rotation = -0.2197265625
-    _front_right_steer_motor_inverted: bool = True
-    _front_right_encoder_inverted: bool = False
-    _front_right_x_pos: units.meter = 0.2585
-    _front_right_y_pos: units.meter = -0.2585
+    _front_right_drive_motor_id: int
+    _front_right_steer_motor_id: int
+    _front_right_encoder_id: int
+    _front_right_encoder_offset: units.rotation
+    _front_right_steer_motor_inverted: bool
+    _front_right_encoder_inverted: bool
+    _front_right_x_pos: units.meter
+    _front_right_y_pos: units.meter
 
-    _back_left_drive_motor_id: int = 2
-    _back_left_steer_motor_id: int = 6
-    _back_left_encoder_id: int = 2
-    _back_left_encoder_offset: units.rotation = -0.333251953125
-    _back_left_steer_motor_inverted: bool = True
-    _back_left_encoder_inverted: bool = False
-    _back_left_x_pos: units.meter = -0.2585
-    _back_left_y_pos: units.meter = 0.2585
+    _back_left_drive_motor_id: int
+    _back_left_steer_motor_id: int
+    _back_left_encoder_id: int
+    _back_left_encoder_offset: units.rotation
+    _back_left_steer_motor_inverted: bool
+    _back_left_encoder_inverted: bool
+    _back_left_x_pos: units.meter
+    _back_left_y_pos: units.meter
 
-    _back_right_drive_motor_id: int = 3
-    _back_right_steer_motor_id: int = 7
-    _back_right_encoder_id: int = 3
-    _back_right_encoder_offset: units.rotation = 0.49462890625
-    _back_right_steer_motor_inverted: bool = True
-    _back_right_encoder_inverted: bool = False
-    _back_right_x_pos: units.meter = -0.2585
-    _back_right_y_pos: units.meter = -0.2585
+    _back_right_drive_motor_id: int
+    _back_right_steer_motor_id: int
+    _back_right_encoder_id: int
+    _back_right_encoder_offset: units.rotation
+    _back_right_steer_motor_inverted: bool
+    _back_right_encoder_inverted: bool
+    _back_right_x_pos: units.meter
+    _back_right_y_pos: units.meter
 
     drivetrain_constants: swerve.SwerveDrivetrainConstants = field(init=False)
     _constants_creator: swerve.SwerveModuleConstantsFactory = field(init=False)
