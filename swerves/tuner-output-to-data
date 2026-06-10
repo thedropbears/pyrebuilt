@@ -104,6 +104,7 @@ def tuner_constants_instantiation(source: str) -> str:
 
     lines = [
         "from phoenix6 import CANBus, configs, signals, swerve",
+        "from wpimath.units import inchesToMeters",
         "",
         "from swerves.tuner_constants import TunerConstants",
         "",
