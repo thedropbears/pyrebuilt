@@ -37,7 +37,7 @@ tuner_constants = TunerConstants(
     _drive_closed_loop_output=swerve.ClosedLoopOutputType.VOLTAGE,
     # The type of motor used for the drive motor
     _drive_motor_type=swerve.DriveMotorArrangement.TALON_FX_INTEGRATED,
-    # The type of motor used for the drive motor
+    # The type of motor used for the steer motor
     _steer_motor_type=swerve.SteerMotorArrangement.TALON_FX_INTEGRATED,
     # The remote sensor feedback type to use for the steer motors;
     # When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
@@ -47,7 +47,13 @@ tuner_constants = TunerConstants(
     _slip_current=120.0,
     # Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     # Some configs will be overwritten; check the `with_*_initial_configs()` API documentation.
-    _drive_initial_configs=configs.TalonFXConfiguration(),
+    # Default supply current limit is 70 A, but it can be lowered to avoid brownouts.
+    # Supply current limits can be larger than the breaker current rating.
+    _drive_initial_configs=configs.TalonFXConfiguration().with_current_limits(
+        configs.CurrentLimitsConfigs()
+        .with_supply_current_limit(70.0)
+        .with_supply_current_limit_enable(True)
+    ),
     # Swerve azimuth does not require much torque output, so we can set a relatively low
     # stator current limit to help avoid brownouts without impacting performance.
     _steer_initial_configs=configs.TalonFXConfiguration().with_current_limits(
@@ -61,7 +67,8 @@ tuner_constants = TunerConstants(
     # CAN bus that the devices are located on;
     # All swerve devices must share the same CAN bus
     canbus=CANBus("", "./logs/example.hoot"),
-    # Theoretical free speed (m/s) at 12 V applied output;
+    # Measured robot speed (m/s) at 12 V applied output;
+    # This is NOT the desired max robot speed
     # This needs to be tuned to your individual robot
     speed_at_12_volts=5.23,
     # Every 1 rotation of the azimuth results in _couple_ratio drive motor turns;
