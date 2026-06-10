@@ -16,10 +16,6 @@ class TunerConstants[
     Phoenix objects are rebuilt in ``__post_init__`` from the selected field values.
     """
 
-    type ModuleConstants = swerve.SwerveModuleConstants[
-        DriveMotorConfigsT, SteerMotorConfigsT, EncoderConfigsT
-    ]
-
     # Both sets of gains need to be tuned to your individual robot.
     _steer_gains: configs.Slot0Configs
     _drive_gains: configs.Slot0Configs
@@ -92,10 +88,6 @@ class TunerConstants[
     _back_right_y_pos: units.meter
 
     drivetrain_constants: swerve.SwerveDrivetrainConstants = field(init=False)
-    front_left: ModuleConstants = field(init=False)
-    front_right: ModuleConstants = field(init=False)
-    back_left: ModuleConstants = field(init=False)
-    back_right: ModuleConstants = field(init=False)
 
     def __post_init__(self) -> None:
         self.drivetrain_constants = (
