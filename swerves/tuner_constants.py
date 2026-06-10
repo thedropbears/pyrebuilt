@@ -31,7 +31,6 @@ class TunerConstants[
     _steer_feedback_type: swerve.SteerFeedbackType
 
     _slip_current: units.ampere
-    _steer_dampening_threshold: units.rotation
 
     _drive_initial_configs: DriveMotorConfigsT
     _steer_initial_configs: SteerMotorConfigsT
