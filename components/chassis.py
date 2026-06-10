@@ -15,7 +15,8 @@ from wpimath.kinematics import (
 )
 from wpimath.units import rotationsToRadians, seconds
 
-from swerves.comp import TunerSwerveDrivetrain, tuner_constants
+from swerves.comp import tuner_constants
+from swerves.drivetrain import TunerSwerveDrivetrain
 from utilities.game import is_red
 from utilities.position import TeamPoses
 
