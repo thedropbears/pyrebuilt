@@ -48,8 +48,8 @@ class IntakeComponent:
     ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
-    ARM_LENGTH = 0.38  # meters
-    ARM_MOI = 0.398668741
+    ARM_LENGTH = 0.34  # meters
+    ARM_MOI = 0.21313981
 
     def __init__(self, mech_root: MechanismRoot2d) -> None:
         self.roller_motor = TalonFX(TalonId.INTAKE_ROLLER)
