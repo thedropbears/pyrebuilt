@@ -45,7 +45,6 @@ tuner_constants = TunerConstants(
     # The stator current at which the wheels start to slip;
     # This needs to be tuned to your individual robot
     _slip_current=120.0,
-    _steer_dampening_threshold=0.05,
     # Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     # Some configs will be overwritten; check the `with_*_initial_configs()` API documentation.
     _drive_initial_configs=configs.TalonFXConfiguration(),
