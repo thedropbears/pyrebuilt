@@ -40,10 +40,10 @@ class IntakeComponent:
     MAX_DEPLOYER_ACCEL = 6
     MAX_DEPLOYER_JERK = 54
 
-    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
+    DEPLOYER_TO_CANCODER_GEARING = 26 / 50
     CANCODER_TO_MECHANISM_GEARING = 1
 
-    MOTOR_TO_ROLLER_GEARING = (1 / 3) * (36 / 26)
+    MOTOR_TO_ROLLER_GEARING = 26 / 36
 
     ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
@@ -93,7 +93,7 @@ class IntakeComponent:
             .with_k_v(1.09)
             .with_k_a(0.26)
             .with_k_g(0.6)
-            .with_gravity_arm_position_offset(0.00)
+            .with_gravity_arm_position_offset(18.3164774 / 360)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
