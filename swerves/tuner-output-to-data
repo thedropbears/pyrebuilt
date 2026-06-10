@@ -106,7 +106,7 @@ def tuner_constants_instantiation(source: str) -> str:
         "from phoenix6 import CANBus, configs, signals, swerve",
         "",
         "from swerves.tuner_constants import TunerConstants",
-        "\n",
+        "",
         "tuner_constants = TunerConstants(",
     ]
     for name, value, comments in assignments:
