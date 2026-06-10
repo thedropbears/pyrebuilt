@@ -31,8 +31,8 @@ class IntakeComponent:
     target_roller_rps = will_reset_to(0.0)
     desired_roller_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(107.0)
-    DEPLOYED_INTAKE_ANGLE = radians(-8.0)
+    RETRACTED_INTAKE_ANGLE = radians(113.0)
+    DEPLOYED_INTAKE_ANGLE = radians(0.0)
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
@@ -45,7 +45,7 @@ class IntakeComponent:
 
     MOTOR_TO_ROLLER_GEARING = 26 / 36
 
-    ENCODER_ZERO_OFFSET = 0.1250  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = 0.419922  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.34  # meters
@@ -86,13 +86,7 @@ class IntakeComponent:
         # siq hand tuned gains
         deployer_deploy_config = (
             Slot0Configs()
-            .with_k_p(30.63)
-            .with_k_i(0.00)
-            .with_k_d(3.05)
-            .with_k_s(0.2220703125)
-            .with_k_v(1.09)
-            .with_k_a(0.26)
-            .with_k_g(0.6)
+            .with_k_g(1.65)
             .with_gravity_arm_position_offset(18.3164774 / 360)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
