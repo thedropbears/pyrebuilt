@@ -154,6 +154,8 @@ class IntakeComponent:
             )
         )
 
+        self.target_deployer_angle = self.deployer_encoder.get_position().value
+
         self.intake_ligament = mech_root.appendLigament(
             "intake",
             length=0.8,
@@ -173,9 +175,9 @@ class IntakeComponent:
         self.target_roller_rps = self.desired_roller_rps
 
     def execute(self) -> None:
-        active_slot = 1 if self.should_use_holding_config() else 0
+        # active_slot = 1 if self.should_use_holding_config() else 0
         self.deployer_motor.set_control(
-            MotionMagicVoltage(self.target_deployer_angle / tau, slot=active_slot)
+            MotionMagicVoltage(self.target_deployer_angle / tau)
         )
 
         if self.target_roller_rps == 0.0:
@@ -211,3 +213,7 @@ class IntakeComponent:
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
         return degrees(self.get_deployer_position())
+
+    @feedback
+    def get_deployer_error(self) -> units.degrees:
+        return self.deployer_motor.get_closed_loop_error().value * 360
