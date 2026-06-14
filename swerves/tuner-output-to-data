@@ -29,7 +29,7 @@ def _find_tuner_constants(module: ast.Module) -> ast.ClassDef:
 
 
 def _comment_lines(lines: list[str], start_line: int, end_line: int) -> list[str]:
-    comments = []
+    comments: list[str] = []
     for lineno in range(start_line, end_line + 1):
         line = lines[lineno - 1]
         stripped = line.strip()
@@ -67,7 +67,7 @@ def _assignment_value(stmt: ast.stmt) -> ast.expr:
 def _assignment_values(
     class_def: ast.ClassDef, lines: list[str]
 ) -> list[tuple[str, ast.expr, list[str]]]:
-    assignments = []
+    assignments: list[tuple[str, ast.expr, list[str]]] = []
     cursor = class_def.lineno + 1
 
     for stmt in class_def.body:
