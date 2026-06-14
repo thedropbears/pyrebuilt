@@ -259,14 +259,17 @@
             "title": "caged_shooting_duration",
             "x": 896.0,
             "y": 128.0,
-            "width": 128.0,
+            "width": 256.0,
             "height": 128.0,
-            "type": "Text Display",
+            "type": "Number Slider",
             "properties": {
               "topic": "/autonomous/Shoot only/state/caged_shooting_duration",
               "period": 0.06,
               "data_type": "int",
-              "show_submit_button": false
+              "min_value": 0.0,
+              "max_value": 20.0,
+              "divisions": 5,
+              "update_continuously": false
             }
           }
         ]
