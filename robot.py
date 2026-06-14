@@ -50,6 +50,12 @@ class MyRobot(magicbot.MagicRobot):
 
     slowed_speed = tunable(1)
 
+    test_x = tunable(0.0)
+    test_y = tunable(0.0)
+    test_omega = tunable(0.0)
+
+    is_command_driving = tunable(False)
+
     test_max_speed = tunable(1.5)
     test_spin_rate = tunable(1)
 
@@ -193,11 +199,25 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.gobbler.gobble()
 
-        if self.gamepad.getAButton():
-            self.climber.deploy()
+        if self.is_command_driving:
+            self.test_drive_inverted = -1 if self.gamepad.getLeftStickButton() else 1
 
-        if self.gamepad.getBButton():
-            self.climber.retract()
+            if self.gamepad.getXButton():
+                self.chassis.drive_robot(self.test_x * self.test_drive_inverted, 0, 0)
+
+            if self.gamepad.getYButton():
+                self.chassis.drive_robot(0, self.test_y * self.test_drive_inverted, 0)
+
+            if self.gamepad.getAButton():
+                self.chassis.drive_robot(
+                    0, 0, self.test_omega * self.test_drive_inverted
+                )
+        else:
+            if self.gamepad.getAButton():
+                self.climber.deploy()
+
+            if self.gamepad.getBButton():
+                self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
