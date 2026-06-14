@@ -1,6 +1,6 @@
-from math import degrees, isclose, radians, tau
+from math import atan2, degrees, isclose, radians, tau
 
-from magicbot import MagicRobot, feedback, tunable, will_reset_to
+from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
     FeedbackConfigs,
@@ -11,7 +11,11 @@ from phoenix6.configs import (
     Slot1Configs,
     TalonFXConfiguration,
 )
-from phoenix6.controls import MotionMagicVoltage, NeutralOut, VelocityVoltage
+from phoenix6.controls import (
+    MotionMagicVoltage,
+    NeutralOut,
+    VelocityVoltage,
+)
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import (
     FeedbackSensorSourceValue,
@@ -31,21 +35,21 @@ class IntakeComponent:
     target_roller_rps = will_reset_to(0.0)
     desired_roller_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(113.0)
-    DEPLOYED_INTAKE_ANGLE = radians(0.0)
+    RETRACTED_INTAKE_ANGLE = radians(90.52)
+    DEPLOYED_INTAKE_ANGLE = radians(-23.3)
 
-    target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
+    target_deployer_angle = tunable(0.0)
 
-    MAX_DEPLOYER_VELOCITY = 3
-    MAX_DEPLOYER_ACCEL = 6
-    MAX_DEPLOYER_JERK = 54
+    MAX_DEPLOYER_VELOCITY = 0.5
+    MAX_DEPLOYER_ACCEL = 1
+    MAX_DEPLOYER_JERK = 3
 
-    DEPLOYER_TO_CANCODER_GEARING = 26 / 50
+    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
 
     MOTOR_TO_ROLLER_GEARING = 26 / 36
 
-    ENCODER_ZERO_OFFSET = 0.419922  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = -0.486328125  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
 
     # Sim
     ARM_LENGTH = 0.34  # meters
@@ -86,8 +90,8 @@ class IntakeComponent:
         # siq hand tuned gains
         deployer_deploy_config = (
             Slot0Configs()
-            .with_k_g(1.65)
-            .with_gravity_arm_position_offset(18.3164774 / 360)
+            .with_k_g(0.95)
+            .with_gravity_arm_position_offset(atan2(24.115, 206.87) / tau)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
@@ -140,15 +144,9 @@ class IntakeComponent:
             CANcoderConfiguration().with_magnet_sensor(
                 MagnetSensorConfigs()
                 .with_magnet_offset(self.ENCODER_ZERO_OFFSET)
-                .with_sensor_direction(
-                    SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE
-                    if MagicRobot.isSimulation()
-                    else SensorDirectionValue.CLOCKWISE_POSITIVE
-                )
+                .with_sensor_direction(SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE)
             )
         )
-
-        self.target_deployer_angle = self.deployer_encoder.get_position().value
 
         self.intake_ligament = mech_root.appendLigament(
             "intake",
@@ -157,6 +155,9 @@ class IntakeComponent:
             lineWidth=3,
             color=Color8Bit(Color.kGreen),
         )
+
+    def on_enable(self) -> None:
+        self.target_deployer_angle = self.deployer_encoder.get_position().value
 
     def intake(self) -> None:
         self.drive()
@@ -171,7 +172,7 @@ class IntakeComponent:
     def execute(self) -> None:
         # active_slot = 1 if self.should_use_holding_config() else 0
         self.deployer_motor.set_control(
-            MotionMagicVoltage(self.target_deployer_angle / tau)
+            MotionMagicVoltage(self.target_deployer_angle / 360)
         )
 
         if self.target_roller_rps == 0.0:
