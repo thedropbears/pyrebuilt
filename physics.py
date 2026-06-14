@@ -172,6 +172,7 @@ class SimpleMechanism(MechanismSim):
     def get_angular_position(self) -> units.radians:
         return self.mech_sim.getAngularPosition()
 
+    @override
     def get_angular_velocity(self) -> units.radians_per_second:
         return self.mech_sim.getAngularVelocity()
 
@@ -385,7 +386,7 @@ class PhysicsEngine:
             robot.intake.DEPLOYED_INTAKE_ANGLE,
         )
 
-    def update_sim(self, now: float, tm_diff: units.seconds) -> None:
+    def update_sim(self, _now: float, tm_diff: units.seconds) -> None:
         self.swerve.update(
             tm_diff, self.rio.getVInVoltage(), self.robot.chassis.modules
         )

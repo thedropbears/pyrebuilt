@@ -33,6 +33,13 @@ exclude = [
     "**/.*",
 ]
 
+reportUnannotatedClassAttribute = "none"
+reportUninitializedInstanceVariable = "none"
+reportUnusedCallResult = "none"
+reportExplicitAny = "none"
+reportUntypedClassDecorator = "none"
+reportUnusedParameter = "none"
+
 [tool.pytest]
 addopts = ["--maxfail=2"]
 faulthandler_timeout = "60"

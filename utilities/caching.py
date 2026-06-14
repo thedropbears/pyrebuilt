@@ -6,7 +6,7 @@ from typing import Any
 class HasPerLoopCache:
     def __init__(self) -> None:
         super().__init__()
-        self._per_loop_cache: dict[Callable, Any] = {}
+        self._per_loop_cache: dict[Callable[..., Any], Any] = {}
 
 
 def cache_per_loop[S: HasPerLoopCache, T](method: Callable[[S], T]) -> Callable[[S], T]:

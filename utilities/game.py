@@ -175,14 +175,14 @@ def behind_alliance_hub_pos(is_red: bool) -> Translation2d:
         return Translation2d(BLUE_HUB_POS.x - 1.5, BLUE_HUB_POS.y)
 
 
-def alliance_shoot_anchor_pos(is_red: bool) -> tuple:
+def alliance_shoot_anchor_pos(is_red: bool) -> tuple[Translation2d, Translation2d]:
     if is_red:
         return (RED_SHOOT_ANCHOR_1, RED_SHOOT_ANCHOR_2)
     else:
         return (BLUE_SHOOT_ANCHOR_1, BLUE_SHOOT_ANCHOR_2)
 
 
-def alliance_trench_shoot_pos(is_red: bool) -> tuple:
+def alliance_trench_shoot_pos(is_red: bool) -> tuple[Translation2d, Translation2d]:
     if is_red:
         return (RED_TRENCH_SHOOT_POS_1, RED_TRENCH_SHOOT_POS_2)
     else:
