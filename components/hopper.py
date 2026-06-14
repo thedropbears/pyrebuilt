@@ -101,12 +101,6 @@ class HopperComponent:
             self.injector_motor.get_velocity().value * pi * self.INJECTOR_WHEEL_DIAMETER
         )
 
-    def is_jammed(self) -> bool:
-        return (
-            self.get_indexer_error() > self.ALLOWABLE_INDEXER_ERROR
-            or self.get_injector_error() > self.ALLOWABLE_INJECTOR_ERROR
-        )
-
     def feed(self, feed_rate: units.meters_per_second) -> None:
         self.feed_rate = feed_rate
 
