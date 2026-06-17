@@ -80,7 +80,7 @@ class BallisticsSolver:
     ) -> tuple[units.meters, Rotation2d]:
         distance_to_target = base_to_goal.norm()
         base_to_goal_direction = base_to_goal / distance_to_target
-        baseline_rps, baseline_tof = TABLE.solution_for(distance_to_target)
+        baseline_rps, _ = TABLE.solution_for(distance_to_target)
 
         baseline_vel = TABLE.rps_to_mps(baseline_rps)
 

@@ -1,4 +1,5 @@
 import math
+from typing import override
 
 import magicbot
 import ntcore
@@ -50,6 +51,12 @@ class MyRobot(magicbot.MagicRobot):
 
     slowed_speed = tunable(1)
 
+    test_x = tunable(0.0)
+    test_y = tunable(0.0)
+    test_omega = tunable(0.0)
+
+    is_command_driving = tunable(False)
+
     test_max_speed = tunable(1.5)
     test_spin_rate = tunable(1)
 
@@ -59,6 +66,7 @@ class MyRobot(magicbot.MagicRobot):
 
     START_POS_TOLERANCE = 0.2
 
+    @override
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
         self.data_log = wpilib.DataLogManager.getLog()
@@ -113,9 +121,11 @@ class MyRobot(magicbot.MagicRobot):
             Rotation2d(3.482),
         )
 
+    @override
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
 
+    @override
     def teleopPeriodic(self) -> None:
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
@@ -165,6 +175,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.leds.execute()
 
+    @override
     def testPeriodic(self) -> None:
         allowed_to_drive = self.gamepad.getRightBumperButton()
 
@@ -193,11 +204,25 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             self.gobbler.gobble()
 
-        if self.gamepad.getAButton():
-            self.climber.deploy()
+        if self.is_command_driving:
+            self.test_drive_inverted = -1 if self.gamepad.getLeftStickButton() else 1
 
-        if self.gamepad.getBButton():
-            self.climber.retract()
+            if self.gamepad.getXButton():
+                self.chassis.drive_robot(self.test_x * self.test_drive_inverted, 0, 0)
+
+            if self.gamepad.getYButton():
+                self.chassis.drive_robot(0, self.test_y * self.test_drive_inverted, 0)
+
+            if self.gamepad.getAButton():
+                self.chassis.drive_robot(
+                    0, 0, self.test_omega * self.test_drive_inverted
+                )
+        else:
+            if self.gamepad.getAButton():
+                self.climber.deploy()
+
+            if self.gamepad.getBButton():
+                self.climber.retract()
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
@@ -223,10 +248,11 @@ class MyRobot(magicbot.MagicRobot):
         self.turret.execute()
         self.hopper.execute()
 
+    @override
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
 
-        selected_auto = self._automodes.chooser.getSelected()
+        selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
         if isinstance(selected_auto, AutoBase):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
@@ -241,8 +267,9 @@ class MyRobot(magicbot.MagicRobot):
         self.conductor.dispatch_ballistics_setpoints()
         self.leds.execute()
 
+    @override
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        self.port_vision._per_loop_cache.clear()
+        self.port_vision._per_loop_cache.clear()  # pyright: ignore[reportPrivateUsage]
         self.turret.periodic()
         self.intake.periodic()

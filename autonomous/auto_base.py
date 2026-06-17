@@ -1,4 +1,5 @@
 import math
+from typing import override
 
 import choreo
 import wpilib
@@ -49,6 +50,7 @@ class AutoBase(AutonomousStateMachine):
         # init any other defaults
         pass
 
+    @override
     def on_enable(self) -> None:
         # configure defaults for pose in sim
 
@@ -75,6 +77,7 @@ class AutoBase(AutonomousStateMachine):
     def display_trajectory(self) -> None:
         self.field.getObject("trajectory").setPoses(self._get_full_path_poses())
 
+    @override
     def on_disable(self) -> None:
         super().on_disable()
         self.field.getObject("trajectory").setPoses([])
@@ -85,7 +88,7 @@ class AutoBase(AutonomousStateMachine):
         self.next_state("tracking_trajectory")
 
     @state
-    def tracking_trajectory(self, initial_call, state_tm) -> None:
+    def tracking_trajectory(self, initial_call: bool, state_tm: float) -> None:
         if initial_call:
             self.current_leg += 1
 

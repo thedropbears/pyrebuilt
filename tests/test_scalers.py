@@ -2,7 +2,7 @@ import math
 
 from hypothesis import assume, example, given
 from hypothesis.strategies import floats, tuples
-from pytest import approx
+from pytest import approx  # pyright: ignore[reportUnknownVariableType]
 
 from utilities.scalers import apply_deadzone, map_exponential, scale_value
 
