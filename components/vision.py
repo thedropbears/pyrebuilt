@@ -71,7 +71,6 @@ class VisualLocalizer(HasPerLoopCache):
     reproj_error_threshold = tunable(2.0)
 
     should_override = will_reset_to(False)
-    has_multitag = will_reset_to(False)
 
     chassis: ChassisComponent
 
@@ -352,6 +351,7 @@ class VisualLocalizer(HasPerLoopCache):
                 return
             self.has_seen_multitag = True
         else:
+            self.has_multitag = False
             if self.only_use_multitag:
                 return
             if self.has_seen_multitag:
