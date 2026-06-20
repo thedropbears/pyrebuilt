@@ -35,14 +35,15 @@ class IntakeComponent:
     target_roller_rps = will_reset_to(0.0)
     desired_roller_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(90.52)
-    DEPLOYED_INTAKE_ANGLE = radians(-23.3)
+    RETRACTED_INTAKE_ANGLE = radians(90.0)
+    DEPLOYED_INTAKE_ANGLE = radians(-18.0)
 
-    target_deployer_angle = tunable(0.0)
+    target_deployer_angle: units.degrees = 0.0
+    desired_deployer_angle = tunable(0.0)
 
-    MAX_DEPLOYER_VELOCITY = 0.5
-    MAX_DEPLOYER_ACCEL = 1
-    MAX_DEPLOYER_JERK = 3
+    MAX_DEPLOYER_VELOCITY = 1.0
+    MAX_DEPLOYER_ACCEL = 2.0
+    MAX_DEPLOYER_JERK = 5.0
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
@@ -90,6 +91,8 @@ class IntakeComponent:
         # siq hand tuned gains
         deployer_deploy_config = (
             Slot0Configs()
+            .with_k_v(4.0)
+            .with_k_a(0.13)
             .with_k_g(0.95)
             .with_gravity_arm_position_offset(atan2(24.115, 206.87) / tau)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
@@ -156,12 +159,12 @@ class IntakeComponent:
             color=Color8Bit(Color.kGreen),
         )
 
-    def on_enable(self) -> None:
-        self.target_deployer_angle = self.deployer_encoder.get_position().value
-
     def intake(self) -> None:
         self.drive()
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
+
+    def update_target_deployment_angle(self) -> None:
+        self.target_deployer_angle = self.desired_deployer_angle
 
     def backdrive(self) -> None:
         self.target_roller_rps = -self.desired_roller_rps
