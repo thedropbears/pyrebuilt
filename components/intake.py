@@ -185,7 +185,7 @@ class IntakeComponent:
         return isclose(
             self.target_deployer_angle, self.DEPLOYED_INTAKE_ANGLE, abs_tol=0.01
         ) and isclose(
-            self.get_deployer_position_degrees(),
+            self.get_deployer_position(),
             self.DEPLOYED_INTAKE_ANGLE,
             abs_tol=radians(5.0),
         )
