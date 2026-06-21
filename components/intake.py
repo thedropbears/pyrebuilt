@@ -15,7 +15,6 @@ from phoenix6.controls import (
     MotionMagicVoltage,
     NeutralOut,
     PositionVoltage,
-    VelocityVoltage,
 )
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import (
@@ -32,9 +31,8 @@ from ids import CancoderId, TalonId
 
 
 class IntakeComponent:
-    # TODO tune all of these
-    target_roller_rps = will_reset_to(0.0)
-    desired_roller_rps = tunable(0.0)  # between 25 and 26 seems to be the sweet spot
+    desired_roller_duty = tunable(0.6)
+    target_roller_duty = will_reset_to(0.0)
 
     RETRACTED_INTAKE_ANGLE: units.degrees = 90.0
     DEPLOYED_INTAKE_ANGLE: units.degrees = -18.0
@@ -71,20 +69,9 @@ class IntakeComponent:
             1 / self.MOTOR_TO_ROLLER_GEARING
         )
 
-        roller_gains_config = (
-            Slot0Configs()
-            .with_k_p(0.00067723)
-            .with_k_i(0)
-            .with_k_d(0)
-            .with_k_s(0.36827)
-            .with_k_v(0.21305)
-            .with_k_a(0.0046032)
-        )
-
         self.roller_motor.configurator.apply(
             TalonFXConfiguration()
             .with_motor_output(roller_motor_output_config)
-            .with_slot0(roller_gains_config)
             .with_feedback(roller_motor_feedback_config)
         )
 
@@ -165,10 +152,10 @@ class IntakeComponent:
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
     def backdrive(self) -> None:
-        self.target_roller_rps = -self.desired_roller_rps
+        self.target_roller_duty = -self.desired_roller_duty
 
     def drive(self) -> None:
-        self.target_roller_rps = self.desired_roller_rps
+        self.target_roller_duty = self.desired_roller_duty
 
     def execute(self) -> None:
         if self.should_use_holding_config():
@@ -180,10 +167,10 @@ class IntakeComponent:
                 MotionMagicVoltage(self.target_deployer_angle / 360)
             )
 
-        if self.target_roller_rps == 0.0:
+        if self.target_roller_duty == 0.0:
             self.roller_motor.set_control(NeutralOut())
         else:
-            self.roller_motor.set_control(VelocityVoltage(self.target_roller_rps))
+            self.roller_motor.set(self.target_roller_duty)
 
     def is_retracted(self) -> bool:
         return isclose(
