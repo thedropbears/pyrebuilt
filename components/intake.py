@@ -33,17 +33,16 @@ from ids import CancoderId, TalonId
 class IntakeComponent:
     # TODO tune all of these
     target_roller_rps = will_reset_to(0.0)
-    desired_roller_rps = tunable(26.0)  # between 25 and 26 seems to be the sweet spot
+    desired_roller_rps = tunable(0.0)  # between 25 and 26 seems to be the sweet spot
 
-    RETRACTED_INTAKE_ANGLE = radians(90.0)
-    DEPLOYED_INTAKE_ANGLE = radians(-18.0)
+    RETRACTED_INTAKE_ANGLE: units.degrees = 90.0
+    DEPLOYED_INTAKE_ANGLE: units.degrees = -18.0
 
-    target_deployer_angle: units.degrees = 0.0
-    desired_deployer_angle = tunable(0.0)
+    target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
-    MAX_DEPLOYER_VELOCITY = 1.0
-    MAX_DEPLOYER_ACCEL = 2.0
-    MAX_DEPLOYER_JERK = 5.0
+    MAX_DEPLOYER_VELOCITY = 1
+    MAX_DEPLOYER_ACCEL = 6.0
+    MAX_DEPLOYER_JERK = 18.0
 
     DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
     CANCODER_TO_MECHANISM_GEARING = 1
@@ -91,11 +90,14 @@ class IntakeComponent:
         # siq hand tuned gains
         deployer_deploy_config = (
             Slot0Configs()
-            .with_k_v(4.0)
-            .with_k_a(0.13)
-            .with_k_g(0.95)
-            .with_gravity_arm_position_offset(atan2(24.115, 206.87) / tau)
+            .with_k_v(2.2)
+            .with_k_a(0.2)
+            .with_k_s(0.12)
+            .with_k_g(0.8)
+            .with_gravity_arm_position_offset(-atan2(24.115, 206.87) / tau)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
+            .with_k_p(60.0)
+            .with_k_d(3.0)
         )
 
         deployer_hold_config = (
@@ -162,9 +164,6 @@ class IntakeComponent:
     def intake(self) -> None:
         self.drive()
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
-
-    def update_target_deployment_angle(self) -> None:
-        self.target_deployer_angle = self.desired_deployer_angle
 
     def backdrive(self) -> None:
         self.target_roller_rps = -self.desired_roller_rps
