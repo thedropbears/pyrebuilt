@@ -89,7 +89,7 @@ dev = [
     "hypothesis>=6.112.1",
     "mypy>=1.19.1",
     "pyfrc>=2026.0.3",
-    "pytest>=9.0.1",
+    "pytest>=9.1.1",
     "pytest-integration>=0.2.3",
 ]
 
