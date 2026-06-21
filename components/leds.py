@@ -30,16 +30,13 @@ class States(IntEnum):
     NO_AUTO = auto()
     AUTO_MISALIGNED = auto()
     READY_TO_RUN = auto()
-<<<<<<< HEAD
     TELEOP_VISION = auto()
     TELEOP_NO_VISION = auto()
-=======
-    TELEOPERATED = auto()
+    READY_TO_SHOOT = auto()
     TURRENT_NEARLY_OUT_OF_RANGE = auto()
     TURRET_OUT_OF_RANGE = auto()
     NEARLY_OUT_OF_SHOOTING_RANGE = auto()
     OUT_OF_SHOOTING_RANGE = auto()
->>>>>>> 2eb544d (Created warning led states for turret and shooting range during teleop)
 
 
 class LEDComponent:
@@ -52,6 +49,7 @@ class LEDComponent:
 
     POSITION_UPDATE_DISTANCE: units.meters = 0.05
     ALLOWABLE_OFFSET: units.meters = 0.05
+    TURRET_OUT_RANGE_CALLED = will_reset_to(False)
 
     should_update_leds = will_reset_to(False)
 
@@ -75,6 +73,9 @@ class LEDComponent:
     def ready_to_run(self):
         self._update_led_state(States.READY_TO_RUN)
 
+    def ready_to_shoot(self):
+        self._update_led_state(States.READY_TO_SHOOT)
+
     def teleop_vision(self):
         self._update_led_state(States.TELEOP_VISION)
 
@@ -89,6 +90,10 @@ class LEDComponent:
 
     def camera_dead(self) -> None:
         self._update_led_state(States.CAMERA_DEAD)
+
+    @feedback
+    def get_out_of_turret_range(self):
+        return self.TURRET_OUT_RANGE_CALLED
 
     def mispositioned(self, position_error: Translation2d):
         self._update_led_state(States.AUTO_MISALIGNED)
@@ -117,6 +122,7 @@ class LEDComponent:
 
     def turret_out_of_range(self):
         self._update_led_state(States.TURRET_OUT_OF_RANGE)
+        self.TURRET_OUT_RANGE_CALLED = True
 
     def nearly_out_of_shooting_range(self):
         self._update_led_state(States.NEARLY_OUT_OF_SHOOTING_RANGE)
@@ -186,11 +192,10 @@ class LEDComponent:
 
             case States.READY_TO_RUN:
                 self.candle.set_control(RainbowAnimation(self.LED_START, self.LED_END))
-            case States.TELEOP_VISION:
+            case States.READY_TO_SHOOT:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.green)
                 )
-<<<<<<< HEAD
             case States.TELEOP_NO_VISION:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.red)
@@ -199,7 +204,7 @@ class LEDComponent:
             case States.CAMERA_DEAD:
                 self.candle.set_control(
                     StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
-=======
+                )
             case States.TURRENT_NEARLY_OUT_OF_RANGE:
                 self.candle.set_control(
                     ColorFlowAnimation(
@@ -229,5 +234,4 @@ class LEDComponent:
             case States.OUT_OF_SHOOTING_RANGE:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.purple)
->>>>>>> 2eb544d (Created warning led states for turret and shooting range during teleop)
                 )
