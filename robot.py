@@ -6,7 +6,7 @@ import ntcore
 import wpilib
 import wpilib.event
 from magicbot import tunable
-from wpimath.geometry import Rotation2d, Translation3d
+from wpimath.geometry import Rotation2d, Translation2d, Translation3d
 
 from autonomous.auto_base import AutoBase
 from components.ballistics import BallisticsSolver
@@ -66,6 +66,9 @@ class MyRobot(magicbot.MagicRobot):
 
     START_POS_TOLERANCE = 0.2
     ALLOWABLE_OFFSET = 0.05  # metres
+
+    MAX_ROTATION = Rotation2d(155)
+    MIN_ROTATION = Rotation2d(145)
 
     @override
     def createObjects(self) -> None:
@@ -129,8 +132,12 @@ class MyRobot(magicbot.MagicRobot):
 
     @override
     def teleopPeriodic(self) -> None:
+        current_target = self.targeter.get_target()
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
+        robot_coords = Translation2d(
+            self.chassis.get_pose().X(), self.chassis.get_pose().Y()
+        )
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             drive_speed = self.slowed_speed
@@ -184,6 +191,21 @@ class MyRobot(magicbot.MagicRobot):
             self.leds.teleop_vision()
         else:
             self.leds.teleop_no_vision()
+
+        if (
+            current_target.angle().radians() > self.turret.MAX_TURRET_ROTATION
+            or current_target.angle().radians() < self.turret.MIN_TURRET_ROTATION
+        ):
+            self.leds.turret_out_of_range()
+        elif current_target.distance(robot_coords) > 4.0:
+            self.leds.out_of_shooting_range()
+        elif (
+            current_target.angle().radians() + 15 > self.turret.MAX_TURRET_ROTATION
+            or current_target.angle().radians() - 15 < self.turret.MIN_TURRET_ROTATION
+        ):
+            self.leds.turret_out_of_range()
+        elif current_target.distance(robot_coords) > 4.0:
+            self.leds.nearly_out_of_shooting_range()
 
         self.leds.execute()
 
