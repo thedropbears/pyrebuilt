@@ -14,6 +14,7 @@ from phoenix6.configs import (
 from phoenix6.controls import (
     MotionMagicVoltage,
     NeutralOut,
+    PositionVoltage,
     VelocityVoltage,
 )
 from phoenix6.hardware import CANcoder, TalonFX
@@ -102,14 +103,12 @@ class IntakeComponent:
 
         deployer_hold_config = (
             Slot1Configs()
-            .with_k_p(90.63)
+            .with_k_p(90.0)
             .with_k_i(0.00)
-            .with_k_d(4)
-            .with_k_s(0.2220703125)
-            .with_k_v(1.09)
-            .with_k_a(0.26)
-            .with_k_g(0.6)
-            .with_gravity_arm_position_offset(0.00)
+            .with_k_d(3)
+            .with_k_s(0.12)
+            .with_k_g(0.8)
+            .with_gravity_arm_position_offset(-atan2(24.115, 206.87) / tau)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
         )
 
@@ -172,10 +171,14 @@ class IntakeComponent:
         self.target_roller_rps = self.desired_roller_rps
 
     def execute(self) -> None:
-        # active_slot = 1 if self.should_use_holding_config() else 0
-        self.deployer_motor.set_control(
-            MotionMagicVoltage(self.target_deployer_angle / 360)
-        )
+        if self.should_use_holding_config():
+            self.deployer_motor.set_control(
+                PositionVoltage(self.target_deployer_angle / 360.0, slot=1)
+            )
+        else:
+            self.deployer_motor.set_control(
+                MotionMagicVoltage(self.target_deployer_angle / 360)
+            )
 
         if self.target_roller_rps == 0.0:
             self.roller_motor.set_control(NeutralOut())
@@ -195,9 +198,9 @@ class IntakeComponent:
         return isclose(
             self.target_deployer_angle, self.DEPLOYED_INTAKE_ANGLE, abs_tol=0.01
         ) and isclose(
-            self.get_deployer_position(),
+            self.get_deployer_position_degrees(),
             self.DEPLOYED_INTAKE_ANGLE,
-            abs_tol=radians(15),
+            abs_tol=5.0,
         )
 
     def periodic(self) -> None:
