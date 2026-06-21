@@ -34,8 +34,8 @@ class IntakeComponent:
     desired_roller_duty = tunable(0.6)
     target_roller_duty = will_reset_to(0.0)
 
-    RETRACTED_INTAKE_ANGLE: units.degrees = 90.0
-    DEPLOYED_INTAKE_ANGLE: units.degrees = -18.0
+    RETRACTED_INTAKE_ANGLE: units.radians = radians(90.0)
+    DEPLOYED_INTAKE_ANGLE: units.radians = radians(-18.0)
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
@@ -160,11 +160,11 @@ class IntakeComponent:
     def execute(self) -> None:
         if self.should_use_holding_config():
             self.deployer_motor.set_control(
-                PositionVoltage(self.target_deployer_angle / 360.0, slot=1)
+                PositionVoltage(self.target_deployer_angle / tau, slot=1)
             )
         else:
             self.deployer_motor.set_control(
-                MotionMagicVoltage(self.target_deployer_angle / 360)
+                MotionMagicVoltage(self.target_deployer_angle / tau)
             )
 
         if self.target_roller_duty == 0.0:
@@ -187,7 +187,7 @@ class IntakeComponent:
         ) and isclose(
             self.get_deployer_position_degrees(),
             self.DEPLOYED_INTAKE_ANGLE,
-            abs_tol=5.0,
+            abs_tol=radians(5.0),
         )
 
     def periodic(self) -> None:
