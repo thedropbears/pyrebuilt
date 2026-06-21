@@ -42,6 +42,10 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
+    fudge_factor = tunable(0.1)
+
+    max_fudge = tunable(20.0).with_properties(unit="degrees")
+
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)
 
@@ -169,8 +173,13 @@ class TurretComponent:
     def slew_to(self, angle: units.radians) -> None:
         self.desired_angle = self.clamp_rotation(angle)
 
+    def fudge_angle(self) -> units.radians:
+        max_fudge = math.radians(self.max_fudge)
+        fudge = clamp(self.desired_angle * self.fudge_factor, -max_fudge, max_fudge)
+        return self.clamp_rotation(self.desired_angle + fudge)
+
     def execute(self) -> None:
-        self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
+        self.motor.set_control(MotionMagicVoltage(self.fudge_angle() / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
