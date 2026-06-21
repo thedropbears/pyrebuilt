@@ -42,9 +42,9 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    fudge_factor = tunable(0.0)
+    fudge_factor = tunable(0.1)
 
-    max_fudge = tunable(5.0).with_properties(unit="degrees")
+    max_fudge = tunable(20.0).with_properties(unit="degrees")
 
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)
