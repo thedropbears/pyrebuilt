@@ -270,8 +270,8 @@ class VisualLocalizer(HasPerLoopCache):
 
         return (
             self.robot_to_turret
-            + self.turret_to_camera
             + Transform3d(Translation3d(), Rotation3d(turret_rotation))
+            + self.turret_to_camera
         )
 
     def zero_servo_(self) -> None:
