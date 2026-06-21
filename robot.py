@@ -226,6 +226,9 @@ class MyRobot(magicbot.MagicRobot):
             if self.gamepad.getBButton():
                 self.climber.retract()
 
+        if self.gamepad.getXButton():
+            self.intake.intake()
+
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
 
