@@ -185,20 +185,20 @@ class IntakeComponent:
         return isclose(
             self.target_deployer_angle, self.DEPLOYED_INTAKE_ANGLE, abs_tol=0.01
         ) and isclose(
-            self.get_deployer_position_degrees(),
+            self.get_deployer_position_radians(),
             self.DEPLOYED_INTAKE_ANGLE,
             abs_tol=radians(5.0),
         )
 
     def periodic(self) -> None:
-        self.intake_ligament.setAngle(self.get_deployer_position_degrees())
+        self.intake_ligament.setAngle(self.get_deployer_position_radians())
 
     @feedback
     def get_deployer_position(self) -> units.radians:
         return self.deployer_encoder.get_position().value * tau
 
     @feedback
-    def get_deployer_position_degrees(self) -> units.degrees:
+    def get_deployer_position_radians(self) -> units.radians:
         return degrees(self.get_deployer_position())
 
     @feedback
