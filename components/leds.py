@@ -16,6 +16,7 @@ class Colors:
     blue = RGBWColor(0, 0, 255)
     purple = RGBWColor(128, 0, 128)
     black = RGBWColor(0, 0, 0)
+    orange = RGBWColor(255, 165, 0)
 
 
 class States(IntEnum):
@@ -24,6 +25,10 @@ class States(IntEnum):
     AUTO_MISALIGNED = auto()
     READY_TO_RUN = auto()
     TELEOPERATED = auto()
+    TURRENT_NEARLY_OUT_OF_RANGE = auto()
+    TURRET_OUT_OF_RANGE = auto()
+    NEARLY_OUT_OF_SHOOTING_RANGE = auto()
+    OUT_OF_SHOOTING_RANGE = auto()
 
 
 class LEDComponent:
@@ -90,6 +95,18 @@ class LEDComponent:
         self.should_update_leds = True
         self._update_led_state(States.AUTO_MISALIGNED)
 
+    def turret_nearly_out_of_range(self):
+        self._update_led_state(States.TURRENT_NEARLY_OUT_OF_RANGE)
+
+    def turret_out_of_range(self):
+        self._update_led_state(States.TURRET_OUT_OF_RANGE)
+
+    def nearly_out_of_shooting_range(self):
+        self._update_led_state(States.NEARLY_OUT_OF_SHOOTING_RANGE)
+
+    def out_of_shooting_range(self):
+        self._update_led_state(States.OUT_OF_SHOOTING_RANGE)
+
     def _make_auto_alignment_animation_segment(
         self, error, start_index, end_index, slot
     ) -> SolidColor | ColorFlowAnimation:
@@ -155,4 +172,34 @@ class LEDComponent:
             case States.TELEOPERATED:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.green)
+                )
+            case States.TURRENT_NEARLY_OUT_OF_RANGE:
+                self.candle.set_control(
+                    ColorFlowAnimation(
+                        self.LED_START,
+                        self.LED_END,
+                        0,
+                        Colors.orange,
+                        AnimationDirectionValue.FORWARD,
+                        0.5,
+                    )
+                )
+            case States.TURRET_OUT_OF_RANGE:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.orange)
+                )
+            case States.NEARLY_OUT_OF_SHOOTING_RANGE:
+                self.candle.set_control(
+                    ColorFlowAnimation(
+                        self.LED_START,
+                        self.LED_END,
+                        0,
+                        Colors.purple,
+                        AnimationDirectionValue.FORWARD,
+                        0.5,
+                    )
+                )
+            case States.OUT_OF_SHOOTING_RANGE:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.purple)
                 )
