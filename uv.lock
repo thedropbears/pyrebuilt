@@ -475,7 +475,7 @@ wheels = [
 
 [[package]]
 name = "pyfrc"
-version = "2026.0.2"
+version = "2026.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pint" },
@@ -485,9 +485,9 @@ dependencies = [
     { name = "tomli" },
     { name = "wpilib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/39/74efe7dc0fec174d6ef2e3aea881d09ec481a268b2b7b50ff787a38d24c5/pyfrc-2026.0.2.tar.gz", hash = "sha256:45894a54ba715a18ac83295d1a2be96d97ac6e149267a41d04e0325113fbb729", size = 35256, upload-time = "2026-02-21T19:57:01.674Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/38/1e7448d052988af9e15fcacc8bf14395a573eaa99c6591ecabd79a509759/pyfrc-2026.0.3.tar.gz", hash = "sha256:149b2e54e742a7af805f6b04a6b848175f7656ead01c6e32d29d13991e696590", size = 35495, upload-time = "2026-06-01T10:28:19.497Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/0e/ae510715beafa90132a1a8276b44f728a6707b5d5ea923e2ea989ddb1265/pyfrc-2026.0.2-py3-none-any.whl", hash = "sha256:bf090a48916d15f17db360006d92253006aea6613a7f3c397e7f834bcd250702", size = 41308, upload-time = "2026-02-21T19:57:00.397Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/83/a9238c5cb5aca112b712e4ea252f3860ef18a515d122e57b782d36ef2ab5/pyfrc-2026.0.3-py3-none-any.whl", hash = "sha256:6ea71c015832db3bf601e6e8df5b8a7f94beb99eea3555cd541b1cf39c1dbc12", size = 41560, upload-time = "2026-06-01T10:28:18.561Z" },
 ]
 
 [[package]]
@@ -579,6 +579,7 @@ dev = [
     { name = "coverage" },
     { name = "hypothesis" },
     { name = "mypy" },
+    { name = "pyfrc" },
     { name = "pytest" },
     { name = "pytest-integration" },
 ]
@@ -599,13 +600,14 @@ dev = [
     { name = "coverage", specifier = ">=7.13.4" },
     { name = "hypothesis", specifier = ">=6.112.1" },
     { name = "mypy", specifier = ">=1.19.1" },
-    { name = "pytest", specifier = ">=9.0.1" },
+    { name = "pyfrc", specifier = ">=2026.0.3" },
+    { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-integration", specifier = ">=0.2.3" },
 ]
 
 [[package]]
 name = "pytest"
-version = "9.0.2"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -614,9 +616,9 @@ dependencies = [
     { name = "pluggy" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/db/7ef3487e0fb0049ddb5ce41d3a49c235bf9ad299b6a25d5780a89f19230f/pytest-9.0.2.tar.gz", hash = "sha256:75186651a92bd89611d1d9fc20f0b4345fd827c41ccd5c299a868a05d70edf11", size = 1568901, upload-time = "2025-12-06T21:30:51.014Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/ab/b3226f0bd7cdcf710fbede2b3548584366da3b19b5021e74f5bde2a8fa3f/pytest-9.0.2-py3-none-any.whl", hash = "sha256:711ffd45bf766d5264d487b917733b453d917afd2b0ad65223959f59089f875b", size = 374801, upload-time = "2025-12-06T21:30:49.154Z" },
+    { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
 ]
 
 [[package]]
@@ -724,22 +726,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/ac/de11bf87ee559ab2f0b1ce5a534262669ea0e81bdd5c22484a43cf15d845/robotpy_cscore-2026.2.2-cp314-cp314-manylinux_2_35_aarch64.whl", hash = "sha256:bb8202400cd44c534fea3d127d7d80a39ec6c70a5672ffe17f9df1fe94e406b8", size = 8338222, upload-time = "2026-03-13T02:31:03.101Z" },
     { url = "https://files.pythonhosted.org/packages/d7/8c/bb2c5cc43f7fb1479b1ee2aa8abf5693b43e073d3165a652024668a660e5/robotpy_cscore-2026.2.2-cp314-cp314-manylinux_2_35_x86_64.whl", hash = "sha256:77ecb45f3f722588454d41536666700010f0e3cab91d82ff79186ab37aa75100", size = 8827568, upload-time = "2026-03-13T02:31:04.713Z" },
     { url = "https://files.pythonhosted.org/packages/0e/18/24e233b5def56f08efc83bb14c6ead0203088dd11f2e571ece304230ee51/robotpy_cscore-2026.2.2-cp314-cp314-win_amd64.whl", hash = "sha256:bfc0632c6cb1799d6e12826bec93e7d30a3181e612cacc434e4da9b08a24e431", size = 1429906, upload-time = "2026-03-13T02:31:06.455Z" },
-]
-
-[[package]]
-name = "robotpy-ctre"
-version = "2026.1.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "phoenix6" },
-    { name = "wpilib" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/6e/b56d72ff69a358c25ee7d1ffcde6fbc29d61b72336d1881a925ffb7d9a4a/robotpy_ctre-2026.1.0.1.tar.gz", hash = "sha256:3351fd984eaa5b5a02644f36f1d50be3d07b006942b4ba1915e0e715bc8503e5", size = 30240, upload-time = "2026-02-22T04:15:36.668Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/05/9cb8fb3623ccbefb85f3adbc153753c4dad610beaadb30e84a7aa8999b43/robotpy_ctre-2026.1.0.1-cp314-cp314-macosx_13_0_arm64.whl", hash = "sha256:0d5232e2c28b85aea758b794da34eac24560cd99aa3056607571af714b42ef41", size = 1851435, upload-time = "2026-02-22T04:15:32.332Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/17/b825f412309c3e4cf69f665f7d26c921fbef708eef930c23ab25f37dcf2d/robotpy_ctre-2026.1.0.1-cp314-cp314-macosx_13_0_x86_64.whl", hash = "sha256:62be95058af3b720b4351001b9e8acfab37cd4e8d2ba42b157f54aea16a8d757", size = 1831060, upload-time = "2026-02-22T04:15:33.411Z" },
-    { url = "https://files.pythonhosted.org/packages/0f/3f/1b5fc3443a8c21ee3f62f17a3edc4d49422b1b07e9de9ab1de2920792735/robotpy_ctre-2026.1.0.1-cp314-cp314-manylinux_2_35_x86_64.whl", hash = "sha256:0c25cab4d757e360b787d6fea4e73e0b8ac705275fb871ae6a7060efcfc8f2e5", size = 2148899, upload-time = "2026-02-22T04:15:34.461Z" },
-    { url = "https://files.pythonhosted.org/packages/8f/ad/47ec16150857b0a25147df69acf1a5dd98769959ceb7e4d2f66b09de52f5/robotpy_ctre-2026.1.0.1-cp314-cp314-win_amd64.whl", hash = "sha256:b146496f9247653effe7ea35b0d07aacde446bd992b11a951fd5ef8c2ab754d6", size = 1274953, upload-time = "2026-02-22T04:15:35.562Z" },
 ]
 
 [[package]]

@@ -88,7 +88,8 @@ dev = [
     "coverage>=7.13.4",
     "hypothesis>=6.112.1",
     "mypy>=1.19.1",
-    "pytest>=9.0.1",
+    "pyfrc>=2026.0.3",
+    "pytest>=9.1.1",
     "pytest-integration>=0.2.3",
 ]
 
@@ -124,3 +125,5 @@ requires = [
 ]
 robotpy_version = "2026.2.2"
 components = ["apriltag", "commands2"]
+
+pyfrc.init_timeout = 3.0
