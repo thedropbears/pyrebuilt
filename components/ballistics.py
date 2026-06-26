@@ -10,7 +10,7 @@ from wpimath.kinematics import ChassisSpeeds
 # fmt: off
 DISTANCE_LOOKUP = np.array([1.75,  2.0,   2.5,   3.0,   3.5,   4.0,   4.5,  5.0,  5.5], dtype=float)
 SPEED_LOOKUP    = np.array([63.0,  67.0,  73.0,  77.0,  83.0,  87.0,  92.0, 99.0, 106.0], dtype=float)
-TIME_LOOKUP     = np.array([0.890, 0.945, 1.025, 1.267, 1.435, 1.633, TODO, TODO, TODO], dtype=float)
+TIME_LOOKUP     = np.array([0.765, 0.92, 1.065, 1.20, 1.31, 1.39, 1.475, 1.56, 2.01], dtype=float)
 MUZZLE_VELOCITY_LOOKUP =  SPEED_LOOKUP * (np.pi * units.inchesToMeters(3))  # rps * pi * diameter
 # fmt: on
 
