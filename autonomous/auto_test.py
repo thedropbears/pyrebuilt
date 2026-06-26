@@ -41,3 +41,10 @@ class Spin3mandreturn(AutoBase):
                 else "comp/spin3m_andreturn"
             ]
         )
+
+
+class Snowblow(AutoBase):
+    MODE_NAME = "Snowblow from depot side and return trench side"
+
+    def __init__(self):
+        super().__init__(["comp/snowblow_from_depot"])
