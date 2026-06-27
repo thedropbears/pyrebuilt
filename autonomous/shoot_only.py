@@ -14,4 +14,4 @@ class ShootOnly(AutonomousStateMachine):
 
     @timed_state(duration=10)
     def caged_shooting(self) -> None:
-        self.conductor.caged_shoot()
+        self.conductor.shoot()
