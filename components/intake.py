@@ -61,13 +61,13 @@ class IntakeComponent:
         self.deployer_encoder = CANcoder(CancoderId.INTAKE)
 
         roller_slot_config = (
-                    Slot0Configs()
-                    .with_k_v(0.15879)
-                    .with_k_a(0.0039303)
-                    .with_k_s(0.31864)
-                    .with_k_p(0.036116)
-                    .with_k_d(0.0)
-                )
+            Slot0Configs()
+            .with_k_v(0.15879)
+            .with_k_a(0.0039303)
+            .with_k_s(0.31864)
+            .with_k_p(0.036116)
+            .with_k_d(0.0)
+        )
 
         roller_motor_output_config = (
             MotorOutputConfigs()
@@ -85,8 +85,6 @@ class IntakeComponent:
             .with_feedback(roller_motor_feedback_config)
             .with_slot0(roller_slot_config)
         )
-
-        
 
         # siq hand tuned gains
         deployer_deploy_config = (
