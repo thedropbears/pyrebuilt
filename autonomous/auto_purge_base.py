@@ -93,7 +93,7 @@ class AutoPurgeBase(AutonomousStateMachine):
     def prepping(self) -> None:
         self.conductor.deploy_only()
 
-    @timed_state(duration=10, next_state="tracking_trajectory")
+    @timed_state(duration=7, next_state="tracking_trajectory")
     def shooting(self) -> None:
         self.conductor.shoot()
 

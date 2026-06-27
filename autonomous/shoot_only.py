@@ -13,7 +13,7 @@ class ShootOnly(AutonomousStateMachine):
     def prepping(self) -> None:
         self.conductor.deploy_only()
 
-    @timed_state(duration=10)
+    @timed_state(duration=7)
     def shooting(self) -> None:
         self.conductor.shoot()
 
