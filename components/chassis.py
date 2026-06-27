@@ -105,6 +105,15 @@ class ChassisComponent:
         return self.phoenix_swerve.get_state().speeds
 
     @feedback
+    def swerve_voltages(self) -> tuple[float, float, float, float]:
+        return (
+            self.modules[0].drive_motor.get_motor_voltage().value,
+            self.modules[1].drive_motor.get_motor_voltage().value,
+            self.modules[2].drive_motor.get_motor_voltage().value,
+            self.modules[3].drive_motor.get_motor_voltage().value,
+        )
+
+    @feedback
     def is_stationary(self) -> bool:
         velocity = self.get_velocity()
         return (
