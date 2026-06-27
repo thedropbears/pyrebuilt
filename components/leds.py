@@ -23,7 +23,8 @@ class States(IntEnum):
     NO_AUTO = auto()
     AUTO_MISALIGNED = auto()
     READY_TO_RUN = auto()
-    TELEOP_MULTITAG = auto()
+    TELEOP_VISION = auto()
+    TELEOP_NO_VISION = auto()
 
 
 class LEDComponent:
@@ -60,7 +61,10 @@ class LEDComponent:
         self._update_led_state(States.READY_TO_RUN)
 
     def teleop_multitag(self):
-        self._update_led_state(States.TELEOP_MULTITAG)
+        self._update_led_state(States.TELEOP_VISION)
+
+    def teleop_no_multitag(self):
+        self._update_led_state(States.TELEOP_NO_VISION)
 
     def no_auto(self):
         self._update_led_state(States.NO_AUTO)
@@ -152,7 +156,11 @@ class LEDComponent:
 
             case States.READY_TO_RUN:
                 self.candle.set_control(RainbowAnimation(self.LED_START, self.LED_END))
-            case States.TELEOP_MULTITAG:
+            case States.TELEOP_VISION:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.green)
+                )
+            case States.TELEOP_NO_VISION:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.red)
                 )
