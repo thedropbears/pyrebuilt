@@ -60,10 +60,10 @@ class LEDComponent:
     def ready_to_run(self):
         self._update_led_state(States.READY_TO_RUN)
 
-    def teleop_multitag(self):
+    def teleop_vision(self):
         self._update_led_state(States.TELEOP_VISION)
 
-    def teleop_no_multitag(self):
+    def teleop_no_vision(self):
         self._update_led_state(States.TELEOP_NO_VISION)
 
     def no_auto(self):
