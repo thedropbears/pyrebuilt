@@ -287,8 +287,10 @@ class MyRobot(magicbot.MagicRobot):
                             self.leds.mispositioned(relative_translation)
                         else:
                             self.leds.ready_to_run()
+                    else:
+                        self.leds.ready_to_run()
                 else:
-                    self.leds.no_auto()
+                    self.leds.ready_to_run()
             else:
                 self.leds.no_auto()
         else:
