@@ -69,6 +69,7 @@ class LEDComponent:
         self._update_led_state(States.NO_MULTITAG)
 
     def mispositioned(self, position_error: Translation2d):
+        self._update_led_state(States.AUTO_MISALIGNED)
         if not (
             (self.position_error - position_error).norm()
             > self.POSITION_UPDATE_DISTANCE
@@ -88,7 +89,6 @@ class LEDComponent:
             return
         self.position_error = position_error
         self.should_update_leds = True
-        self._update_led_state(States.AUTO_MISALIGNED)
 
     def _make_auto_alignment_animation_segment(
         self, error, start_index, end_index, slot
