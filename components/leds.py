@@ -36,10 +36,6 @@ class LEDComponent:
 
     POSITION_UPDATE_DISTANCE: units.meters = 0.05
     ALLOWABLE_OFFSET: units.meters = 0.05
-    multitag_called = will_reset_to(False)
-    no_auto_called = will_reset_to(False)
-    mispositioned_called = will_reset_to(False)
-    ready_to_run_called = will_reset_to(False)
 
     should_update_leds = will_reset_to(False)
 
@@ -55,22 +51,6 @@ class LEDComponent:
     def get_desired_state(self):
         return self.desired_state.name
 
-    @feedback
-    def get_multitag_called(self):
-        return self.multitag_called
-
-    @feedback
-    def get_no_auto_called(self):
-        return self.no_auto_called
-
-    @feedback
-    def get_mispositioned_called(self):
-        return self.mispositioned_called
-
-    @feedback
-    def get_ready_to_run_called(self):
-        return self.ready_to_run_called
-
     def _update_led_state(self, state: States) -> None:
         if self.desired_state != state:
             self.desired_state = state
@@ -78,7 +58,6 @@ class LEDComponent:
 
     def ready_to_run(self):
         self._update_led_state(States.READY_TO_RUN)
-        self.ready_to_run_called = True
 
     def teleop_multitag(self):
         self._update_led_state(States.TELEOP_MULTITAG)
