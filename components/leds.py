@@ -1,7 +1,12 @@
 from enum import IntEnum, auto
 
 from magicbot import feedback, will_reset_to
-from phoenix6.controls import ColorFlowAnimation, RainbowAnimation, SolidColor
+from phoenix6.controls import (
+    ColorFlowAnimation,
+    RainbowAnimation,
+    SolidColor,
+    StrobeAnimation,
+)
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import AnimationDirectionValue, RGBWColor
 from wpimath import units
@@ -19,11 +24,13 @@ class Colors:
 
 
 class States(IntEnum):
+    CAMERA_DEAD = auto()
     NO_MULTITAG = auto()
     NO_AUTO = auto()
     AUTO_MISALIGNED = auto()
     READY_TO_RUN = auto()
-    TELEOP_MULTITAG = auto()
+    TELEOP_VISION = auto()
+    TELEOP_NO_VISION = auto()
 
 
 class LEDComponent:
@@ -59,14 +66,20 @@ class LEDComponent:
     def ready_to_run(self):
         self._update_led_state(States.READY_TO_RUN)
 
-    def teleop_multitag(self):
-        self._update_led_state(States.TELEOP_MULTITAG)
+    def teleop_vision(self):
+        self._update_led_state(States.TELEOP_VISION)
+
+    def teleop_no_vision(self):
+        self._update_led_state(States.TELEOP_NO_VISION)
 
     def no_auto(self):
         self._update_led_state(States.NO_AUTO)
 
     def no_multitag_solution(self):
         self._update_led_state(States.NO_MULTITAG)
+
+    def camera_dead(self) -> None:
+        self._update_led_state(States.CAMERA_DEAD)
 
     def mispositioned(self, position_error: Translation2d):
         self._update_led_state(States.AUTO_MISALIGNED)
@@ -152,7 +165,16 @@ class LEDComponent:
 
             case States.READY_TO_RUN:
                 self.candle.set_control(RainbowAnimation(self.LED_START, self.LED_END))
-            case States.TELEOP_MULTITAG:
+            case States.TELEOP_VISION:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.green)
+                )
+            case States.TELEOP_NO_VISION:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.red)
+                )
+
+            case States.CAMERA_DEAD:
+                self.candle.set_control(
+                    StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
                 )

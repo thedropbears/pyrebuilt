@@ -286,6 +286,10 @@ class VisualLocalizer(HasPerLoopCache):
         self.should_override = True
         self.override_setpoint = 0.99
 
+    @feedback
+    def camera_connected(self) -> bool:
+        return self.camera.isConnected()
+
     def execute(self) -> None:
         desired = self.convert_turret_to_servo(self.get_desired_turret_rotation())
         new_turret_setpoint = clamp(
@@ -313,6 +317,8 @@ class VisualLocalizer(HasPerLoopCache):
             return
 
         all_results = self.camera.getAllUnreadResults()
+
+        self.camera.isConnected()
         # Skip processing results other than the most recent.
         last_results: PhotonPipelineResult | None = None
         multitag_result: MultiTargetPNPResult | None = None
