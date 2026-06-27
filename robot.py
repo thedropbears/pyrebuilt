@@ -125,7 +125,7 @@ class MyRobot(magicbot.MagicRobot):
     @override
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
-        self.leds.teleop_multitag()
+        self.leds.teleop_vision()
 
     @override
     def teleopPeriodic(self) -> None:
@@ -175,10 +175,10 @@ class MyRobot(magicbot.MagicRobot):
         if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
 
-        if self.port_vision.sees_multi_tag_target():
-            self.leds.teleop_multitag()
+        if self.port_vision.sees_target():
+            self.leds.teleop_vision()
         else:
-            self.leds.no_multitag_solution()
+            self.leds.teleop_no_vision()
 
         self.leds.execute()
 
