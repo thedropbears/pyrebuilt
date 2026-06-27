@@ -175,7 +175,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
 
-        if self.port_vision.sees_target():
+        if not self.port_vision.camera_connected():
+            self.leds.camera_dead()
+        elif self.port_vision.sees_target():
             self.leds.teleop_vision()
         else:
             self.leds.teleop_no_vision()
@@ -267,7 +269,9 @@ class MyRobot(magicbot.MagicRobot):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
-        if self.port_vision.sees_multi_tag_target():
+        if not self.port_vision.camera_connected():
+            self.leds.camera_dead()
+        elif self.port_vision.sees_multi_tag_target():
             selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
             if selected_auto is not None:
                 if isinstance(selected_auto, AutoBase):

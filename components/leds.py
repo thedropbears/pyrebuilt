@@ -1,7 +1,12 @@
 from enum import IntEnum, auto
 
 from magicbot import feedback, will_reset_to
-from phoenix6.controls import ColorFlowAnimation, RainbowAnimation, SolidColor
+from phoenix6.controls import (
+    ColorFlowAnimation,
+    RainbowAnimation,
+    SolidColor,
+    StrobeAnimation,
+)
 from phoenix6.hardware.candle import CANdle
 from phoenix6.signals import AnimationDirectionValue, RGBWColor
 from wpimath import units
@@ -19,6 +24,7 @@ class Colors:
 
 
 class States(IntEnum):
+    CAMERA_DEAD = auto()
     NO_MULTITAG = auto()
     NO_AUTO = auto()
     AUTO_MISALIGNED = auto()
@@ -71,6 +77,9 @@ class LEDComponent:
 
     def no_multitag_solution(self):
         self._update_led_state(States.NO_MULTITAG)
+
+    def camera_dead(self) -> None:
+        self._update_led_state(States.CAMERA_DEAD)
 
     def mispositioned(self, position_error: Translation2d):
         self._update_led_state(States.AUTO_MISALIGNED)
@@ -163,4 +172,9 @@ class LEDComponent:
             case States.TELEOP_NO_VISION:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.red)
+                )
+
+            case States.CAMERA_DEAD:
+                self.candle.set_control(
+                    StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
                 )
