@@ -3,6 +3,7 @@ from math import atan2, degrees, isclose, radians, tau
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
     CANcoderConfiguration,
+    CurrentLimitsConfigs,
     FeedbackConfigs,
     MagnetSensorConfigs,
     MotionMagicConfigs,
@@ -84,6 +85,7 @@ class IntakeComponent:
             .with_motor_output(roller_motor_output_config)
             .with_feedback(roller_motor_feedback_config)
             .with_slot0(roller_slot_config)
+            .with_current_limits(CurrentLimitsConfigs().with_supply_current_limit(35.0))
         )
 
         # siq hand tuned gains
@@ -215,3 +217,11 @@ class IntakeComponent:
     @feedback
     def get_deployer_error(self) -> units.degrees:
         return self.deployer_motor.get_closed_loop_error().value * 360
+
+    @feedback
+    def get_roller_motor_voltage(self) -> float:
+        return self.roller_motor.get_motor_voltage().value
+
+    @feedback
+    def get_roller_cl_output(self) -> float:
+        return self.roller_motor.get_closed_loop_output().value
