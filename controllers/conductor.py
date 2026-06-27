@@ -97,6 +97,9 @@ class Conductor(StateMachine):
             self.engage(self.caged_shooting)
         self.keep_shooting = True
 
+    def deploy_only(self) -> None:
+        self.engage(self.deploying_only)
+
     @default_state
     def priming(self) -> None:
         self.dispatch_ballistics_setpoints(False)
@@ -116,6 +119,11 @@ class Conductor(StateMachine):
 
         if not self.keep_shooting:
             self.next_state(self.purging)
+
+    @state(must_finish=True)
+    def deploying_only(self) -> None:
+        self.gobbler.gobble()
+        self.done()
 
     @state(must_finish=True)
     def purging(self) -> None:
