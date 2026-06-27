@@ -113,6 +113,7 @@ class ChassisComponent:
             self.modules[3].drive_motor.get_motor_voltage().value,
         )
 
+    @feedback
     def get_drive_currents(self):
         return (
             self.modules[0].drive_motor.get_stator_current().value,
