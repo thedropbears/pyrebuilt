@@ -25,6 +25,7 @@ class Conductor(StateMachine):
     targeter: Targeter
     field: Field2d
     keep_shooting = will_reset_to(False)
+    keep_outtaking = will_reset_to(False)
     TURRET_OFFSET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
     shot_succesful = will_reset_to(False)
@@ -82,11 +83,15 @@ class Conductor(StateMachine):
 
     def shoot(self) -> None:
         if self.shooter.flywheel_is_at_speed():
-            self.engage(self.shooting)
+            self.engage(self.shooting, force=True)
         self.keep_shooting = True
 
     def log_shot(self) -> None:
         self.shot_succesful = True
+
+    def outtake_intake(self) -> None:
+        self.engage(self.outtaking_intake, force=True)
+        self.keep_outtaking = True
 
     @feedback
     def get_is_shooting(self) -> bool:
@@ -98,7 +103,7 @@ class Conductor(StateMachine):
         self.keep_shooting = True
 
     def deploy_only(self) -> None:
-        self.engage(self.deploying_only)
+        self.engage(self.deploying_only, force=True)
 
     @default_state
     def priming(self) -> None:
@@ -110,6 +115,13 @@ class Conductor(StateMachine):
         self.dispatch_ballistics_setpoints()
 
         if not self.keep_shooting:
+            self.next_state(self.purging)
+
+    @state(must_finish=True)
+    def outtaking_intake(self) -> None:
+        self.gobbler.outtake()
+
+        if not self.keep_outtaking:
             self.next_state(self.purging)
 
     @state(must_finish=True)
