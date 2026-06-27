@@ -9,12 +9,12 @@ class ShootOnly(AutonomousStateMachine):
 
     conductor: Conductor
 
-    @timed_state(duration=1, first=True, next_state="caged_shooting")
+    @timed_state(duration=1, first=True, next_state="shooting")
     def prepping(self) -> None:
         self.conductor.deploy_only()
 
     @timed_state(duration=10)
-    def caged_shooting(self) -> None:
+    def shooting(self) -> None:
         self.conductor.shoot()
 
 
