@@ -166,6 +166,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.gamepad.getAButton():
             self.port_vision.zero_servo_()
 
+        if self.gamepad.getLeftBumper():
+            self.conductor.outtake_intake()
+
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
 

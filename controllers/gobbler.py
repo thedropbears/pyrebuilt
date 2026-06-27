@@ -15,6 +15,10 @@ class Gobbler(StateMachine):
     def cage(self) -> None:
         self.engage(self.caging, force=True)
 
+    def outtake(self) -> None:
+        self.should_retract = False
+        self.engage(self.outtaking)
+
     @state(first=True, must_finish=True)
     def intaking(self) -> None:
         self.intake.intake()
@@ -27,6 +31,13 @@ class Gobbler(StateMachine):
         self.intake.drive()
         if self.intake.is_retracted():
             self.done()
+
+    @state(must_finish=True)
+    def outtaking(self) -> None:
+        self.intake.outtake()
+
+        if self.should_retract:
+            self.next_state(self.retracting)
 
     @state
     def caging(self) -> None:

@@ -167,6 +167,10 @@ class IntakeComponent:
     def backdrive(self) -> None:
         self.target_roller_rps = -self.desired_roller_rps
 
+    def outtake(self) -> None:
+        self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
+        self.target_roller_rps = -self.desired_roller_rps
+
     def drive(self) -> None:
         self.target_roller_rps = self.desired_roller_rps
 
