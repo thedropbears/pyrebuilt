@@ -260,6 +260,10 @@ class MyRobot(magicbot.MagicRobot):
         self.turret.execute()
         self.hopper.execute()
 
+    @magicbot.feedback
+    def get_robot_voltage(self) -> float:
+        return wpilib.DriverStation.getBatteryVoltage()
+
     @override
     def disabledPeriodic(self) -> None:
         self.event_loop.poll()
