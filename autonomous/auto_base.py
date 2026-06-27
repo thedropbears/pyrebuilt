@@ -11,6 +11,7 @@ from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
 from components.chassis import ChassisComponent
+from controllers.conductor import Conductor
 from utilities import game
 
 heading_controller = PIDController(1.0, 0.0, 0.0)
@@ -26,6 +27,7 @@ wpilib.SmartDashboard.putData("Auto Heading PID", heading_controller)
 class AutoBase(AutonomousStateMachine):
     field: wpilib.Field2d
     chassis: ChassisComponent
+    conductor: Conductor
 
     def __init__(self, trajectory_names: list[str]) -> None:
         # We want to parameterise these by paths and potentially a sequence of events
@@ -133,3 +135,5 @@ class AutoBase(AutonomousStateMachine):
 
         # Apply the generated speeds
         self.chassis.drive_field(speeds.vx, speeds.vy, speeds.omega)
+
+        self.conductor.shoot()
