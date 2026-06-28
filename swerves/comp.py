@@ -57,7 +57,7 @@ class TunerConstants:
 
     # The stator current at which the wheels start to slip;
     # This needs to be tuned to your individual robot
-    _slip_current: units.ampere = 60.0
+    _slip_current: units.ampere = 120.0
 
     _steer_dampening_threshold: units.rotation = 0.05
 
