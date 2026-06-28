@@ -2,6 +2,7 @@ import math
 from logging import Logger
 
 import ntcore
+from phoenix6.sim import chassis_reference
 import wpilib
 from magicbot import feedback, tunable
 from phoenix6.swerve import requests
@@ -24,6 +25,9 @@ class ChassisComponent:
     field: wpilib.Field2d
     logger: Logger
     max_angular_rate = tunable(rotationsToRadians(0.75))
+
+    LINEAR_ODOMETRY_STD_DEVS = 0.05
+    ROTATION_ODOMETRY_STD_DEVS = 0.01
 
     def __init__(self) -> None:
         self.on_red_alliance = is_red()
@@ -78,8 +82,7 @@ class ChassisComponent:
     def setup(self) -> None:
         self.modules = self.phoenix_swerve.modules
 
-        self.phoenix_swerve.set_state_std_devs((0.05, 0.05, 0.01))
-        self.phoenix_swerve.set_vision_measurement_std_devs((0.4, 0.4, 0.03))
+        self.phoenix_swerve.set_state_std_devs((ChassisComponent.LINEAR_ODOMETRY_STD_DEVS, ChassisComponent.LINEAR_ODOMETRY_STD_DEVS, ChassisComponent.ROTATION_ODOMETRY_STD_DEVS))
 
         self.field_obj = self.field.getObject("fused_pose")
         self.set_pose(TeamPoses.RED_TEST_POSE if is_red() else TeamPoses.BLUE_TEST_POSE)
@@ -176,6 +179,9 @@ class ChassisComponent:
 
     def stop(self) -> None:
         self.set_request_velocities(requests.RobotCentric(), 0.0, 0.0, 0.0)
+
+    def get_odometry_covariance(self) -> tuple[float,float]:
+        return ChassisComponent.LINEAR_ODOMETRY_STD_DEVS, ChassisComponent.ROTATION_ODOMETRY_STD_DEVS
 
     def add_vision_measurement(
         self,
