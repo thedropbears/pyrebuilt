@@ -32,9 +32,11 @@ class Conductor(StateMachine):
 
     def setup(self) -> None:
         self.turret_pose = self.field.getObject("Turret Pose")
+        self.turret_fudge_pose = self.field.getObject("Turret Fudge Pose")
         turret_base_pose, _ = self.get_current_turret_config()
 
         self.turret_pose.setPose(turret_base_pose)
+        self.turret_fudge_pose.setPose(turret_base_pose)
 
     def get_current_turret_config(self) -> tuple[Pose2d, Translation2d]:
 
@@ -67,6 +69,13 @@ class Conductor(StateMachine):
             turret_base_pose.rotateAround(
                 turret_base_pose.translation(),
                 Rotation2d(self.turret.get_current_angle()),
+            )
+        )
+
+        self.turret_fudge_pose.setPose(
+            turret_base_pose.rotateAround(
+                turret_base_pose.translation(),
+                Rotation2d(self.turret.fudge_angle()),
             )
         )
 
