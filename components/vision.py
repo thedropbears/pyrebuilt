@@ -103,6 +103,8 @@ class VisualLocalizer(HasPerLoopCache):
         # To find this value, manually point the camera forwards and record the encoder value
         # This has nothing to do with the servo - do it by hand!!
         self.encoder_offset = encoder_offset
+        self.last_innovation = Transform2d()
+        self.last_mahalanobis = 0.0
 
         # To find the servo offsets, command the servo to neutral in test mode and record the encoder value
         # Repeat for full range
@@ -378,6 +380,22 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_timestamp = timestamp
 
         pose = pipeline_result.estimatedPose.toPose2d()
+        self.last_innovation = pose - self.chassis.get_pose()
+
+        linear_odometry_std_devs, rotation_odometry_std_devs = (
+            self.chassis.LINEAR_ODOMETRY_STD_DEVS,
+            self.chassis.ROTATION_ODOMETRY_STD_DEVS,
+        )
+        sxx = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
+        syy = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
+        stt = rotation_vision_uncertainty**2 + rotation_odometry_std_devs**2
+
+        self.last_mahalanobis = math.sqrt(
+            self.last_innovation.X() ** 2 / sxx
+            + self.last_innovation.Y() ** 2 / syy
+            + self.last_innovation.rotation().radians() ** 2 / stt
+        )
+
         self.chassis.add_vision_measurement(
             pose,
             timestamp,
@@ -397,3 +415,11 @@ class VisualLocalizer(HasPerLoopCache):
     @feedback
     def sees_multi_tag_target(self) -> bool:
         return self.has_multitag and self.sees_target()
+
+    @feedback
+    def get_last_mahalanobis(self):
+        return self.last_mahalanobis
+
+    @feedback
+    def get_last_innovation(self) -> Transform2d:
+        return self.last_innovation
