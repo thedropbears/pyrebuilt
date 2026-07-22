@@ -33,7 +33,7 @@ class States(IntEnum):
     TELEOP_VISION = auto()
     TELEOP_NO_VISION = auto()
     READY_TO_SHOOT = auto()
-    TURRENT_NEARLY_OUT_OF_RANGE = auto()
+    TURRET_NEARLY_OUT_OF_RANGE = auto()
     TURRET_OUT_OF_RANGE = auto()
     NEARLY_OUT_OF_SHOOTING_RANGE = auto()
     OUT_OF_SHOOTING_RANGE = auto()
@@ -118,7 +118,7 @@ class LEDComponent:
         self.should_update_leds = True
 
     def turret_nearly_out_of_range(self):
-        self._update_led_state(States.TURRENT_NEARLY_OUT_OF_RANGE)
+        self._update_led_state(States.TURRET_NEARLY_OUT_OF_RANGE)
 
     def turret_out_of_range(self):
         self._update_led_state(States.TURRET_OUT_OF_RANGE)
@@ -205,7 +205,7 @@ class LEDComponent:
                 self.candle.set_control(
                     StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
                 )
-            case States.TURRENT_NEARLY_OUT_OF_RANGE:
+            case States.TURRET_NEARLY_OUT_OF_RANGE:
                 self.candle.set_control(
                     ColorFlowAnimation(
                         self.LED_START,

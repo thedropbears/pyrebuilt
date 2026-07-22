@@ -183,28 +183,24 @@ class MyRobot(magicbot.MagicRobot):
         if not self.port_vision.camera_connected():
             self.leds.camera_dead()
         elif self.port_vision.sees_target():
-            self.leds.teleop_vision()
+            if self.turret.can_rotate_to_target() is False:
+                self.leds.turret_out_of_range()
+            elif (
+                current_target.distance(robot_coords) > 4.5
+                or current_target.distance(robot_coords) < 1.75
+            ):
+                self.leds.out_of_shooting_range()
+            elif self.turret.is_close_to_rotation_limit():
+                self.leds.turret_nearly_out_of_range()
+            elif (
+                current_target.distance(robot_coords) > 4.0
+                or current_target.distance(robot_coords) < 2.25
+            ):
+                self.leds.nearly_out_of_shooting_range()
+            else:
+                self.leds.ready_to_shoot()
         else:
             self.leds.teleop_no_vision()
-
-        if (
-            current_target.angle().radians() > self.turret.MAX_TURRET_ROTATION
-            or current_target.angle().radians() < self.turret.MIN_TURRET_ROTATION
-        ):
-        if self.turret.can_rotate_to_target() is False:
-            self.leds.turret_out_of_range()
-        elif (
-            current_target.distance(robot_coords) > 4.5
-            or current_target.distance(robot_coords) < 1.75
-        ):
-            self.leds.out_of_shooting_range()
-        elif self.turret.is_close_to_rotation_limit():
-            self.leds.turret_nearly_out_of_range()
-        elif (
-            current_target.distance(robot_coords) > 4.0
-            or current_target.distance(robot_coords) < 2.25
-        ):
-            self.leds.nearly_out_of_shooting_range()
         self.leds.execute()
 
     @override
