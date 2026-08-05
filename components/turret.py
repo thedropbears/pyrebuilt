@@ -193,4 +193,4 @@ class TurretComponent:
         )
 
     def is_within_rotation_limit(self) -> bool:
-        return self.MAX_TURRET_ROTATION > self.desired_angle > self.MIN_TURRET_ROTATION
+        return self.MIN_TURRET_ROTATION < self.desired_angle < self.MAX_TURRET_ROTATION
