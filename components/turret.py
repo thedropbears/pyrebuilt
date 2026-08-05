@@ -191,3 +191,6 @@ class TurretComponent:
         return math.isclose(
             abs(self.desired_angle), self.MAX_TURRET_ROTATION, abs_tol=math.radians(15)
         )
+
+    def is_within_rotation_limit(self) -> bool:
+        return self.MAX_TURRET_ROTATION > self.desired_angle > self.MIN_TURRET_ROTATION

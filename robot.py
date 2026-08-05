@@ -183,17 +183,17 @@ class MyRobot(magicbot.MagicRobot):
         if not self.port_vision.camera_connected():
             self.leds.camera_dead()
         elif self.port_vision.sees_target():
-            if self.turret.can_rotate_to_target() is False:
+            if not self.turret.is_within_rotation_limit():
                 self.leds.turret_out_of_range()
             elif (
-                current_target.distance(robot_coords) > 4.5
+                current_target.distance(robot_coords) > 5.5
                 or current_target.distance(robot_coords) < 1.75
             ):
                 self.leds.out_of_shooting_range()
             elif self.turret.is_close_to_rotation_limit():
                 self.leds.turret_nearly_out_of_range()
             elif (
-                current_target.distance(robot_coords) > 4.0
+                current_target.distance(robot_coords) > 5.0
                 or current_target.distance(robot_coords) < 2.25
             ):
                 self.leds.nearly_out_of_shooting_range()
