@@ -22,6 +22,7 @@ class Colors:
     purple = RGBWColor(128, 0, 128)
     black = RGBWColor(0, 0, 0)
     orange = RGBWColor(255, 165, 0)
+    yellow = RGBWColor(255, 255, 0)
 
 
 class States(IntEnum):
@@ -49,7 +50,6 @@ class LEDComponent:
 
     POSITION_UPDATE_DISTANCE: units.meters = 0.05
     ALLOWABLE_OFFSET: units.meters = 0.05
-    TURRET_OUT_RANGE_CALLED = will_reset_to(False)
 
     should_update_leds = will_reset_to(False)
 
@@ -91,10 +91,6 @@ class LEDComponent:
     def camera_dead(self) -> None:
         self._update_led_state(States.CAMERA_DEAD)
 
-    @feedback
-    def get_out_of_turret_range(self):
-        return self.TURRET_OUT_RANGE_CALLED
-
     def mispositioned(self, position_error: Translation2d):
         self._update_led_state(States.AUTO_MISALIGNED)
         if not (
@@ -122,7 +118,6 @@ class LEDComponent:
 
     def turret_out_of_range(self):
         self._update_led_state(States.TURRET_OUT_OF_RANGE)
-        self.TURRET_OUT_RANGE_CALLED = True
 
     def nearly_out_of_shooting_range(self):
         self._update_led_state(States.NEARLY_OUT_OF_SHOOTING_RANGE)
@@ -226,12 +221,12 @@ class LEDComponent:
                         self.LED_START,
                         self.LED_END,
                         0,
-                        Colors.purple,
+                        Colors.yellow,
                         AnimationDirectionValue.FORWARD,
                         0.5,
                     )
                 )
             case States.OUT_OF_SHOOTING_RANGE:
                 self.candle.set_control(
-                    SolidColor(self.LED_START, self.LED_END, Colors.purple)
+                    SolidColor(self.LED_START, self.LED_END, Colors.yellow)
                 )
