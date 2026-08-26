@@ -129,10 +129,8 @@ class MyRobot(magicbot.MagicRobot):
 
     @override
     def teleopPeriodic(self) -> None:
-        current_target = self.targeter.get_target()
         drive_speed = self.max_speed
         spin_rate = self.max_spin_rate
-        robot_coords = self.chassis.get_pose().translation()
 
         if self.gamepad.getLeftTriggerAxis() > 0.5:
             drive_speed = self.slowed_speed
@@ -183,18 +181,10 @@ class MyRobot(magicbot.MagicRobot):
         if not self.port_vision.camera_connected():
             self.leds.camera_dead()
         elif self.port_vision.sees_target():
-            if not self.turret.is_within_rotation_limit():
-                self.leds.turret_out_of_range()
-            elif not (1.75 < current_target.distance(robot_coords) < 5.5):
-                self.leds.out_of_shooting_range()
-            elif self.turret.is_close_to_rotation_limit():
-                self.leds.turret_nearly_out_of_range()
-            elif not (2.25 < current_target.distance(robot_coords) < 5.0):
-                self.leds.nearly_out_of_shooting_range()
-            else:
-                self.leds.ready_to_shoot()
+            self.leds.teleop_vision()
         else:
             self.leds.teleop_no_vision()
+
         self.leds.execute()
 
     @override

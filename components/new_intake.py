@@ -14,16 +14,16 @@ class IntakeComponent:
 
     def __init__(self) -> None:
         self.motor = TalonFX(TalonId.INTAKE_DEPLOYER)
-        self.retracted_intake_Angle = units.degrees(0)
-        self.deployed_intake_Angle = units.degrees(75)
+        self.retracted_intake_angle = units.degrees(0)
+        self.deployed_intake_angle = units.degrees(75)
         self.pid = PIDController(1, 0, 1)
         self.encoder = AnalogEncoder(DioChannel.INTAKE_DEPLOYER_ENCODER)
 
     def retract(self):
-        pass
+        self.target_intake_angle = self.retracted_intake_angle
 
-    def extend(self):
-        pass
+    def deploy(self):
+        self.target_intake_angle = self.deployed_intake_angle
 
     def intake(self):
         pass
