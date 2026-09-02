@@ -1,5 +1,5 @@
 from magicbot import feedback, will_reset_to
-from phoenix6.configs import Slot0Configs
+from phoenix6.configs import Slot0Configs, TalonFXConfiguration
 from phoenix6.controls import DutyCycleOut, PositionVoltage
 from phoenix6.hardware import TalonFX
 from wpilib import AnalogEncoder
@@ -23,7 +23,9 @@ class IntakeComponent:
         slot0_configs.with_k_p(1)
         slot0_configs.with_k_i(0)
         slot0_configs.with_k_d(1)
-        self.intake_roller.configurator.apply(slot0_configs)
+        self.intake_deployer.configurator.apply(
+            TalonFXConfiguration().with_slot0(slot0_configs)
+        )
         self.request = PositionVoltage(0).with_slot(0)
 
     def retract(self):
