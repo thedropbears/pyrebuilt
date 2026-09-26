@@ -1,238 +1,28 @@
 from __future__ import annotations
 
-import math
 import typing
-from collections.abc import Callable
-from typing import override
 
-import phoenix6
-import rev
 import wpilib
 from phoenix6.swerve.sim_swerve_drivetrain import SimSwerveDrivetrain
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
-    DCMotorSim,
     DutyCycleEncoderSim,
     PWMSim,
     RoboRioSim,
-    SingleJointedArmSim,
 )
 from wpimath import units
 from wpimath.geometry import Translation2d
-from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.system.plant import DCMotor
 
 from swerves.comp import TunerConstants
 from utilities import game
+from utilities.ctre import CANcoderSim, TalonFXMotorSim
 from utilities.functions import constrain_angle
+from utilities.simulation import ArmMechanism, MotorMechanismSim, SimpleMechanism
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
-
-
-class MotorSim(typing.Protocol):
-    gearbox: DCMotor
-    gearing: float
-
-    def get_motor_voltage(self) -> units.volts: ...
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None: ...
-
-
-class TalonFXMotorSim(MotorSim):
-    def __init__(
-        self,
-        # DCMotor gearbox factory, e.g. DCMotor.falcon500
-        gearbox_motor: Callable[[int], DCMotor],
-        *motors: phoenix6.hardware.TalonFX | phoenix6.hardware.TalonFXS,
-        # Reduction between motor and encoder readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        gearing: float,
-    ):
-        self.gearbox = gearbox_motor(len(motors))
-        self.gearing = gearing
-        self.sim_states = [motor.sim_state for motor in motors]
-        for sim_state in self.sim_states:
-            sim_state.set_supply_voltage(12.0)
-
-    @override
-    def get_motor_voltage(self) -> units.volts:
-        return self.sim_states[0].motor_voltage
-
-    @override
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None:
-        motor_rev_per_mechanism_rad = self.gearing / math.tau
-        for sim_state in self.sim_states:
-            sim_state.set_raw_rotor_position(position * motor_rev_per_mechanism_rad)
-            sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
-
-
-class SparkMotorSim(MotorSim):
-    def __init__(
-        self,
-        gearbox_motor: Callable[[int], DCMotor],
-        *motors: rev.SparkMax,
-        # Reduction between motor and mechanism rotations, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        gearing: float,
-    ):
-        self.gearbox = gearbox_motor(len(motors))
-        self.gearing = gearing
-        self.sim_states = [rev.SparkSim(motor, self.gearbox) for motor in motors]
-
-    @override
-    def get_motor_voltage(self) -> units.volts:
-        sim_state = self.sim_states[0]
-        return sim_state.getBusVoltage() * sim_state.getAppliedOutput()
-
-    @override
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None:
-        for sim_state in self.sim_states:
-            sim_state.iterate(velocity, self.get_bus_voltage(), dt)
-
-    def get_bus_voltage(self) -> units.volts:
-        return self.sim_states[0].getBusVoltage()
-
-
-class EncoderSim(typing.Protocol):
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None: ...
-
-
-class CANcoderSim(EncoderSim):
-    def __init__(
-        self,
-        encoder: phoenix6.hardware.CANcoder,
-        offset: float,
-        # Encoder rotations per mechanism rotation.
-        # One when the CANcoder is mounted directly on the mechanism's axis.
-        gearing: float,
-    ) -> None:
-        self.sim_state = encoder.sim_state
-        self.sim_state.sensor_offset = offset
-        self.gearing = gearing
-
-    @override
-    def update_from_mechanism(
-        self,
-        position: units.radians,
-        velocity: units.radians_per_second,
-        dt: units.seconds,
-    ) -> None:
-        encoder_rev_per_mechanism_rad = self.gearing / math.tau
-        self.sim_state.set_raw_position(position * encoder_rev_per_mechanism_rad)
-        self.sim_state.set_velocity(velocity * encoder_rev_per_mechanism_rad)
-
-
-class MechanismSim(typing.Protocol):
-    def update(self, motor_voltage: units.volts, dt: units.seconds) -> None: ...
-
-    def get_angular_position(self) -> units.radians: ...
-    def get_angular_velocity(self) -> units.radians_per_second: ...
-
-
-class SimpleMechanism(MechanismSim):
-    def __init__(
-        self, gearbox: DCMotor, moi: units.kilogram_square_meters, gearing: float
-    ) -> None:
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
-        self.mech_sim = DCMotorSim(self.plant, gearbox)
-
-    @override
-    def update(self, motor_voltage: float, dt: float) -> None:
-        self.mech_sim.setInputVoltage(motor_voltage)
-        self.mech_sim.update(dt)
-
-    @override
-    def get_angular_position(self) -> units.radians:
-        return self.mech_sim.getAngularPosition()
-
-    @override
-    def get_angular_velocity(self) -> units.radians_per_second:
-        return self.mech_sim.getAngularVelocity()
-
-
-class ArmMechanism(MechanismSim):
-    def __init__(
-        self,
-        gearbox: DCMotor,
-        moi: units.kilogram_square_meters,
-        gearing: float,
-        arm_length: units.meters,
-        min_angle: units.radians,
-        max_angle: units.radians,
-        starting_angle: units.radians,
-    ) -> None:
-        self.plant_arm = LinearSystemId.singleJointedArmSystem(gearbox, moi, gearing)
-        self.mech_sim = SingleJointedArmSim(
-            self.plant_arm,
-            gearbox,
-            gearing,
-            arm_length,
-            min_angle,
-            max_angle,
-            True,
-            starting_angle,
-        )
-
-    @override
-    def update(self, motor_voltage: float, dt: float) -> None:
-        self.mech_sim.setInputVoltage(motor_voltage)
-        self.mech_sim.update(dt)
-
-    @override
-    def get_angular_position(self) -> units.radians:
-        return self.mech_sim.getAngle()
-
-    @override
-    def get_angular_velocity(self) -> units.radians_per_second:
-        return self.mech_sim.getVelocity()
-
-
-class MotorMechanismSim:
-    """A mechanism driven by a motor sim, with any number of external encoders."""
-
-    def __init__(
-        self,
-        motor_sim: MotorSim,
-        mech_sim: MechanismSim,
-        encoder_sim: EncoderSim | None = None,
-    ) -> None:
-        self.motor_sim = motor_sim
-        self.mech_sim = mech_sim
-        self.encoder_sim = encoder_sim
-        # Publish the starting state so robot code reads it before the first tick.
-        self._publish(0.0)
-
-    def update(self, dt: units.seconds) -> None:
-        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
-        self._publish(dt)
-
-    def _publish(self, dt: units.seconds) -> None:
-        position = self.mech_sim.get_angular_position()
-        velocity = self.mech_sim.get_angular_velocity()
-        self.motor_sim.update_from_mechanism(position, velocity, dt)
-        if self.encoder_sim:
-            self.encoder_sim.update_from_mechanism(position, velocity, dt)
-
 
 # class ServoEncoderSim:
 #     def __init__(self, pwm, encoder):
