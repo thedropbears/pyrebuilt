@@ -207,89 +207,31 @@ class ArmMechanism(MechanismSim):
         return self.mech_sim.getVelocity()
 
 
-class SteerModuleSim:
+class MotorMechanismSim:
+    """A mechanism driven by a motor sim, with any number of external encoders."""
+
     def __init__(
         self,
         motor_sim: MotorSim,
-        moi: units.kilogram_square_meters,
-    ):
-        self.motor_sim = motor_sim
-        self.mech_sim = SimpleMechanism(
-            self.motor_sim.gearbox, moi, self.motor_sim.gearing
-        )
-
-    def update(self, dt: units.seconds):
-        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
-        self.motor_sim.update_from_mechanism(
-            self.mech_sim.get_angular_position(),
-            self.mech_sim.get_angular_velocity(),
-            dt,
-        )
-
-
-class TurretSim:
-    def __init__(
-        self,
-        motor_sim: MotorSim,
-        encoder_sim: EncoderSim,
-        moi: units.kilogram_square_meters,
-    ):
-        self.motor_sim = motor_sim
-        self.encoder_sim = encoder_sim
-        self.mech_sim = SimpleMechanism(
-            self.motor_sim.gearbox, moi, self.motor_sim.gearing
-        )
-
-    def update(self, dt: units.seconds) -> None:
-        self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
-        self.motor_sim.update_from_mechanism(
-            self.mech_sim.get_angular_position(),
-            self.mech_sim.get_angular_velocity(),
-            dt,
-        )
-        self.encoder_sim.update_from_mechanism(
-            self.mech_sim.get_angular_position(),
-            self.mech_sim.get_angular_velocity(),
-            dt,
-        )
-
-
-class ArmSim:
-    def __init__(
-        self,
-        motor_sim: MotorSim,
-        encoder_sim: EncoderSim,
-        moi: units.kilogram_square_meters,
-        arm_length: units.meters,
-        min_angle: units.radians,
-        max_angle: units.radians,
-        starting_angle: units.radians,
+        mech_sim: MechanismSim,
+        encoder_sim: EncoderSim | None = None,
     ) -> None:
         self.motor_sim = motor_sim
+        self.mech_sim = mech_sim
         self.encoder_sim = encoder_sim
-        self.mech_sim = ArmMechanism(
-            self.motor_sim.gearbox,
-            moi,
-            self.motor_sim.gearing,
-            arm_length,
-            min_angle,
-            max_angle,
-            starting_angle,
-        )
+        # Publish the starting state so robot code reads it before the first tick.
+        self._publish(0.0)
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
+        self._publish(dt)
 
-        self.motor_sim.update_from_mechanism(
-            self.mech_sim.get_angular_position(),
-            self.mech_sim.get_angular_velocity(),
-            dt,
-        )
-        self.encoder_sim.update_from_mechanism(
-            self.mech_sim.get_angular_position(),
-            self.mech_sim.get_angular_velocity(),
-            dt,
-        )
+    def _publish(self, dt: units.seconds) -> None:
+        position = self.mech_sim.get_angular_position()
+        velocity = self.mech_sim.get_angular_velocity()
+        self.motor_sim.update_from_mechanism(position, velocity, dt)
+        if self.encoder_sim:
+            self.encoder_sim.update_from_mechanism(position, velocity, dt)
 
 
 # class ServoEncoderSim:
@@ -323,27 +265,52 @@ class PhysicsEngine:
         ]
         self.swerve = SimSwerveDrivetrain(swerve_positions, self.imu, module_constants)
 
-        self.flywheel_sim = SteerModuleSim(
-            TalonFXMotorSim(
-                DCMotor.krakenX60,
-                robot.shooter.flywheel_motor,
-                gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
+        flywheel_motor = TalonFXMotorSim(
+            DCMotor.krakenX60,
+            robot.shooter.flywheel_motor,
+            gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
+        )
+        self.flywheel_sim = MotorMechanismSim(
+            flywheel_motor,
+            SimpleMechanism(
+                flywheel_motor.gearbox, 796.0 * 1e-6, flywheel_motor.gearing
             ),
-            796.0 * 1e-6,
         )
 
-        self.turret_sim = TurretSim(
-            TalonFXMotorSim(
-                DCMotor.minion,
-                robot.turret.motor,
-                gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
-            ),
+        turret_motor = TalonFXMotorSim(
+            DCMotor.minion,
+            robot.turret.motor,
+            gearing=1 / robot.turret.MOTOR_TO_TURRET_GEARING,
+        )
+        self.turret_sim = MotorMechanismSim(
+            turret_motor,
+            SimpleMechanism(turret_motor.gearbox, 0.02890532995, turret_motor.gearing),
             CANcoderSim(
                 robot.turret.absolute_encoder,
                 robot.turret.ENCODER_OFFSET,
                 robot.turret.TURRET_TO_ENCODER_GEARING,
             ),
-            0.02890532995,
+        )
+
+        intake_motor = TalonFXMotorSim(
+            DCMotor.falcon500,
+            robot.intake.deployer_motor,
+            gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
+        )
+        self.intake_arm_sim = MotorMechanismSim(
+            intake_motor,
+            ArmMechanism(
+                intake_motor.gearbox,
+                robot.intake.ARM_MOI,
+                intake_motor.gearing,
+                robot.intake.ARM_LENGTH,
+                min_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
+                max_angle=robot.intake.RETRACTED_INTAKE_ANGLE,
+                starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
+            ),
+            CANcoderSim(
+                robot.intake.deployer_encoder, robot.intake.ENCODER_ZERO_OFFSET, 1.0
+            ),
         )
 
         self.vision_sim = VisionSystemSim("main")
@@ -361,22 +328,6 @@ class PhysicsEngine:
         self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
         self.port_vision_encoder_sim = DutyCycleEncoderSim(
             self.port_visual_localiser.encoder
-        )
-
-        self.intake_arm_sim = ArmSim(
-            TalonFXMotorSim(
-                DCMotor.falcon500,
-                robot.intake.deployer_motor,
-                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
-            ),
-            CANcoderSim(
-                robot.intake.deployer_encoder, robot.intake.ENCODER_ZERO_OFFSET, 1.0
-            ),
-            robot.intake.ARM_MOI,
-            robot.intake.ARM_LENGTH,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
         )
 
     def update_sim(self, _now: float, tm_diff: units.seconds) -> None:
