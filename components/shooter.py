@@ -15,6 +15,8 @@ class ShooterComponent:
 
     FLYWHEEL_GEAR_RATIO = 1 / (36 / 24)
 
+    FLYWHEEL_MOI: units.kilogram_square_meters = 796.0 * 1e-6
+
     FLYWHEEL_SETPOINT_TOLERANCE = 3.0
 
     def __init__(self) -> None:
