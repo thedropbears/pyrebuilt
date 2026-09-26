@@ -74,6 +74,9 @@ class VisualLocalizer(HasPerLoopCache):
 
     chassis: ChassisComponent
 
+    LINEAR_MEASUREMENT_STD_DEV = 0.05
+    ROTATION_MEASUREMENT_STD_DEV = 0.1
+
     def __init__(
         self,
         # The name of the camera in PhotonVision.
@@ -383,8 +386,8 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_innovation = pose - self.chassis.get_pose()
 
         linear_odometry_std_devs, rotation_odometry_std_devs = (
-            self.chassis.LINEAR_ODOMETRY_STD_DEVS,
-            self.chassis.ROTATION_ODOMETRY_STD_DEVS,
+           VisualLocalizer.LINEAR_MEASUREMENT_STD_DEV,
+            VisualLocalizer.ROTATION_MEASUREMENT_STD_DEV,
         )
         sxx = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
         syy = linear_vision_uncertainty**2 + linear_odometry_std_devs**2

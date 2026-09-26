@@ -25,8 +25,8 @@ class ChassisComponent:
     logger: Logger
     max_angular_rate = tunable(rotationsToRadians(0.75))
 
-    LINEAR_ODOMETRY_STD_DEVS = 0.05
-    ROTATION_ODOMETRY_STD_DEVS = 0.01
+    LINEAR_ODOMETRY_STD_DEVS = 0.003
+    ROTATION_ODOMETRY_STD_DEVS = 0.001
 
     def __init__(self) -> None:
         self.on_red_alliance = is_red()
