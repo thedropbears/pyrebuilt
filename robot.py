@@ -16,6 +16,7 @@ from components.hopper import HopperComponent
 from components.intake import IntakeComponent
 from components.leds import LEDComponent
 from components.shooter import ShooterComponent
+from components.showoff import ShowoffComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
 from components.vision import ServoOffsets, VisualLocalizer
@@ -42,6 +43,7 @@ class MyRobot(magicbot.MagicRobot):
     shooter: ShooterComponent
     climber: ClimberComponent
     intake: IntakeComponent
+    showoff: ShowoffComponent
     turret: TurretComponent
     leds: LEDComponent
 
@@ -140,6 +142,10 @@ class MyRobot(magicbot.MagicRobot):
         drive_z = (
             -rescale_js(self.gamepad.getRightX(), 0.1, exponential=2.0) * spin_rate
         )
+
+        if self.gamepad.getBButton():
+            self.showoff.show_off()
+            drive_z = self.showoff.get_rotation_rate()
 
         local_driving = self.gamepad.getRightBumperButton()
 
