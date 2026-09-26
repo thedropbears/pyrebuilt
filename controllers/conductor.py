@@ -26,7 +26,7 @@ class Conductor(StateMachine):
     field: Field2d
     keep_shooting = will_reset_to(False)
     keep_deploying = will_reset_to(False)
-    TURRET_OFFSET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())
+    CHASSIS_TO_TURRET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
     shot_succesful = will_reset_to(False)
 
@@ -37,49 +37,46 @@ class Conductor(StateMachine):
         self.turret_pose.setPose(turret_base_pose)
 
     def get_current_turret_config(self) -> tuple[Pose2d, Translation2d]:
-
+        """Return the turret's pose and linear velocity, both in the field frame."""
         chassis_pose = self.chassis.get_pose()
-        chassis_rotation = chassis_pose.rotation()
-        chassis_speeds = self.chassis.get_velocity()
 
-        turret_base_pose = chassis_pose.transformBy(self.TURRET_OFFSET)
+        # Turret pose: apply the robot-relative mounting offset to the chassis pose.
+        turret_pose = chassis_pose + Conductor.CHASSIS_TO_TURRET
 
-        chassis_velocity = ChassisSpeeds.fromRobotRelativeSpeeds(
-            chassis_speeds, chassis_rotation
+        # Chassis velocity in the field frame.
+        field_speeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            self.chassis.get_velocity(), chassis_pose.rotation()
+        )
+        chassis_velocity = Translation2d(field_speeds.vx, field_speeds.vy)
+
+        # Rigid-body motion: v_turret = v_chassis + ω × r,
+        # where r is the chassis-to-turret offset expressed in the field frame.
+        offset = Conductor.CHASSIS_TO_TURRET.translation().rotateBy(
+            chassis_pose.rotation()
+        )
+        tangential_velocity = (
+            offset.rotateBy(Rotation2d.fromDegrees(90)) * field_speeds.omega
         )
 
-        turret_offset_field = (
-            turret_base_pose.translation() - chassis_pose.translation()
-        )
-
-        turret_base_velocity = Translation2d(
-            chassis_velocity.vx - chassis_velocity.omega * turret_offset_field.Y(),
-            chassis_velocity.vy + chassis_velocity.omega * turret_offset_field.X(),
-        )
-
-        return turret_base_pose, turret_base_velocity
+        return turret_pose, chassis_velocity + tangential_velocity
 
     def dispatch_ballistics_setpoints(self, feed_needed: bool = True):
 
         turret_base_pose, turret_base_velocity = self.get_current_turret_config()
-
-        self.turret_pose.setPose(
-            turret_base_pose.rotateAround(
-                turret_base_pose.translation(),
-                Rotation2d(self.turret.get_current_angle()),
-            )
-        )
+        target = self.targeter.get_target()
 
         solution = self.ballistics.solve_for(
             turret_base_pose,
             turret_base_velocity,
-            self.targeter.get_target(),
+            target,
         )
 
         if feed_needed:
             self.hopper.feed(solution.feed_speed)
         self.turret.slew_to(solution.bearing)
         self.shooter.set_flywheel(solution.flywheel_speed)
+
+        self.draw_turret_aim(turret_base_pose, target)
 
     def shoot(self) -> None:
         if self.shooter.flywheel_is_at_speed():
@@ -147,3 +144,17 @@ class Conductor(StateMachine):
 
         if self.intake.is_retracted():
             self.done()
+
+    def draw_turret_aim(self, turret_pose: Pose2d, goal: Translation2d) -> None:
+        start = turret_pose.translation()
+        distance = start.distance(goal)
+
+        # Actual aim direction in the field frame (mount rotation + turret angle).
+        aim_heading = turret_pose.rotation() + Rotation2d(
+            self.turret.get_current_angle()
+        )
+        aim_end = start + Translation2d(distance, aim_heading)
+
+        self.field.getObject("TurretAim").setPoses(
+            [Pose2d(start, aim_heading), Pose2d(aim_end, aim_heading)]
+        )

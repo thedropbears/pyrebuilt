@@ -74,6 +74,9 @@ class VisualLocalizer(HasPerLoopCache):
 
     chassis: ChassisComponent
 
+    LINEAR_MEASUREMENT_STD_DEV = 0.05
+    ROTATION_MEASUREMENT_STD_DEV = 0.1
+
     def __init__(
         self,
         # The name of the camera in PhotonVision.
@@ -157,6 +160,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.pose_log_entry = wpiutil.log.FloatArrayLogEntry(
             data_log, name + "_vision_pose"
         )
+        self.turret_pose = field.getObject(name + "_turret_pose")
 
         self.current_reproj = 0.0
         self.has_multitag = False
@@ -315,6 +319,15 @@ class VisualLocalizer(HasPerLoopCache):
         self.turret_rotation_buffer.addSample(now, self.turret_rotation)
         self.heading_buffer.addSample(now, self.chassis.get_rotation())
 
+        current_robot_to_cam = self.robot_to_camera(now)
+        self.turret_pose.setPose(
+            self.chassis.get_pose()
+            + Transform2d(
+                current_robot_to_cam.translation().toTranslation2d(),
+                current_robot_to_cam.rotation().toRotation2d(),
+            )
+        )
+
         if not self.add_to_estimator:
             return
 
@@ -383,8 +396,8 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_innovation = pose - self.chassis.get_pose()
 
         linear_odometry_std_devs, rotation_odometry_std_devs = (
-            self.chassis.LINEAR_ODOMETRY_STD_DEVS,
-            self.chassis.ROTATION_ODOMETRY_STD_DEVS,
+            VisualLocalizer.LINEAR_MEASUREMENT_STD_DEV,
+            VisualLocalizer.ROTATION_MEASUREMENT_STD_DEV,
         )
         sxx = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
         syy = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
