@@ -1,7 +1,26 @@
+import dataclasses
 import math
 import typing
 
+from phoenix6.configs import (
+    ExternalFeedbackConfigs,
+    FeedbackConfigs,
+    MagnetSensorConfigs,
+    MotorOutputConfigs,
+)
 from phoenix6.hardware import CANcoder, TalonFX, TalonFXS
+from phoenix6.signals import (
+    ExternalFeedbackSensorSourceValue,
+    FeedbackSensorSourceValue,
+    InvertedValue,
+    SensorDirectionValue,
+)
+from phoenix6.sim import (
+    CANcoderSimState,
+    ChassisReference,
+    TalonFXSimState,
+    TalonFXSSimState,
+)
 from wpimath import units
 from wpimath.system.plant import DCMotor
 
@@ -11,21 +30,111 @@ from utilities.simulation import EncoderSim, MotorSim
 FALCON_FREE_RPS = 100
 
 
+def _read_config[ConfigT](configurator: typing.Any, config: ConfigT) -> ConfigT:
+    """Read a config group back from a Phoenix device."""
+    status = configurator.refresh(config)
+    if not status.is_ok():
+        raise RuntimeError(
+            f"Failed to read {type(config).__name__} from device: {status.name}"
+        )
+    return config
+
+
+def _chassis_reference(clockwise_positive: bool) -> ChassisReference:
+    if clockwise_positive:
+        return ChassisReference.CLOCKWISE_POSITIVE
+    return ChassisReference.COUNTER_CLOCKWISE_POSITIVE
+
+
+def _talon_sim_state(
+    motor: TalonFX | TalonFXS,
+) -> TalonFXSimState | TalonFXSSimState:
+
+    motor_output = _read_config(motor.configurator, MotorOutputConfigs())
+
+    orientation = _chassis_reference(
+        motor_output.inverted == InvertedValue.CLOCKWISE_POSITIVE
+    )
+
+    if isinstance(motor, TalonFXS):
+        sim_state = motor.sim_state
+        sim_state.motor_orientation = orientation
+    else:
+        sim_state = motor.sim_state
+        sim_state.orientation = orientation
+
+    sim_state.set_supply_voltage(12.0)
+    return sim_state
+
+
+_FX_CANCODER_SOURCES = {
+    FeedbackSensorSourceValue.REMOTE_CANCODER,
+    FeedbackSensorSourceValue.FUSED_CANCODER,
+    FeedbackSensorSourceValue.SYNC_CANCODER,
+}
+_FXS_CANCODER_SOURCES = {
+    ExternalFeedbackSensorSourceValue.REMOTE_CANCODER,
+    ExternalFeedbackSensorSourceValue.FUSED_CANCODER,
+    ExternalFeedbackSensorSourceValue.SYNC_CANCODER,
+}
+
+
+@dataclasses.dataclass(frozen=True)
+class _TalonFeedback:
+    """The gearing a Talon's feedback config describes."""
+
+    uses_rotor: bool
+    rotor_to_sensor: float
+    sensor_to_mechanism: float
+    # Device ID of the CANcoder used for feedback, if any.
+    cancoder_id: int | None
+
+    @property
+    def motor_to_mechanism(self) -> float:
+        """Motor rotations per mechanism rotation."""
+        # RotorToSensorRatio is ignored when feedback comes from the rotor.
+        if self.uses_rotor:
+            return self.sensor_to_mechanism
+        return self.rotor_to_sensor * self.sensor_to_mechanism
+
+
+def _talon_feedback(motor: TalonFX | TalonFXS) -> _TalonFeedback:
+    if isinstance(motor, TalonFXS):
+        ext = _read_config(motor.configurator, ExternalFeedbackConfigs())
+        source = ext.external_feedback_sensor_source
+        return _TalonFeedback(
+            uses_rotor=source == ExternalFeedbackSensorSourceValue.COMMUTATION,
+            rotor_to_sensor=ext.rotor_to_sensor_ratio,
+            sensor_to_mechanism=ext.sensor_to_mechanism_ratio,
+            cancoder_id=(
+                ext.feedback_remote_sensor_id
+                if source in _FXS_CANCODER_SOURCES
+                else None
+            ),
+        )
+
+    fb = _read_config(motor.configurator, FeedbackConfigs())
+    source = fb.feedback_sensor_source
+    return _TalonFeedback(
+        uses_rotor=source == FeedbackSensorSourceValue.ROTOR_SENSOR,
+        rotor_to_sensor=fb.rotor_to_sensor_ratio,
+        sensor_to_mechanism=fb.sensor_to_mechanism_ratio,
+        cancoder_id=(
+            fb.feedback_remote_sensor_id if source in _FX_CANCODER_SOURCES else None
+        ),
+    )
+
+
 class TalonFXMotorSim(MotorSim):
     def __init__(
         self,
         # DCMotor gearbox factory, e.g. DCMotor.falcon500
         gearbox_motor: typing.Callable[[int], DCMotor],
         *motors: TalonFX | TalonFXS,
-        # Reduction between motor and encoder readings, as output over input.
-        # If the mechanism spins slower than the motor, this number should be greater than one.
-        gearing: float,
     ):
         self.gearbox = gearbox_motor(len(motors))
-        self.gearing = gearing
-        self.sim_states = [motor.sim_state for motor in motors]
-        for sim_state in self.sim_states:
-            sim_state.set_supply_voltage(12.0)
+        self.gearing = _talon_feedback(motors[0]).motor_to_mechanism
+        self.sim_states = [_talon_sim_state(motor) for motor in motors]
 
     @typing.override
     def get_motor_voltage(self) -> units.volts:
@@ -44,17 +153,36 @@ class TalonFXMotorSim(MotorSim):
             sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
+def _cancoder_sim_state(encoder: CANcoder) -> CANcoderSimState:
+
+    magnet_sensor = _read_config(encoder.configurator, MagnetSensorConfigs())
+    sim_state = encoder.sim_state
+    sim_state.sensor_offset = magnet_sensor.magnet_offset
+    sim_state.orientation = _chassis_reference(
+        magnet_sensor.sensor_direction == SensorDirectionValue.CLOCKWISE_POSITIVE
+    )
+    return sim_state
+
+
 class CANcoderSim(EncoderSim):
-    def __init__(
-        self,
-        encoder: CANcoder,
-        offset: float,
-        # Encoder rotations per mechanism rotation.
-        # One when the CANcoder is mounted directly on the mechanism's axis.
-        gearing: float,
-    ) -> None:
-        self.sim_state = encoder.sim_state
-        self.sim_state.sensor_offset = offset
+    @staticmethod
+    def from_gearing(encoder: CANcoder, gearing: float) -> CANcoderSim:
+        return CANcoderSim(encoder, gearing)
+
+    @staticmethod
+    def from_dependant_device(
+        encoder: CANcoder, dependant_device: TalonFX | TalonFXS
+    ) -> CANcoderSim:
+        feedback = _talon_feedback(dependant_device)
+        if feedback.cancoder_id != encoder.device_id:
+            raise ValueError(
+                f"Talon {dependant_device.device_id} does not use "
+                f"CANcoder {encoder.device_id} for feedback"
+            )
+        return CANcoderSim(encoder, feedback.sensor_to_mechanism)
+
+    def __init__(self, encoder: CANcoder, gearing: float) -> None:
+        self.sim_state = _cancoder_sim_state(encoder)
         self.gearing = gearing
 
     @typing.override

@@ -38,11 +38,11 @@ class MechanismSim(typing.Protocol):
 
 
 class SimpleMechanism(MechanismSim):
-    def __init__(
-        self, gearbox: DCMotor, moi: units.kilogram_square_meters, gearing: float
-    ) -> None:
-        self.plant = LinearSystemId.DCMotorSystem(gearbox, moi, gearing)
-        self.mech_sim = DCMotorSim(self.plant, gearbox)
+    def __init__(self, motor_sim: MotorSim, moi: units.kilogram_square_meters) -> None:
+        self.plant = LinearSystemId.DCMotorSystem(
+            motor_sim.gearbox, moi, motor_sim.gearing
+        )
+        self.mech_sim = DCMotorSim(self.plant, motor_sim.gearbox)
 
     @typing.override
     def update(self, motor_voltage: float, dt: float) -> None:
@@ -61,19 +61,20 @@ class SimpleMechanism(MechanismSim):
 class ArmMechanism(MechanismSim):
     def __init__(
         self,
-        gearbox: DCMotor,
+        motor_sim: MotorSim,
         moi: units.kilogram_square_meters,
-        gearing: float,
         arm_length: units.meters,
         min_angle: units.radians,
         max_angle: units.radians,
         starting_angle: units.radians,
     ) -> None:
-        self.plant_arm = LinearSystemId.singleJointedArmSystem(gearbox, moi, gearing)
+        self.plant_arm = LinearSystemId.singleJointedArmSystem(
+            motor_sim.gearbox, moi, motor_sim.gearing
+        )
         self.mech_sim = SingleJointedArmSim(
             self.plant_arm,
-            gearbox,
-            gearing,
+            motor_sim.gearbox,
+            motor_sim.gearing,
             arm_length,
             min_angle,
             max_angle,

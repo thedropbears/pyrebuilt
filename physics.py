@@ -56,50 +56,36 @@ class PhysicsEngine:
         self.swerve = SimSwerveDrivetrain(swerve_positions, self.imu, module_constants)
 
         flywheel_motor = TalonFXMotorSim(
-            DCMotor.krakenX60,
-            robot.shooter.flywheel_motor,
-            gearing=robot.shooter.FLYWHEEL_GEAR_RATIO,
+            DCMotor.krakenX60, robot.shooter.flywheel_motor
         )
         self.flywheel_sim = MotorMechanismSim(
             flywheel_motor,
-            SimpleMechanism(
-                flywheel_motor.gearbox, 796.0 * 1e-6, flywheel_motor.gearing
-            ),
+            SimpleMechanism(flywheel_motor, 796.0 * 1e-6),
         )
 
-        turret_motor = TalonFXMotorSim(
-            DCMotor.minion,
-            robot.turret.motor,
-            gearing=1 / robot.turret.MOTOR_TO_TURRET_GEARING,
-        )
+        turret_motor = TalonFXMotorSim(DCMotor.minion, robot.turret.motor)
         self.turret_sim = MotorMechanismSim(
             turret_motor,
-            SimpleMechanism(turret_motor.gearbox, 0.02890532995, turret_motor.gearing),
-            CANcoderSim(
+            SimpleMechanism(turret_motor, 0.02890532995),
+            CANcoderSim.from_dependant_device(
                 robot.turret.absolute_encoder,
-                robot.turret.ENCODER_OFFSET,
-                robot.turret.TURRET_TO_ENCODER_GEARING,
+                robot.turret.motor,
             ),
         )
 
-        intake_motor = TalonFXMotorSim(
-            DCMotor.falcon500,
-            robot.intake.deployer_motor,
-            gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
-        )
+        intake_motor = TalonFXMotorSim(DCMotor.falcon500, robot.intake.deployer_motor)
         self.intake_arm_sim = MotorMechanismSim(
             intake_motor,
             ArmMechanism(
-                intake_motor.gearbox,
+                intake_motor,
                 robot.intake.ARM_MOI,
-                intake_motor.gearing,
                 robot.intake.ARM_LENGTH,
                 min_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
                 max_angle=robot.intake.RETRACTED_INTAKE_ANGLE,
                 starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
             ),
-            CANcoderSim(
-                robot.intake.deployer_encoder, robot.intake.ENCODER_ZERO_OFFSET, 1.0
+            CANcoderSim.from_dependant_device(
+                robot.intake.deployer_encoder, robot.intake.deployer_motor
             ),
         )
 
