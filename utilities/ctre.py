@@ -84,7 +84,6 @@ _FXS_CANCODER_SOURCES = {
 class _TalonFeedback:
     """The gearing a Talon's feedback config describes."""
 
-    uses_rotor: bool
     rotor_to_sensor: float
     sensor_to_mechanism: float
     # Device ID of the CANcoder used for feedback, if any.
@@ -93,9 +92,7 @@ class _TalonFeedback:
     @property
     def motor_to_mechanism(self) -> float:
         """Motor rotations per mechanism rotation."""
-        # RotorToSensorRatio is ignored when feedback comes from the rotor.
-        if self.uses_rotor:
-            return self.sensor_to_mechanism
+        # RotorToSensorRatio should be 1.0 when feedback comes from the rotor.
         return self.rotor_to_sensor * self.sensor_to_mechanism
 
 
@@ -104,8 +101,9 @@ def _talon_feedback(motor: TalonFX | TalonFXS) -> _TalonFeedback:
         ext = _read_config(motor.configurator, ExternalFeedbackConfigs())
         ext_source = ext.external_feedback_sensor_source
         return _TalonFeedback(
-            uses_rotor=ext_source == ExternalFeedbackSensorSourceValue.COMMUTATION,
-            rotor_to_sensor=ext.rotor_to_sensor_ratio,
+            rotor_to_sensor=ext.rotor_to_sensor_ratio
+            if ext_source == ExternalFeedbackSensorSourceValue.COMMUTATION
+            else 1.0,
             sensor_to_mechanism=ext.sensor_to_mechanism_ratio,
             cancoder_id=(
                 ext.feedback_remote_sensor_id
@@ -117,8 +115,9 @@ def _talon_feedback(motor: TalonFX | TalonFXS) -> _TalonFeedback:
     fb = _read_config(motor.configurator, FeedbackConfigs())
     fx_source = fb.feedback_sensor_source
     return _TalonFeedback(
-        uses_rotor=fx_source == FeedbackSensorSourceValue.ROTOR_SENSOR,
-        rotor_to_sensor=fb.rotor_to_sensor_ratio,
+        rotor_to_sensor=fb.rotor_to_sensor_ratio
+        if fx_source == FeedbackSensorSourceValue.ROTOR_SENSOR
+        else 1.0,
         sensor_to_mechanism=fb.sensor_to_mechanism_ratio,
         cancoder_id=(
             fb.feedback_remote_sensor_id if fx_source in _FX_CANCODER_SOURCES else None
