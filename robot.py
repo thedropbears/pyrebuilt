@@ -265,7 +265,7 @@ class MyRobot(magicbot.MagicRobot):
 
     @magicbot.feedback
     def get_robot_voltage(self) -> float:
-        return wpilib.DriverStation.getBatteryVoltage()
+        return wpilib.RobotController.getBatteryVoltage()
 
     @override
     def disabledPeriodic(self) -> None:
