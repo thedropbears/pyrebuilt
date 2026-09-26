@@ -46,15 +46,19 @@ def _chassis_reference(clockwise_positive: bool) -> ChassisReference:
     return ChassisReference.COUNTER_CLOCKWISE_POSITIVE
 
 
+INVERTED_VALUE_TO_CHASSIS_REFERENCE = {
+    InvertedValue.CLOCKWISE_POSITIVE: ChassisReference.CLOCKWISE_POSITIVE,
+    InvertedValue.COUNTER_CLOCKWISE_POSITIVE: ChassisReference.COUNTER_CLOCKWISE_POSITIVE,
+}
+
+
 def _talon_sim_state(
     motor: TalonFX | TalonFXS,
 ) -> TalonFXSimState | TalonFXSSimState:
 
     motor_output = _read_config(motor.configurator, MotorOutputConfigs())
 
-    orientation = _chassis_reference(
-        motor_output.inverted == InvertedValue.CLOCKWISE_POSITIVE
-    )
+    orientation = INVERTED_VALUE_TO_CHASSIS_REFERENCE[motor_output.inverted]
 
     if isinstance(motor, TalonFXS):
         fxs_state = motor.sim_state
@@ -153,14 +157,20 @@ class TalonMotorSim(MotorSim):
             sim_state.set_rotor_velocity(velocity * motor_rev_per_mechanism_rad)
 
 
+SENSOR_DIRECTION_TO_CHASSIS_REFERENCE = {
+    SensorDirectionValue.CLOCKWISE_POSITIVE: ChassisReference.CLOCKWISE_POSITIVE,
+    SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE: ChassisReference.COUNTER_CLOCKWISE_POSITIVE,
+}
+
+
 def _cancoder_sim_state(encoder: CANcoder) -> CANcoderSimState:
 
     magnet_sensor = _read_config(encoder.configurator, MagnetSensorConfigs())
     sim_state = encoder.sim_state
     sim_state.sensor_offset = magnet_sensor.magnet_offset
-    sim_state.orientation = _chassis_reference(
-        magnet_sensor.sensor_direction == SensorDirectionValue.CLOCKWISE_POSITIVE
-    )
+    sim_state.orientation = SENSOR_DIRECTION_TO_CHASSIS_REFERENCE[
+        magnet_sensor.sensor_direction
+    ]
     return sim_state
 
 
