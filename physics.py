@@ -108,6 +108,40 @@ class SparkMotorSim(MotorSim):
         return self.sim_states[0].getBusVoltage()
 
 
+class EncoderSim(typing.Protocol):
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None: ...
+
+
+class CANcoderSim(EncoderSim):
+    def __init__(
+        self,
+        encoder: phoenix6.hardware.CANcoder,
+        offset: float,
+        # Encoder rotations per mechanism rotation.
+        # One when the CANcoder is mounted directly on the mechanism's axis.
+        gearing: float,
+    ) -> None:
+        self.sim_state = encoder.sim_state
+        self.sim_state.sensor_offset = offset
+        self.gearing = gearing
+
+    @override
+    def update_from_mechanism(
+        self,
+        position: units.radians,
+        velocity: units.radians_per_second,
+        dt: units.seconds,
+    ) -> None:
+        encoder_rev_per_mechanism_rad = self.gearing / math.tau
+        self.sim_state.set_raw_position(position * encoder_rev_per_mechanism_rad)
+        self.sim_state.set_velocity(velocity * encoder_rev_per_mechanism_rad)
+
+
 class MechanismSim(typing.Protocol):
     def update(self, motor_voltage: units.volts, dt: units.seconds) -> None: ...
 
@@ -197,16 +231,14 @@ class TurretSim:
     def __init__(
         self,
         motor_sim: MotorSim,
+        encoder_sim: EncoderSim,
         moi: units.kilogram_square_meters,
-        encoder: phoenix6.hardware.CANcoder,
-        encoder_offset: float,
     ):
         self.motor_sim = motor_sim
+        self.encoder_sim = encoder_sim
         self.mech_sim = SimpleMechanism(
             self.motor_sim.gearbox, moi, self.motor_sim.gearing
         )
-        self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
 
     def update(self, dt: units.seconds) -> None:
         self.mech_sim.update(self.motor_sim.get_motor_voltage(), dt)
@@ -215,28 +247,26 @@ class TurretSim:
             self.mech_sim.get_angular_velocity(),
             dt,
         )
-        self.encoder_sim.set_raw_position(
-            self.mech_sim.get_angular_position() / math.tau
+        self.encoder_sim.update_from_mechanism(
+            self.mech_sim.get_angular_position(),
+            self.mech_sim.get_angular_velocity(),
+            dt,
         )
-        self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
 
 class ArmSim:
     def __init__(
         self,
         motor_sim: MotorSim,
+        encoder_sim: EncoderSim,
         moi: units.kilogram_square_meters,
         arm_length: units.meters,
-        encoder: phoenix6.hardware.CANcoder,
-        encoder_offset: units.turns,
         min_angle: units.radians,
         max_angle: units.radians,
         starting_angle: units.radians,
     ) -> None:
         self.motor_sim = motor_sim
-        self.encoder_sim = encoder.sim_state
-        self.encoder_sim.sensor_offset = encoder_offset
-        self.encoder_sim.set_raw_position(starting_angle / math.tau)
+        self.encoder_sim = encoder_sim
         self.mech_sim = ArmMechanism(
             self.motor_sim.gearbox,
             moi,
@@ -255,10 +285,11 @@ class ArmSim:
             self.mech_sim.get_angular_velocity(),
             dt,
         )
-        self.encoder_sim.set_raw_position(
-            self.mech_sim.get_angular_position() / math.tau
+        self.encoder_sim.update_from_mechanism(
+            self.mech_sim.get_angular_position(),
+            self.mech_sim.get_angular_velocity(),
+            dt,
         )
-        self.encoder_sim.set_velocity(self.mech_sim.get_angular_velocity() / math.tau)
 
 
 # class ServoEncoderSim:
@@ -307,9 +338,12 @@ class PhysicsEngine:
                 robot.turret.motor,
                 gearing=(1 / robot.turret.MOTOR_TO_TURRET_GEARING),
             ),
+            CANcoderSim(
+                robot.turret.absolute_encoder,
+                robot.turret.ENCODER_OFFSET,
+                robot.turret.TURRET_TO_ENCODER_GEARING,
+            ),
             0.02890532995,
-            robot.turret.absolute_encoder,
-            robot.turret.ENCODER_OFFSET,
         )
 
         self.vision_sim = VisionSystemSim("main")
@@ -335,10 +369,11 @@ class PhysicsEngine:
                 robot.intake.deployer_motor,
                 gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
             ),
+            CANcoderSim(
+                robot.intake.deployer_encoder, robot.intake.ENCODER_ZERO_OFFSET, 1.0
+            ),
             robot.intake.ARM_MOI,
             robot.intake.ARM_LENGTH,
-            robot.intake.deployer_encoder,
-            robot.intake.ENCODER_ZERO_OFFSET,
             robot.intake.DEPLOYED_INTAKE_ANGLE,
             robot.intake.RETRACTED_INTAKE_ANGLE,
             robot.intake.DEPLOYED_INTAKE_ANGLE,
