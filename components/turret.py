@@ -1,6 +1,6 @@
 import math
 
-from magicbot import MagicRobot, feedback, tunable
+from magicbot import feedback, tunable
 from phoenix6.configs import (
     CANcoderConfiguration,
     CommutationConfigs,
@@ -49,6 +49,8 @@ class TurretComponent:
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)
 
+    MOI: units.kilogram_square_meters = 0.02890532995
+
     def __init__(self) -> None:
         # Initialise Encoder
         self.absolute_encoder = CANcoder(CancoderId.TURRET)
@@ -75,11 +77,7 @@ class TurretComponent:
 
         motor_output_config = (
             MotorOutputConfigs()
-            .with_inverted(
-                InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-                if MagicRobot.isSimulation()
-                else InvertedValue.CLOCKWISE_POSITIVE
-            )
+            .with_inverted(InvertedValue.CLOCKWISE_POSITIVE)
             .with_neutral_mode(NeutralModeValue.BRAKE)
         )
 
