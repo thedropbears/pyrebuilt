@@ -88,6 +88,9 @@ class Targeter:
     def execute(self) -> None:
         current_pos = self.chassis.get_pose().translation()
 
+        self.target = alliance_hub_pos(is_red())
+        return
+
         if is_in_alliance_zone(current_pos):
             self.target = self.get_optimal_target_from_alliance_zone()
 
