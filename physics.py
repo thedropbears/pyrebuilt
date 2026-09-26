@@ -355,8 +355,6 @@ class PhysicsEngine:
         speeds = self.kinematics.toChassisSpeeds(states)
         self.flywheel_sim.update(tm_diff)
 
-        self.imu.add_yaw(math.degrees(speeds.omega * tm_diff))
-
         self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
