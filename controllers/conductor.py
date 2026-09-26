@@ -63,24 +63,20 @@ class Conductor(StateMachine):
     def dispatch_ballistics_setpoints(self, feed_needed: bool = True):
 
         turret_base_pose, turret_base_velocity = self.get_current_turret_config()
-
-        self.turret_pose.setPose(
-            turret_base_pose.rotateAround(
-                turret_base_pose.translation(),
-                Rotation2d(self.turret.get_current_angle()),
-            )
-        )
+        target = self.targeter.get_target()
 
         solution = self.ballistics.solve_for(
             turret_base_pose,
             turret_base_velocity,
-            self.targeter.get_target(),
+            target,
         )
 
         if feed_needed:
             self.hopper.feed(solution.feed_speed)
         self.turret.slew_to(solution.bearing)
         self.shooter.set_flywheel(solution.flywheel_speed)
+
+        self.draw_turret_aim(turret_base_pose, target)
 
     def shoot(self) -> None:
         if self.shooter.flywheel_is_at_speed():
@@ -148,3 +144,17 @@ class Conductor(StateMachine):
 
         if self.intake.is_retracted():
             self.done()
+
+    def draw_turret_aim(self, turret_pose: Pose2d, goal: Translation2d) -> None:
+        start = turret_pose.translation()
+        distance = start.distance(goal)
+
+        # Actual aim direction in the field frame (mount rotation + turret angle).
+        aim_heading = turret_pose.rotation() + Rotation2d(
+            self.turret.get_current_angle()
+        )
+        aim_end = start + Translation2d(distance, aim_heading)
+
+        self.field.getObject("TurretAim").setPoses(
+            [Pose2d(start, aim_heading), Pose2d(aim_end, aim_heading)]
+        )
