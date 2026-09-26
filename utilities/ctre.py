@@ -125,7 +125,7 @@ def _talon_feedback(motor: TalonFX | TalonFXS) -> _TalonFeedback:
     )
 
 
-class TalonFXMotorSim(MotorSim):
+class TalonMotorSim(MotorSim):
     def __init__(
         self,
         # DCMotor gearbox factory, e.g. DCMotor.falcon500

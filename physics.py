@@ -17,7 +17,7 @@ from wpimath.system.plant import DCMotor
 
 from swerves.comp import TunerConstants
 from utilities import game
-from utilities.ctre import CANcoderSim, TalonFXMotorSim
+from utilities.ctre import CANcoderSim, TalonMotorSim
 from utilities.functions import constrain_angle
 from utilities.simulation import ArmMechanism, MotorMechanismSim, SimpleMechanism
 
@@ -47,15 +47,13 @@ class PhysicsEngine:
         ]
         self.swerve = SimSwerveDrivetrain(swerve_positions, self.imu, module_constants)
 
-        flywheel_motor = TalonFXMotorSim(
-            DCMotor.krakenX60, robot.shooter.flywheel_motor
-        )
+        flywheel_motor = TalonMotorSim(DCMotor.krakenX60, robot.shooter.flywheel_motor)
         self.flywheel_sim = MotorMechanismSim(
             flywheel_motor,
             SimpleMechanism(flywheel_motor, robot.shooter.FLYWHEEL_MOI),
         )
 
-        turret_motor = TalonFXMotorSim(DCMotor.minion, robot.turret.motor)
+        turret_motor = TalonMotorSim(DCMotor.minion, robot.turret.motor)
         self.turret_sim = MotorMechanismSim(
             turret_motor,
             SimpleMechanism(turret_motor, robot.turret.MOI),
@@ -65,7 +63,7 @@ class PhysicsEngine:
             ),
         )
 
-        intake_motor = TalonFXMotorSim(DCMotor.falcon500, robot.intake.deployer_motor)
+        intake_motor = TalonMotorSim(DCMotor.falcon500, robot.intake.deployer_motor)
         self.intake_arm_sim = MotorMechanismSim(
             intake_motor,
             ArmMechanism(
