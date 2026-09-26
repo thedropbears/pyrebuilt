@@ -110,6 +110,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.best_log = field.getObject(name + "_best_log")
         self.field_pos_obj = field.getObject(name + "_vision_pose")
 
+        self.turret_pose = field.getObject(name + "_turret_pose")
         self.current_reproj = 0.0
         self.has_multitag = False
         self.has_seen_multitag = False
@@ -228,8 +229,6 @@ class VisualLocalizer(HasPerLoopCache):
             wpilib.Timer.getFPGATimestamp(), self.chassis.get_rotation()
         )
 
-        if self.add_to_estimator:
-            self.process_camera_results()
 
     def process_camera_results(self) -> None:
         all_results = self.camera.getAllUnreadResults()
@@ -326,6 +325,13 @@ class VisualLocalizer(HasPerLoopCache):
         )
         self.field_pos_obj.setPose(pose)
         self.best_log.setPose(pose)
+        self.turret_pose.setPose(
+                    self.chassis.get_pose()
+                    + Transform2d(
+                        current_robot_to_cam.translation().toTranslation2d(),
+                        current_robot_to_cam.rotation().toRotation2d(),
+                    )
+                )
 
     def aim_turret(self) -> None:
         desired = self.turret.clamp_angle(self.get_desired_turret_angle())
