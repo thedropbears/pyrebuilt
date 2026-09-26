@@ -180,7 +180,7 @@ class CANcoderSim(EncoderSim):
         return CANcoderSim(encoder, gearing)
 
     @staticmethod
-    def from_dependant_device(
+    def from_dependent_device(
         encoder: CANcoder, dependant_device: TalonFX | TalonFXS
     ) -> CANcoderSim:
         feedback = _talon_feedback(dependant_device)

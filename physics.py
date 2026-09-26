@@ -57,7 +57,7 @@ class PhysicsEngine:
         self.turret_sim = MotorMechanismSim(
             turret_motor,
             SimpleMechanism(turret_motor, robot.turret.MOI),
-            CANcoderSim.from_dependant_device(
+            CANcoderSim.from_dependent_device(
                 robot.turret.absolute_encoder,
                 robot.turret.motor,
             ),
@@ -74,7 +74,7 @@ class PhysicsEngine:
                 max_angle=robot.intake.RETRACTED_INTAKE_ANGLE,
                 starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
             ),
-            CANcoderSim.from_dependant_device(
+            CANcoderSim.from_dependent_device(
                 robot.intake.deployer_encoder, robot.intake.deployer_motor
             ),
         )
