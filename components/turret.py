@@ -49,6 +49,8 @@ class TurretComponent:
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)
 
+    MOI: units.kilogram_square_meters = 0.02890532995
+
     def __init__(self) -> None:
         # Initialise Encoder
         self.absolute_encoder = CANcoder(CancoderId.TURRET)

@@ -60,13 +60,13 @@ class PhysicsEngine:
         )
         self.flywheel_sim = MotorMechanismSim(
             flywheel_motor,
-            SimpleMechanism(flywheel_motor, 796.0 * 1e-6),
+            SimpleMechanism(flywheel_motor, robot.shooter.FLYWHEEL_MOI),
         )
 
         turret_motor = TalonFXMotorSim(DCMotor.minion, robot.turret.motor)
         self.turret_sim = MotorMechanismSim(
             turret_motor,
-            SimpleMechanism(turret_motor, 0.02890532995),
+            SimpleMechanism(turret_motor, robot.turret.MOI),
             CANcoderSim.from_dependant_device(
                 robot.turret.absolute_encoder,
                 robot.turret.motor,
