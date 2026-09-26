@@ -57,14 +57,15 @@ def _talon_sim_state(
     )
 
     if isinstance(motor, TalonFXS):
-        sim_state = motor.sim_state
-        sim_state.motor_orientation = orientation
-    else:
-        sim_state = motor.sim_state
-        sim_state.orientation = orientation
+        fxs_state = motor.sim_state
+        fxs_state.motor_orientation = orientation
+        fxs_state.set_supply_voltage(12.0)
+        return fxs_state
 
-    sim_state.set_supply_voltage(12.0)
-    return sim_state
+    fx_state = motor.sim_state
+    fx_state.orientation = orientation
+    fx_state.set_supply_voltage(12.0)
+    return fx_state
 
 
 _FX_CANCODER_SOURCES = {
@@ -101,26 +102,26 @@ class _TalonFeedback:
 def _talon_feedback(motor: TalonFX | TalonFXS) -> _TalonFeedback:
     if isinstance(motor, TalonFXS):
         ext = _read_config(motor.configurator, ExternalFeedbackConfigs())
-        source = ext.external_feedback_sensor_source
+        ext_source = ext.external_feedback_sensor_source
         return _TalonFeedback(
-            uses_rotor=source == ExternalFeedbackSensorSourceValue.COMMUTATION,
+            uses_rotor=ext_source == ExternalFeedbackSensorSourceValue.COMMUTATION,
             rotor_to_sensor=ext.rotor_to_sensor_ratio,
             sensor_to_mechanism=ext.sensor_to_mechanism_ratio,
             cancoder_id=(
                 ext.feedback_remote_sensor_id
-                if source in _FXS_CANCODER_SOURCES
+                if ext_source in _FXS_CANCODER_SOURCES
                 else None
             ),
         )
 
     fb = _read_config(motor.configurator, FeedbackConfigs())
-    source = fb.feedback_sensor_source
+    fx_source = fb.feedback_sensor_source
     return _TalonFeedback(
-        uses_rotor=source == FeedbackSensorSourceValue.ROTOR_SENSOR,
+        uses_rotor=fx_source == FeedbackSensorSourceValue.ROTOR_SENSOR,
         rotor_to_sensor=fb.rotor_to_sensor_ratio,
         sensor_to_mechanism=fb.sensor_to_mechanism_ratio,
         cancoder_id=(
-            fb.feedback_remote_sensor_id if source in _FX_CANCODER_SOURCES else None
+            fb.feedback_remote_sensor_id if fx_source in _FX_CANCODER_SOURCES else None
         ),
     )
 
