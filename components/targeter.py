@@ -89,6 +89,7 @@ class Targeter:
         current_pos = self.chassis.get_pose().translation()
 
         self.target = alliance_hub_pos(is_red())
+        self.target_pos_obj.setPose(self.target.x, self.target.y, Rotation2d())
         return
 
         if is_in_alliance_zone(current_pos):
