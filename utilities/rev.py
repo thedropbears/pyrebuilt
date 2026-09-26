@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Callable
 
 import rev
 import wpilib
@@ -46,7 +47,7 @@ def configure_through_bore_encoder(
 class SparkMotorSim(MotorSim):
     def __init__(
         self,
-        gearbox_motor: typing.Callable[[int], DCMotor],
+        gearbox_motor: Callable[[int], DCMotor],
         *motors: rev.SparkMax,
         # Reduction between motor and mechanism rotations, as output over input.
         # If the mechanism spins slower than the motor, this number should be greater than one.

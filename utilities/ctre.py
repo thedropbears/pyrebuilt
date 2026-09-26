@@ -40,12 +40,6 @@ def _read_config[ConfigT](configurator: typing.Any, config: ConfigT) -> ConfigT:
     return config
 
 
-def _chassis_reference(clockwise_positive: bool) -> ChassisReference:
-    if clockwise_positive:
-        return ChassisReference.CLOCKWISE_POSITIVE
-    return ChassisReference.COUNTER_CLOCKWISE_POSITIVE
-
-
 INVERTED_VALUE_TO_CHASSIS_REFERENCE = {
     InvertedValue.CLOCKWISE_POSITIVE: ChassisReference.CLOCKWISE_POSITIVE,
     InvertedValue.COUNTER_CLOCKWISE_POSITIVE: ChassisReference.COUNTER_CLOCKWISE_POSITIVE,
@@ -59,17 +53,14 @@ def _talon_sim_state(
     motor_output = _read_config(motor.configurator, MotorOutputConfigs())
 
     orientation = INVERTED_VALUE_TO_CHASSIS_REFERENCE[motor_output.inverted]
+    motor.sim_state.set_supply_voltage(12.0)
 
     if isinstance(motor, TalonFXS):
-        fxs_state = motor.sim_state
-        fxs_state.motor_orientation = orientation
-        fxs_state.set_supply_voltage(12.0)
-        return fxs_state
+        motor.sim_state.motor_orientation = orientation
+    else:
+        motor.sim_state.orientation = orientation
 
-    fx_state = motor.sim_state
-    fx_state.orientation = orientation
-    fx_state.set_supply_voltage(12.0)
-    return fx_state
+    return motor.sim_state
 
 
 _FX_CANCODER_SOURCES = {
@@ -175,10 +166,6 @@ def _cancoder_sim_state(encoder: CANcoder) -> CANcoderSimState:
 
 
 class CANcoderSim(EncoderSim):
-    @staticmethod
-    def from_gearing(encoder: CANcoder, gearing: float) -> CANcoderSim:
-        return CANcoderSim(encoder, gearing)
-
     @staticmethod
     def from_dependent_device(
         encoder: CANcoder, dependant_device: TalonFX | TalonFXS
