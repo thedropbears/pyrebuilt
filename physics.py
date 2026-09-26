@@ -24,14 +24,6 @@ from utilities.simulation import ArmMechanism, MotorMechanismSim, SimpleMechanis
 if typing.TYPE_CHECKING:
     from robot import MyRobot
 
-# class ServoEncoderSim:
-#     def __init__(self, pwm, encoder):
-#         self.pwm_sim = PWMSim(pwm)
-#         self.encoder_sim = DutyCycleEncoderSim(encoder)
-
-#     def update(self):
-#         command = self.pwm_sim.getPosition()
-
 
 class PhysicsEngine:
     def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
