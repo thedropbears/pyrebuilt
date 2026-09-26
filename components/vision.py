@@ -396,7 +396,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_innovation = pose - self.chassis.get_pose()
 
         linear_odometry_std_devs, rotation_odometry_std_devs = (
-           VisualLocalizer.LINEAR_MEASUREMENT_STD_DEV,
+            VisualLocalizer.LINEAR_MEASUREMENT_STD_DEV,
             VisualLocalizer.ROTATION_MEASUREMENT_STD_DEV,
         )
         sxx = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
