@@ -160,6 +160,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.pose_log_entry = wpiutil.log.FloatArrayLogEntry(
             data_log, name + "_vision_pose"
         )
+        self.turret_pose = field.getObject(name + "_turret_pose")
 
         self.current_reproj = 0.0
         self.has_multitag = False
@@ -317,6 +318,15 @@ class VisualLocalizer(HasPerLoopCache):
         now = wpilib.Timer.getFPGATimestamp()
         self.turret_rotation_buffer.addSample(now, self.turret_rotation)
         self.heading_buffer.addSample(now, self.chassis.get_rotation())
+
+        current_robot_to_cam = self.robot_to_camera(now)
+        self.turret_pose.setPose(
+            self.chassis.get_pose()
+            + Transform2d(
+                current_robot_to_cam.translation().toTranslation2d(),
+                current_robot_to_cam.rotation().toRotation2d(),
+            )
+        )
 
         if not self.add_to_estimator:
             return
