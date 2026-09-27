@@ -46,9 +46,6 @@ class VisualLocalizer(HasPerLoopCache):
     using information from a single PhotonVision camera.
     """
 
-    # Give bias to the best pose by multiplying this const to the alt dist
-    BEST_POSE_BIAS = 1.2
-
     # Time since the last target sighting we allow before informing drivers
     TIMEOUT = 1.0  # s
 
@@ -59,9 +56,7 @@ class VisualLocalizer(HasPerLoopCache):
 
     add_to_estimator = tunable(True)
     only_use_multitag = tunable(True)
-    should_log = tunable(True)
 
-    last_pose_z = tunable(0.0, writeDefault=False)
     linear_uncertainty_single_tag = tunable(0.30)
     rotation_uncertainty_single_tag = tunable(0.6)
 
@@ -140,7 +135,6 @@ class VisualLocalizer(HasPerLoopCache):
         self.max_rotation = min(relative_rotations[1], relative_servo_rotations[1])
 
         self.servo = wpilib.Servo(servo_id)
-        self.pos = turret_pos
         self.robot_to_turret = Transform3d(turret_pos, Rotation3d(turret_rot))
         self.robot_to_turret_2d = Transform2d(turret_pos.toTranslation2d(), turret_rot)
         self.turret_to_camera = Transform3d(
@@ -154,15 +148,10 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_timestamp = -1.0
         self.best_log = field.getObject(name + "_best_log")
         self.field_pos_obj = field.getObject(name + "_vision_pose")
-        self.pose_log_entry = wpiutil.log.FloatArrayLogEntry(
-            data_log, name + "_vision_pose"
-        )
 
         self.current_reproj = 0.0
         self.has_multitag = False
         self.has_seen_multitag = False
-
-        self._has_pairs = False
 
         self.override_setpoint = 0.5
 
@@ -184,10 +173,6 @@ class VisualLocalizer(HasPerLoopCache):
         return Rotation2d(self.encoder.get())
 
     @feedback
-    def has_pairs(self) -> bool:
-        return self._has_pairs
-
-    @feedback
     @cache_per_loop
     def relative_bearing_to_best_cluster(self) -> float:
         tags = self.get_visible_tags()
@@ -199,10 +184,8 @@ class VisualLocalizer(HasPerLoopCache):
             bearing_pairs = zip(relative_bearings, relative_bearings[offset:])
             for pair in bearing_pairs:
                 if abs(pair[0] - pair[1]) < self.CAMERA_FOV:
-                    self._has_pairs = True
                     return (pair[1] + pair[0]) * 0.5
-        # If we get here there are no pairs, so choose the closest
-        self._has_pairs = False
+
         tags.sort(key=lambda v: v.range)
         return tags[0].relative_bearing
 
