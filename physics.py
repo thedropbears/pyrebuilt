@@ -63,7 +63,7 @@ class PhysicsEngine:
             ),
         )
 
-        intake_motor = TalonMotorSim(DCMotor.falcon500, robot.intake.deployer_motor)
+        intake_motor = TalonMotorSim(DCMotor.falcon500, robot.intake.intake_deployer)
         self.intake_arm_sim = MotorMechanismSim(
             intake_motor,
             ArmMechanism(
@@ -75,7 +75,7 @@ class PhysicsEngine:
                 starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
             ),
             CANcoderSim.from_dependent_device(
-                robot.intake.deployer_encoder, robot.intake.deployer_motor
+                robot.intake.deployer_encoder, robot.intake.intake_deployer
             ),
         )
 
@@ -94,21 +94,6 @@ class PhysicsEngine:
         self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
         self.port_vision_encoder_sim = DutyCycleEncoderSim(
             self.port_visual_localiser.encoder
-        )
-
-        self.intake_arm_sim = ArmSim(
-            TalonFXMotorSim(
-                DCMotor.falcon500,
-                robot.intake.intake_deployer,
-                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
-            ),
-            robot.intake.ARM_MOI,
-            robot.intake.ARM_LENGTH,
-            robot.intake.deployer_encoder,
-            robot.intake.ENCODER_ZERO_OFFSET,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
-            robot.intake.RETRACTED_INTAKE_ANGLE,
-            robot.intake.DEPLOYED_INTAKE_ANGLE,
         )
 
     def update_sim(self, _now: float, tm_diff: units.seconds) -> None:
