@@ -13,8 +13,8 @@ from components.ballistics import BallisticsSolver
 from components.chassis import ChassisComponent
 from components.climber import ClimberComponent
 from components.hopper import HopperComponent
+from components.intake import IntakeComponent
 from components.leds import LEDComponent
-from components.new_intake import IntakeComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
