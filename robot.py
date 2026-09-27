@@ -13,9 +13,8 @@ from components.ballistics import BallisticsSolver
 from components.chassis import ChassisComponent
 from components.climber import ClimberComponent
 from components.hopper import HopperComponent
-from components.intake import IntakeComponent
 from components.leds import LEDComponent
-from components.new_intake import NewIntakeComponent
+from components.new_intake import IntakeComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
@@ -42,10 +41,9 @@ class MyRobot(magicbot.MagicRobot):
     hopper: HopperComponent
     shooter: ShooterComponent
     climber: ClimberComponent
-    intake: IntakeComponent
     turret: TurretComponent
     leds: LEDComponent
-    new_intake: NewIntakeComponent
+    intake: IntakeComponent
 
     # Driving constraints
     max_speed = tunable(3.0)  # m/s
@@ -239,9 +237,9 @@ class MyRobot(magicbot.MagicRobot):
                 self.climber.retract()
 
         if self.gamepad.getXButton():
-            self.new_intake.deploy()
+            self.intake.deploy()
         if self.gamepad.getAButton():
-            self.new_intake.retract()
+            self.intake.retract()
 
         if self.gamepad.getLeftBumperButton():
             self.hopper.feed(self.test_hopper_surface_speed)
@@ -318,7 +316,7 @@ class MyRobot(magicbot.MagicRobot):
         self.targeter.execute()
         self.conductor.dispatch_ballistics_setpoints()
         self.leds.execute()
-        self.new_intake.execute()
+        self.intake.execute()
 
     @override
     def robotPeriodic(self) -> None:

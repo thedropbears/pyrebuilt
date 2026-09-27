@@ -8,7 +8,7 @@ from wpimath import units
 from ids import DioChannel, TalonId
 
 
-class NewIntakeComponent:
+class IntakeComponent:
     target_roller_rps = will_reset_to(units.turns_per_second(0))
     target_intake_angle = will_reset_to(units.degrees(0))
     RETRACTED_INTAKE_ANGLE = units.degrees(0)
@@ -44,6 +44,9 @@ class NewIntakeComponent:
     @feedback
     def get_intake_angle(self):
         return self.encoder.get()
+
+    def periodic(self):
+        self.rotating_arm.setAngle(self.get_intake_angle())
 
     def execute(self):
         self.rotating_arm.setAngle(self.target_intake_angle)
