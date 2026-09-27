@@ -178,16 +178,14 @@ class VisualLocalizer(HasPerLoopCache):
         tags = self.get_visible_tags()
         if len(tags) == 0:
             return 0.0
-        relative_bearings = [tag.relative_bearing for tag in tags]
-        relative_bearings.sort()
+        relative_bearings = sorted(tag.relative_bearing for tag in tags)
         for offset in range(len(relative_bearings) - 1, 0, -1):
             bearing_pairs = zip(relative_bearings, relative_bearings[offset:])
             for pair in bearing_pairs:
                 if abs(pair[0] - pair[1]) < self.CAMERA_FOV:
                     return (pair[1] + pair[0]) * 0.5
 
-        tags.sort(key=lambda v: v.range)
-        return tags[0].relative_bearing
+        return min(tags, key=lambda v: v.range).relative_bearing
 
     @feedback
     @cache_per_loop
