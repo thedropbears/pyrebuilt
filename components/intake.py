@@ -3,8 +3,8 @@ from math import isclose, radians
 from magicbot import feedback, will_reset_to
 from phoenix6.configs import Slot0Configs, TalonFXConfiguration
 from phoenix6.controls import DutyCycleOut, PositionVoltage
-from phoenix6.hardware import TalonFX
-from wpilib import AnalogEncoder, Mechanism2d, SmartDashboard
+from phoenix6.hardware import TalonFX, cancoder
+from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
 
 from ids import DioChannel, TalonId
@@ -16,15 +16,20 @@ class IntakeComponent:
     RETRACTED_INTAKE_ANGLE = units.degrees(0)
     DEPLOYED_INTAKE_ANGLE = units.degrees(75)
     DESIRED_ROLLER_VOLTAGE = DutyCycleOut(1)
+    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
+    ENCODER_ZERO_OFFSET = -0.486328125
+
+    ARM_LENGTH = 0.34
+    ARM_MOI = 0.21313981
 
     def __init__(self) -> None:
         self.intake_deployer = TalonFX(TalonId.INTAKE_DEPLOYER)
         self.intake_roller = TalonFX(TalonId.INTAKE_ROLLER)
-        self.encoder = AnalogEncoder(DioChannel.INTAKE_DEPLOYER_ENCODER)
+        self.deployer_encoder = cancoder.CANcoder(DioChannel.INTAKE_DEPLOYER_ENCODER)
         slot0_configs = Slot0Configs()
-        slot0_configs.with_k_p(1)
+        slot0_configs.with_k_p(60.0)
         slot0_configs.with_k_i(0)
-        slot0_configs.with_k_d(1)
+        slot0_configs.with_k_d(3.0)
         self.intake_deployer.configurator.apply(
             TalonFXConfiguration().with_slot0(slot0_configs)
         )
@@ -32,7 +37,7 @@ class IntakeComponent:
         self.mech = Mechanism2d(3, 3)
         self.root = self.mech.getRoot("intake", 0, 2)
         self.rotating_arm = self.root.appendLigament("rotating arm", 6, 90)
-        SmartDashboard.putData("Practice Mech 2D", self.mech)
+        SmartDashboard.putData("Mech 2D", self.mech)
         roller_configs = Slot0Configs()
         roller_configs.with_k_p(1)
         roller_configs.with_k_i(0)
@@ -52,7 +57,11 @@ class IntakeComponent:
 
     @feedback
     def get_intake_angle(self):
-        return self.encoder.get()
+        return self.deployer_encoder.get_absolute_position().value
+
+    @feedback
+    def get_target_intake_angle(self):
+        return self.target_intake_angle
 
     def periodic(self):
         self.rotating_arm.setAngle(self.get_intake_angle())
