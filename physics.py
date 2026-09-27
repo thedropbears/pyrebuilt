@@ -96,6 +96,21 @@ class PhysicsEngine:
             self.port_visual_localiser.encoder
         )
 
+        self.intake_arm_sim = ArmSim(
+            TalonFXMotorSim(
+                DCMotor.falcon500,
+                robot.intake.intake_deployer,
+                gearing=1 / robot.intake.DEPLOYER_TO_CANCODER_GEARING,
+            ),
+            robot.intake.ARM_MOI,
+            robot.intake.ARM_LENGTH,
+            robot.intake.deployer_encoder,
+            robot.intake.ENCODER_ZERO_OFFSET,
+            robot.intake.DEPLOYED_INTAKE_ANGLE,
+            robot.intake.RETRACTED_INTAKE_ANGLE,
+            robot.intake.DEPLOYED_INTAKE_ANGLE,
+        )
+
     def update_sim(self, _now: float, tm_diff: units.seconds) -> None:
         self.swerve.update(
             tm_diff, self.rio.getVInVoltage(), self.robot.chassis.modules
