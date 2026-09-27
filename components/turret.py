@@ -12,7 +12,7 @@ from phoenix6.configs import (
     SoftwareLimitSwitchConfigs,
     TalonFXSConfiguration,
 )
-from phoenix6.controls import MotionMagicVoltage
+from phoenix6.controls import PositionVoltage
 from phoenix6.hardware import CANcoder, TalonFXS
 from phoenix6.signals import (
     ExternalFeedbackSensorSourceValue,
@@ -64,11 +64,11 @@ class TurretComponent:
         motor_gains_config = (
             Slot0Configs()
             .with_k_p(5.8939)
-            .with_k_i(0.0)
-            .with_k_d(0.022253)
+            # .with_k_i(0.0)
+            .with_k_d(1.02253)
             .with_k_s(0.14095)
-            .with_k_v(2.4342)
-            .with_k_a(0.14956)
+            # .with_k_v(2.4342)
+            # .with_k_a(0.14956)
         )
 
         motor_output_config = (
@@ -168,7 +168,7 @@ class TurretComponent:
         self.desired_angle = self.clamp_rotation(angle)
 
     def execute(self) -> None:
-        self.motor.set_control(MotionMagicVoltage(self.desired_angle / math.tau))
+        self.motor.set_control(PositionVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
