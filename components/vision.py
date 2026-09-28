@@ -53,6 +53,9 @@ class VisualLocalizer(HasPerLoopCache):
     # away from viewing it close to edge-on.
     FACING_ANGLE_THRESHOLD: units.degrees = 100
 
+    # currently just any tag on either hub. It will still localise if it sees others but wont try to aim at them.
+    TAG_AIM_WHITELIST = [3, 4, 5, 8, 9, 10, 11, 2, 25, 26, 17, 27, 19, 20, 21, 24]
+
     add_to_estimator = tunable(True)
     only_use_multitag = tunable(True)
 
@@ -110,6 +113,9 @@ class VisualLocalizer(HasPerLoopCache):
         self.has_seen_multitag = False
 
         self.override_setpoint = 0.5
+        self.allowed_tags = [
+            tag for tag in APRILTAGS_2D if tag.id in VisualLocalizer.TAG_AIM_WHITELIST
+        ]
 
     @feedback
     @cache_per_loop
@@ -136,7 +142,7 @@ class VisualLocalizer(HasPerLoopCache):
         turret_translation = turret_pose.translation()
         turret_rotation = turret_pose.rotation()
 
-        for tag in APRILTAGS_2D:
+        for tag in self.allowed_tags:
             tag_pose = tag.pose
             turret_to_tag = tag_pose.translation() - turret_translation
             turret_angle_to_tag = turret_to_tag.angle()
