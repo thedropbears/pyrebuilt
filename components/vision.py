@@ -227,13 +227,13 @@ class VisualLocalizer(HasPerLoopCache):
             wpilib.Timer.getFPGATimestamp(), self.chassis.get_rotation()
         )
 
-        if not self.add_to_estimator:
-            return
+        if self.add_to_estimator:
+            self.process_camera_results()
 
+    def process_camera_results(self) -> None:
         all_results = self.camera.getAllUnreadResults()
 
-        self.camera.isConnected()
-        # Skip processing results other than the most recent.
+        # Prefer the most recent multitag result; otherwise the most recent result.
         last_results: PhotonPipelineResult | None = None
         multitag_result: MultiTargetPNPResult | None = None
         for results in all_results:
@@ -250,6 +250,10 @@ class VisualLocalizer(HasPerLoopCache):
         if last_results is None:
             return
 
+        # We have a new frame to judge, so clear the flag and only set it
+        # again if a multitag measurement is actually accepted below.
+        self.has_multitag = False
+
         timestamp = last_results.getTimestampSeconds()
 
         self.estimator.robotToCamera = self.robot_to_camera(timestamp)
@@ -264,14 +268,13 @@ class VisualLocalizer(HasPerLoopCache):
                 return
             linear_vision_uncertainty = self.linear_uncertainty_multi_tag
             rotation_vision_uncertainty = self.rotation_uncertainty_multi_tag
-            self.has_multitag = True
 
             self.current_reproj = multitag_result.estimatedPose.bestReprojErr
             if self.current_reproj > self.reproj_error_threshold:
                 return
             self.has_seen_multitag = True
+            is_multitag = True
         else:
-            self.has_multitag = False
             if self.only_use_multitag:
                 return
             if self.has_seen_multitag:
@@ -288,7 +291,10 @@ class VisualLocalizer(HasPerLoopCache):
             rotation_vision_uncertainty = self.rotation_uncertainty_single_tag
             if pipeline_result.targetsUsed[0].getPoseAmbiguity() > 0.1:
                 return
+            is_multitag = False
 
+        # Measurement accepted from here on
+        self.has_multitag = is_multitag
         self.last_timestamp = timestamp
 
         pose = pipeline_result.estimatedPose.toPose2d()
