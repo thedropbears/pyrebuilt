@@ -106,6 +106,12 @@ class ServoTurret:
     def is_connected(self) -> bool:
         return self.encoder.isConnected()
 
+    def wrap_into_range(self, turret_angle: float) -> float | None:
+        wrapped = self.max_angle - ((self.max_angle - turret_angle) % math.tau)
+        if wrapped > self.min_angle:
+            return wrapped
+        return None
+
     def _angle_to_command(self, turret_angle: units.radians) -> float:
         # -1 at one end of the servo's travel, +1 at the other
         normalised = (turret_angle - self.neutral_angle) / self.half_travel

@@ -8,6 +8,7 @@ import wpiutil.wpistruct
 from magicbot import feedback, tunable, will_reset_to
 from photonlibpy import PhotonCamera, PhotonPoseEstimator
 from photonlibpy.targeting import MultiTargetPNPResult, PhotonPipelineResult
+from wpimath import units
 from wpimath.geometry import (
     Rotation2d,
     Rotation3d,
@@ -45,7 +46,12 @@ class VisualLocalizer(HasPerLoopCache):
     CAMERA_FOV = math.radians(
         68
     )  # photon vision says 69.8, but we are being conservative
+
     CAMERA_MAX_RANGE = 4.0  # m
+
+    # More than 90 degrees means the tag faces the turret; 100 keeps us
+    # away from viewing it close to edge-on.
+    FACING_ANGLE_THRESHOLD: units.degrees = 100
 
     add_to_estimator = tunable(True)
     only_use_multitag = tunable(True)
@@ -134,32 +140,21 @@ class VisualLocalizer(HasPerLoopCache):
             tag_pose = tag.pose
             turret_to_tag = tag_pose.translation() - turret_translation
             turret_angle_to_tag = turret_to_tag.angle()
-            relative_bearing = turret_angle_to_tag - turret_rotation
             distance = turret_to_tag.norm()
             relative_facing = tag_pose.rotation() - turret_angle_to_tag
-            relative_bearing_rad = relative_bearing.radians()
-            # Make the angle less than the max rotation, then see if we are above the min too
-            in_rotation_range = False
-            while relative_bearing_rad > self.turret.max_angle:
-                relative_bearing_rad -= math.tau
-            if relative_bearing_rad > self.turret.min_angle:
-                # We are good
-                in_rotation_range = True
-            # Try in the other direction in case we started below the min
-            while relative_bearing_rad < self.turret.min_angle:
-                relative_bearing_rad += math.tau
-            if relative_bearing_rad < self.turret.max_angle:
-                # We are good
-                in_rotation_range = True
+
+            relative_bearing = self.turret.wrap_into_range(
+                (turret_angle_to_tag - turret_rotation).radians()
+            )
 
             if (
-                in_rotation_range
-                and abs(relative_facing.degrees()) > 100
+                relative_bearing is not None
+                and abs(relative_facing.degrees()) > self.FACING_ANGLE_THRESHOLD
                 and distance < self.CAMERA_MAX_RANGE
             ):
                 # Test for relative facing is more than 90 degrees because we don't want to be too
                 # close to parallel to the tag
-                tags_in_view.append(VisibleTag(tag.id, relative_bearing_rad, distance))
+                tags_in_view.append(VisibleTag(tag.id, relative_bearing, distance))
 
         return tags_in_view
 
