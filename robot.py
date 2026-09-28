@@ -18,12 +18,13 @@ from components.leds import LEDComponent
 from components.shooter import ShooterComponent
 from components.targeter import Targeter
 from components.turret import TurretComponent
-from components.vision import ServoOffsets, VisualLocalizer
+from components.vision import VisualLocalizer
 from controllers.conductor import Conductor
 from controllers.gobbler import Gobbler
 from ids import DioChannel, PwmChannel
 from utilities.game import is_red
 from utilities.scalers import rescale_js
+from utilities.servo import ServoTurret, TurretCalibration
 
 
 class MyRobot(magicbot.MagicRobot):
@@ -104,22 +105,21 @@ class MyRobot(magicbot.MagicRobot):
 
         self.status_lights_strip_length = 112 * 4
 
-        self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
-        self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
-
         self.port_vision_name = "port_turret"
         self.port_vision_turret_pos = Translation3d(0.161, 0.169, 0.401)
         self.port_vision_turret_rot = Rotation2d()
         self.port_vision_camera_offset = Translation3d(0.027501, 0, 0.026724)
         self.port_vision_camera_pitch = math.radians(-5.0)
-        self.port_vision_encoder_offset = Rotation2d(2.055)
-        self.port_vision_servo_offsets = ServoOffsets(
-            neutral=Rotation2d(1.928),
-            full_range=Rotation2d(3.960),
-        )
-        self.port_vision_rotation_range = (
-            Rotation2d(0.952),
-            Rotation2d(3.482),
+        self.port_vision_turret = ServoTurret(
+            PwmChannel.PORT_VISION_SERVO,
+            DioChannel.PORT_VISION_ENCODER,
+            TurretCalibration(
+                encoder_at_forward=Rotation2d(2.055),
+                encoder_at_servo_neutral=Rotation2d(1.928),
+                encoder_at_servo_full_range=Rotation2d(3.960),
+                encoder_at_min_limit=Rotation2d(0.952),
+                encoder_at_max_limit=Rotation2d(3.482),
+            ),
         )
 
     @override
