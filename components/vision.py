@@ -106,19 +106,6 @@ class VisualLocalizer(HasPerLoopCache):
         self.override_setpoint = 0.5
 
     @feedback
-    def reproj(self) -> float:
-        return self.current_reproj
-
-    @feedback
-    def using_multitag(self) -> bool:
-        return self.has_multitag
-
-    @feedback
-    def get_raw_encoder_rotation(self) -> Rotation2d:
-        # The encoder has been set up to return values in the interval [0, 2pi]
-        return self.turret.raw_encoder_reading_()
-
-    @feedback
     @cache_per_loop
     def relative_bearing_to_best_cluster(self) -> float:
         tags = self.get_visible_tags()
@@ -181,6 +168,39 @@ class VisualLocalizer(HasPerLoopCache):
         # Read encoder angle and account for offset
         return self.relative_bearing_to_best_cluster()
 
+    @feedback
+    def reproj(self) -> float:
+        return self.current_reproj
+
+    @feedback
+    def using_multitag(self) -> bool:
+        return self.has_multitag
+
+    @feedback
+    def get_raw_encoder_rotation(self) -> Rotation2d:
+        # The encoder has been set up to return values in the interval [0, 2pi]
+        return self.turret.raw_encoder_reading_()
+
+    @feedback
+    def camera_connected(self) -> bool:
+        return self.camera.isConnected()
+
+    @feedback
+    def sees_multi_tag_target(self) -> bool:
+        return self.has_multitag and self.sees_target()
+
+    @feedback
+    def get_last_mahalanobis(self):
+        return self.last_mahalanobis
+
+    @feedback
+    def get_last_innovation(self) -> Transform2d:
+        return self.last_innovation
+
+    @feedback
+    def sees_target(self) -> bool:
+        return wpilib.Timer.getFPGATimestamp() - self.last_timestamp < self.TIMEOUT
+
     def robot_to_camera(self, timestamp: float) -> Transform3d:
         turret_rotation = self.turret.rotation_at(timestamp)
         if turret_rotation is None:
@@ -197,10 +217,6 @@ class VisualLocalizer(HasPerLoopCache):
 
     def full_range_servo_(self) -> None:
         self.turret.hold_full_range_()
-
-    @feedback
-    def camera_connected(self) -> bool:
-        return self.camera.isConnected()
 
     def execute(self) -> None:
         self.aim_turret()
@@ -302,22 +318,6 @@ class VisualLocalizer(HasPerLoopCache):
         )
         self.field_pos_obj.setPose(pose)
         self.best_log.setPose(pose)
-
-    @feedback
-    def sees_target(self) -> bool:
-        return wpilib.Timer.getFPGATimestamp() - self.last_timestamp < self.TIMEOUT
-
-    @feedback
-    def sees_multi_tag_target(self) -> bool:
-        return self.has_multitag and self.sees_target()
-
-    @feedback
-    def get_last_mahalanobis(self):
-        return self.last_mahalanobis
-
-    @feedback
-    def get_last_innovation(self) -> Transform2d:
-        return self.last_innovation
 
     def aim_turret(self) -> None:
         desired = self.turret.clamp_angle(self.get_desired_turret_angle())
