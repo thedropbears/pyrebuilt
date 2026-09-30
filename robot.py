@@ -171,6 +171,8 @@ class MyRobot(magicbot.MagicRobot):
 
         if self.codriver_joystick.getTrigger():
             self.conductor.log_shot()
+        if self.gamepad.getAButton():
+            self.conductor.backdrive()
 
         if self.codriver_joystick.getRawButton(4):
             self.ballistics.LATENCY_FACTOR += 0.01
