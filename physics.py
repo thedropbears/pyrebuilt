@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from math import tau
 
 import wpilib
 from phoenix6.swerve.sim_swerve_drivetrain import SimSwerveDrivetrain
@@ -70,9 +71,9 @@ class PhysicsEngine:
                 intake_motor,
                 robot.intake.ARM_MOI,
                 robot.intake.ARM_LENGTH,
-                min_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
-                max_angle=robot.intake.RETRACTED_INTAKE_ANGLE,
-                starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE,
+                min_angle=robot.intake.DEPLOYED_INTAKE_ANGLE * tau,
+                max_angle=robot.intake.RETRACTED_INTAKE_ANGLE * tau,
+                starting_angle=robot.intake.DEPLOYED_INTAKE_ANGLE * tau,
             ),
             CANcoderSim.from_dependent_device(
                 robot.intake.deployer_encoder, robot.intake.deployer_motor
