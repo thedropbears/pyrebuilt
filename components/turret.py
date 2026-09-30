@@ -12,7 +12,7 @@ from phoenix6.configs import (
     SoftwareLimitSwitchConfigs,
     TalonFXSConfiguration,
 )
-from phoenix6.controls import MotionMagicVoltage
+from phoenix6.controls import PositionVoltage
 from phoenix6.hardware import CANcoder, TalonFXS
 from phoenix6.signals import (
     ExternalFeedbackSensorSourceValue,
@@ -42,10 +42,6 @@ class TurretComponent:
 
     desired_angle = tunable(0.0).with_properties(unit="radians")
 
-    fudge_factor = tunable(0.1)
-
-    max_fudge = tunable(20.0).with_properties(unit="degrees")
-
     MAX_TURRET_ROTATION = math.radians(155)
     MIN_TURRET_ROTATION = math.radians(-145)
 
@@ -68,11 +64,11 @@ class TurretComponent:
         motor_gains_config = (
             Slot0Configs()
             .with_k_p(5.8939)
-            .with_k_i(0.0)
-            .with_k_d(0.022253)
+            # .with_k_i(0.0)
+            .with_k_d(1.02253)
             .with_k_s(0.14095)
-            .with_k_v(2.4342)
-            .with_k_a(0.14956)
+            # .with_k_v(2.4342)
+            # .with_k_a(0.14956)
         )
 
         motor_output_config = (
@@ -171,21 +167,8 @@ class TurretComponent:
     def slew_to(self, angle: units.radians) -> None:
         self.desired_angle = self.clamp_rotation(angle)
 
-    def fudge_angle(self) -> units.radians:
-        max_fudge = math.radians(self.max_fudge)
-        fudge = clamp(self.desired_angle * self.fudge_factor, -max_fudge, max_fudge)
-        return self.clamp_rotation(self.desired_angle + fudge)
-
     def execute(self) -> None:
-        self.motor.set_control(MotionMagicVoltage(self.fudge_angle() / math.tau))
+        self.motor.set_control(PositionVoltage(self.desired_angle / math.tau))
 
     def periodic(self) -> None:
         self.sim_pointer.setAngle(self.get_current_angle_degrees())
-
-    def can_rotate_to_target(self) -> bool:
-        return self.desired_angle == self.clamp_rotation(self.desired_angle)
-
-    def is_close_to_rotation_limit(self) -> bool:
-        return math.isclose(
-            abs(self.desired_angle), self.MAX_TURRET_ROTATION, abs_tol=math.radians(15)
-        )
