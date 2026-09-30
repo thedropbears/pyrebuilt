@@ -21,6 +21,8 @@ class Colors:
     blue = RGBWColor(0, 0, 255)
     purple = RGBWColor(128, 0, 128)
     black = RGBWColor(0, 0, 0)
+    orange = RGBWColor(255, 165, 0)
+    yellow = RGBWColor(255, 255, 0)
 
 
 class States(IntEnum):
@@ -31,6 +33,11 @@ class States(IntEnum):
     READY_TO_RUN = auto()
     TELEOP_VISION = auto()
     TELEOP_NO_VISION = auto()
+    READY_TO_SHOOT = auto()
+    TURRET_NEARLY_OUT_OF_RANGE = auto()
+    TURRET_OUT_OF_RANGE = auto()
+    NEARLY_OUT_OF_SHOOTING_RANGE = auto()
+    OUT_OF_SHOOTING_RANGE = auto()
 
 
 class LEDComponent:
@@ -65,6 +72,9 @@ class LEDComponent:
 
     def ready_to_run(self):
         self._update_led_state(States.READY_TO_RUN)
+
+    def ready_to_shoot(self):
+        self._update_led_state(States.READY_TO_SHOOT)
 
     def teleop_vision(self):
         self._update_led_state(States.TELEOP_VISION)
@@ -102,6 +112,18 @@ class LEDComponent:
             return
         self.position_error = position_error
         self.should_update_leds = True
+
+    def turret_nearly_out_of_range(self):
+        self._update_led_state(States.TURRET_NEARLY_OUT_OF_RANGE)
+
+    def turret_out_of_range(self):
+        self._update_led_state(States.TURRET_OUT_OF_RANGE)
+
+    def nearly_out_of_shooting_range(self):
+        self._update_led_state(States.NEARLY_OUT_OF_SHOOTING_RANGE)
+
+    def out_of_shooting_range(self):
+        self._update_led_state(States.OUT_OF_SHOOTING_RANGE)
 
     def _make_auto_alignment_animation_segment(
         self, error, start_index, end_index, slot
@@ -165,7 +187,7 @@ class LEDComponent:
 
             case States.READY_TO_RUN:
                 self.candle.set_control(RainbowAnimation(self.LED_START, self.LED_END))
-            case States.TELEOP_VISION:
+            case States.READY_TO_SHOOT:
                 self.candle.set_control(
                     SolidColor(self.LED_START, self.LED_END, Colors.green)
                 )
@@ -177,4 +199,34 @@ class LEDComponent:
             case States.CAMERA_DEAD:
                 self.candle.set_control(
                     StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
+                )
+            case States.TURRET_NEARLY_OUT_OF_RANGE:
+                self.candle.set_control(
+                    ColorFlowAnimation(
+                        self.LED_START,
+                        self.LED_END,
+                        0,
+                        Colors.orange,
+                        AnimationDirectionValue.FORWARD,
+                        0.5,
+                    )
+                )
+            case States.TURRET_OUT_OF_RANGE:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.orange)
+                )
+            case States.NEARLY_OUT_OF_SHOOTING_RANGE:
+                self.candle.set_control(
+                    ColorFlowAnimation(
+                        self.LED_START,
+                        self.LED_END,
+                        0,
+                        Colors.yellow,
+                        AnimationDirectionValue.FORWARD,
+                        0.5,
+                    )
+                )
+            case States.OUT_OF_SHOOTING_RANGE:
+                self.candle.set_control(
+                    SolidColor(self.LED_START, self.LED_END, Colors.yellow)
                 )
