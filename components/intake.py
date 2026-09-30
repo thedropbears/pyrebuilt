@@ -1,4 +1,4 @@
-from math import atan2, degrees, isclose, radians, tau
+from math import isclose
 
 from magicbot import feedback, tunable, will_reset_to
 from phoenix6.configs import (
@@ -9,13 +9,11 @@ from phoenix6.configs import (
     MotionMagicConfigs,
     MotorOutputConfigs,
     Slot0Configs,
-    Slot1Configs,
     TalonFXConfiguration,
 )
 from phoenix6.controls import (
     MotionMagicVoltage,
     NeutralOut,
-    PositionVoltage,
     VelocityVoltage,
 )
 from phoenix6.hardware import CANcoder, TalonFX
@@ -36,8 +34,8 @@ class IntakeComponent:
     desired_roller_rps = tunable(38.0)
     target_roller_rps = will_reset_to(0.0)
 
-    RETRACTED_INTAKE_ANGLE: units.radians = radians(90.0)
-    DEPLOYED_INTAKE_ANGLE: units.radians = radians(-18.0)
+    RETRACTED_INTAKE_ANGLE: units.turns = 0.325
+    DEPLOYED_INTAKE_ANGLE: units.turns = 0.05
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
@@ -45,12 +43,12 @@ class IntakeComponent:
     MAX_DEPLOYER_ACCEL = 6.0
     MAX_DEPLOYER_JERK = 18.0
 
-    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (26 / 50)
+    DEPLOYER_TO_CANCODER_GEARING = (1 / 5) * (16 / 60)
     CANCODER_TO_MECHANISM_GEARING = 1
 
     MOTOR_TO_ROLLER_GEARING = 26 / 36
 
-    ENCODER_ZERO_OFFSET = -0.486328125  # read from phoenix tuner, negated and made to be between 0 and 1 by removing any integer component
+    ENCODER_ZERO_OFFSET = -0.243164
 
     # Sim
     ARM_LENGTH = 0.34  # meters
@@ -88,28 +86,16 @@ class IntakeComponent:
             .with_current_limits(CurrentLimitsConfigs().with_supply_current_limit(35.0))
         )
 
-        # siq hand tuned gains
         deployer_deploy_config = (
             Slot0Configs()
-            .with_k_v(2.2)
-            .with_k_a(0.2)
-            .with_k_s(0.12)
-            .with_k_g(0.8)
-            .with_gravity_arm_position_offset(-atan2(24.115, 206.87) / tau)
+            .with_k_v(0)
+            .with_k_a(0)
+            .with_k_s(0)
+            .with_k_g(0.6)
+            .with_gravity_arm_position_offset(0)
             .with_gravity_type(GravityTypeValue.ARM_COSINE)
-            .with_k_p(60.0)
-            .with_k_d(3.0)
-        )
-
-        deployer_hold_config = (
-            Slot1Configs()
-            .with_k_p(90.0)
-            .with_k_i(0.00)
-            .with_k_d(3)
-            .with_k_s(0.12)
-            .with_k_g(0.8)
-            .with_gravity_arm_position_offset(-atan2(24.115, 206.87) / tau)
-            .with_gravity_type(GravityTypeValue.ARM_COSINE)
+            .with_k_p(30)
+            .with_k_d(0.05)
         )
 
         deployer_output_config = (
@@ -137,7 +123,6 @@ class IntakeComponent:
             TalonFXConfiguration()
             .with_motor_output(deployer_output_config)
             .with_slot0(deployer_deploy_config)
-            .with_slot1(deployer_hold_config)
             .with_feedback(deployer_feedback_config)
             .with_motion_magic(deployer_magic_config)
         )
@@ -164,9 +149,6 @@ class IntakeComponent:
         self.drive()
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
 
-    def backdrive(self) -> None:
-        self.target_roller_rps = -self.desired_roller_rps
-
     def outtake(self) -> None:
         self.target_deployer_angle = self.DEPLOYED_INTAKE_ANGLE
         self.target_roller_rps = -self.desired_roller_rps
@@ -175,14 +157,7 @@ class IntakeComponent:
         self.target_roller_rps = self.desired_roller_rps
 
     def execute(self) -> None:
-        if self.should_use_holding_config():
-            self.deployer_motor.set_control(
-                PositionVoltage(self.target_deployer_angle / tau, slot=1)
-            )
-        else:
-            self.deployer_motor.set_control(
-                MotionMagicVoltage(self.target_deployer_angle / tau)
-            )
+        self.deployer_motor.set_control(MotionMagicVoltage(self.target_deployer_angle))
 
         if self.target_roller_rps == 0.0:
             self.roller_motor.set_control(NeutralOut())
@@ -191,32 +166,23 @@ class IntakeComponent:
 
     def is_retracted(self) -> bool:
         return isclose(
-            self.target_deployer_angle, self.RETRACTED_INTAKE_ANGLE, abs_tol=0.01
+            self.target_deployer_angle, self.RETRACTED_INTAKE_ANGLE, abs_tol=0.002
         ) and isclose(
             self.get_deployer_position(),
             self.RETRACTED_INTAKE_ANGLE,
-            abs_tol=radians(10),
-        )
-
-    def should_use_holding_config(self) -> bool:
-        return isclose(
-            self.target_deployer_angle, self.DEPLOYED_INTAKE_ANGLE, abs_tol=0.01
-        ) and isclose(
-            self.get_deployer_position(),
-            self.DEPLOYED_INTAKE_ANGLE,
-            abs_tol=radians(5.0),
+            abs_tol=0.02,
         )
 
     def periodic(self) -> None:
         self.intake_ligament.setAngle(self.get_deployer_position_degrees())
 
     @feedback
-    def get_deployer_position(self) -> units.radians:
-        return self.deployer_encoder.get_position().value * tau
+    def get_deployer_position(self) -> units.turns:
+        return self.deployer_encoder.get_position().value
 
     @feedback
     def get_deployer_position_degrees(self) -> units.degrees:
-        return degrees(self.get_deployer_position())
+        return self.get_deployer_position() * 360
 
     @feedback
     def get_deployer_error(self) -> units.degrees:
