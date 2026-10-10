@@ -51,7 +51,7 @@ class VisualLocalizer(HasPerLoopCache):
 
     # More than 90 degrees means the tag faces the turret; 100 keeps us
     # away from viewing it close to edge-on.
-    FACING_ANGLE_THRESHOLD: units.degrees = 100
+    FACING_ANGLE_THRESHOLD: units.degrees = 120
 
     # currently just any tag on either hub. It will still localise if it sees others but wont try to aim at them.
     TAG_AIM_WHITELIST = [3, 4, 5, 8, 9, 10, 11, 2, 25, 26, 18, 27, 19, 20, 21, 24]
@@ -72,6 +72,8 @@ class VisualLocalizer(HasPerLoopCache):
     chassis: ChassisComponent
 
     TURRET_DEADBAND = math.radians(5)
+    LINEAR_MEASUREMENT_STD_DEV = 0.05
+    ROTATION_MEASUREMENT_STD_DEV = 0.1
 
     def __init__(
         self,
@@ -108,6 +110,7 @@ class VisualLocalizer(HasPerLoopCache):
         self.best_log = field.getObject(name + "_best_log")
         self.field_pos_obj = field.getObject(name + "_vision_pose")
 
+        self.turret_pose = field.getObject(name + "_turret_pose")
         self.current_reproj = 0.0
         self.has_multitag = False
         self.has_seen_multitag = False
@@ -219,11 +222,19 @@ class VisualLocalizer(HasPerLoopCache):
         self.turret.hold_full_range_()
 
     def execute(self) -> None:
+        loop_stamp = wpilib.Timer.getFPGATimestamp()
         self.aim_turret()
         self.turret.update()
 
-        self.heading_buffer.addSample(
-            wpilib.Timer.getFPGATimestamp(), self.chassis.get_rotation()
+        self.heading_buffer.addSample(loop_stamp, self.chassis.get_rotation())
+
+        current_robot_to_cam = self.robot_to_camera(loop_stamp)
+        self.turret_pose.setPose(
+            self.chassis.get_pose()
+            + Transform2d(
+                current_robot_to_cam.translation().toTranslation2d(),
+                current_robot_to_cam.rotation().toRotation2d(),
+            )
         )
 
         if self.add_to_estimator:
@@ -300,8 +311,8 @@ class VisualLocalizer(HasPerLoopCache):
         self.last_innovation = pose - self.chassis.get_pose()
 
         linear_odometry_std_devs, rotation_odometry_std_devs = (
-            self.chassis.LINEAR_ODOMETRY_STD_DEVS,
-            self.chassis.ROTATION_ODOMETRY_STD_DEVS,
+            VisualLocalizer.LINEAR_MEASUREMENT_STD_DEV,
+            VisualLocalizer.ROTATION_MEASUREMENT_STD_DEV,
         )
         sxx = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
         syy = linear_vision_uncertainty**2 + linear_odometry_std_devs**2
