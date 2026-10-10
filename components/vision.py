@@ -54,7 +54,7 @@ class VisualLocalizer(HasPerLoopCache):
     FACING_ANGLE_THRESHOLD: units.degrees = 100
 
     # currently just any tag on either hub. It will still localise if it sees others but wont try to aim at them.
-    TAG_AIM_WHITELIST = [3, 4, 5, 8, 9, 10, 11, 2, 25, 26, 17, 27, 19, 20, 21, 24]
+    TAG_AIM_WHITELIST = [3, 4, 5, 8, 9, 10, 11, 2, 25, 26, 18, 27, 19, 20, 21, 24]
 
     add_to_estimator = tunable(True)
     only_use_multitag = tunable(True)
