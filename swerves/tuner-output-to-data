@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+import argparse
+import ast
+import sys
+from pathlib import Path
+
+DERIVED_CONSTANTS = {
+    "drivetrain_constants",
+    "_constants_creator",
+    "front_left",
+    "front_right",
+    "back_left",
+    "back_right",
+}
+
+
+def _read_source(path: str | None) -> str:
+    if path is None or path == "-":
+        return sys.stdin.read()
+    return Path(path).read_text()
+
+
+def _find_tuner_constants(module: ast.Module) -> ast.ClassDef:
+    for stmt in module.body:
+        if isinstance(stmt, ast.ClassDef) and stmt.name == "TunerConstants":
+            return stmt
+    msg = "could not find class TunerConstants"
+    raise SystemExit(msg)
+
+
+def _comment_lines(lines: list[str], start_line: int, end_line: int) -> list[str]:
+    comments: list[str] = []
+    for lineno in range(start_line, end_line + 1):
+        line = lines[lineno - 1]
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            comments.append(stripped)
+    return comments
+
+
+def _assignment_name(stmt: ast.stmt) -> str | None:
+    if isinstance(stmt, ast.Assign):
+        names = [
+            target.id
+            for target in stmt.targets
+            if isinstance(target, ast.Name) and target.id not in DERIVED_CONSTANTS
+        ]
+        if len(names) == 1:
+            return names[0]
+    elif (
+        isinstance(stmt, ast.AnnAssign)
+        and isinstance(stmt.target, ast.Name)
+        and stmt.value is not None
+        and stmt.target.id not in DERIVED_CONSTANTS
+    ):
+        return stmt.target.id
+    return None
+
+
+def _assignment_value(stmt: ast.stmt) -> ast.expr:
+    if isinstance(stmt, ast.Assign | ast.AnnAssign):
+        assert stmt.value is not None
+        return stmt.value
+    raise TypeError(stmt)
+
+
+def _assignment_values(
+    class_def: ast.ClassDef, lines: list[str]
+) -> list[tuple[str, ast.expr, list[str]]]:
+    assignments: list[tuple[str, ast.expr, list[str]]] = []
+    cursor = class_def.lineno + 1
+
+    for stmt in class_def.body:
+        if stmt.end_lineno is None:
+            msg = "source locations are unavailable for TunerConstants"
+            raise SystemExit(msg)
+
+        leading_comments = _comment_lines(lines, cursor, stmt.lineno - 1)
+        inner_comments = _comment_lines(lines, stmt.lineno, stmt.end_lineno)
+        name = _assignment_name(stmt)
+        if name is not None:
+            assignments.append(
+                (name, _assignment_value(stmt), leading_comments + inner_comments)
+            )
+        cursor = stmt.end_lineno + 1
+
+    return assignments
+
+
+def _format_assignment(name: str, value: ast.expr, comments: list[str]) -> list[str]:
+    lines = [f"    {comment}" for comment in comments]
+    lines.append(f"    {name}={ast.unparse(value)},")
+    return lines
+
+
+def tuner_constants_instantiation(source: str) -> str:
+    source_lines = source.splitlines()
+    module = ast.parse(source)
+    class_def = _find_tuner_constants(module)
+    assignments = _assignment_values(class_def, source_lines)
+    if not assignments:
+        msg = "class TunerConstants did not contain any convertible assignments"
+        raise SystemExit(msg)
+
+    lines = [
+        "from phoenix6 import CANBus, configs, signals, swerve",
+        "from wpimath.units import inchesToMeters",
+        "",
+        "from swerves.tuner_constants import TunerConstants",
+        "",
+        "tuner_constants = TunerConstants(",
+    ]
+    for name, value, comments in assignments:
+        lines.extend(_format_assignment(name, value, comments))
+    lines.append(")")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Convert a generated TunerConstants class into a swerves.tuner_constants "
+            "dataclass instantiation."
+        )
+    )
+    parser.add_argument(
+        "source",
+        nargs="?",
+        help="Generated Python file to read. Reads stdin when omitted or set to '-'.",
+    )
+    args = parser.parse_args()
+    sys.stdout.write(tuner_constants_instantiation(_read_source(args.source)))
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()
