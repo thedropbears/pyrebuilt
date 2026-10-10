@@ -3,7 +3,7 @@ from math import isclose, radians
 from magicbot import feedback, will_reset_to
 from phoenix6.configs import FeedbackConfigs, Slot0Configs, TalonFXConfiguration
 from phoenix6.controls import DutyCycleOut, PositionVoltage
-from phoenix6.hardware import TalonFX, cancoder
+from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import FeedbackSensorSourceValue
 from wpilib import Mechanism2d, SmartDashboard
 from wpimath import units
@@ -27,7 +27,7 @@ class IntakeComponent:
     def __init__(self) -> None:
         self.intake_deployer = TalonFX(TalonId.INTAKE_DEPLOYER)
         self.intake_roller = TalonFX(TalonId.INTAKE_ROLLER)
-        self.deployer_encoder = cancoder.CANcoder(CancoderId.INTAKE)
+        self.deployer_encoder = CANcoder(CancoderId.INTAKE)
         slot0_configs = Slot0Configs().with_k_p(60.0).with_k_i(0).with_k_d(3.0)
         self.deployer_encoder_configs = (
             FeedbackConfigs()
