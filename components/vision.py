@@ -182,7 +182,6 @@ class VisualLocalizer(HasPerLoopCache):
         # The encoder has been set up to return values in the interval [0, 2pi]
         return self.turret.raw_encoder_reading_()
 
-    @feedback
     def camera_connected(self) -> bool:
         return self.camera.isConnected()
 
