@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import typing
 from math import tau
 
@@ -8,8 +9,6 @@ from phoenix6.swerve.sim_swerve_drivetrain import SimSwerveDrivetrain
 from photonlibpy.simulation import PhotonCameraSim, SimCameraProperties, VisionSystemSim
 from pyfrc.physics.core import PhysicsInterface
 from wpilib.simulation import (
-    DutyCycleEncoderSim,
-    PWMSim,
     RoboRioSim,
 )
 from wpimath import units
@@ -19,7 +18,7 @@ from wpimath.system.plant import DCMotor
 from swerves.comp import TunerConstants
 from utilities import game
 from utilities.ctre import CANcoderSim, TalonMotorSim
-from utilities.functions import constrain_angle
+from utilities.servo import ServoTurretSim
 from utilities.simulation import ArmMechanism, MotorMechanismSim, SimpleMechanism
 
 if typing.TYPE_CHECKING:
@@ -80,6 +79,12 @@ class PhysicsEngine:
             ),
         )
 
+        self.port_vision_turret_sim = ServoTurretSim(
+            robot.port_vision.turret,
+            55.0 / 60.0 * math.tau,
+            robot.port_vision.turret.neutral_angle,
+        )
+
         self.vision_sim = VisionSystemSim("main")
         self.vision_sim.addAprilTags(game.apriltag_layout)
         properties = SimCameraProperties.OV9281_1280_720()
@@ -91,11 +96,6 @@ class PhysicsEngine:
             self.port_visual_localiser.robot_to_camera(wpilib.Timer.getFPGATimestamp()),
         )
         self.vision_sim_counter = 0
-
-        self.port_vision_servo_sim = PWMSim(self.port_visual_localiser.servo)
-        self.port_vision_encoder_sim = DutyCycleEncoderSim(
-            self.port_visual_localiser.encoder
-        )
 
     def update_sim(self, _now: float, tm_diff: units.seconds) -> None:
         self.swerve.update(
@@ -111,18 +111,7 @@ class PhysicsEngine:
         self.intake_arm_sim.update(tm_diff)
         self.physics_controller.drive(speeds, tm_diff)
         self.turret_sim.update(tm_diff)
-        self.port_vision_encoder_sim.set(
-            constrain_angle(
-                (
-                    (
-                        self.port_visual_localiser.servo_offsets.full_range
-                        - self.port_visual_localiser.servo_offsets.neutral
-                    )
-                    * (2.0 * self.port_visual_localiser.servo.getPosition() - 1.0)
-                    + self.port_visual_localiser.servo_offsets.neutral
-                ).radians()
-            )
-        )
+        self.port_vision_turret_sim.update(tm_diff)
 
         # Simulate slow vision updates.
         self.vision_sim_counter += 1

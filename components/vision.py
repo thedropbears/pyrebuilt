@@ -8,6 +8,7 @@ import wpiutil.wpistruct
 from magicbot import feedback, tunable, will_reset_to
 from photonlibpy import PhotonCamera, PhotonPoseEstimator
 from photonlibpy.targeting import MultiTargetPNPResult, PhotonPipelineResult
+from wpimath import units
 from wpimath.geometry import (
     Rotation2d,
     Rotation3d,
@@ -19,9 +20,8 @@ from wpimath.interpolation import TimeInterpolatableRotation2dBuffer
 
 from components.chassis import ChassisComponent
 from utilities.caching import HasPerLoopCache, cache_per_loop
-from utilities.functions import clamp
 from utilities.game import APRILTAGS_2D, apriltag_layout
-from utilities.rev import configure_through_bore_encoder
+from utilities.servo import ServoTurret
 
 
 @wpiutil.wpistruct.make_wpistruct  # pyright: ignore[reportUnknownMemberType]
@@ -34,20 +34,11 @@ class VisibleTag:
     range: float
 
 
-@dataclass
-class ServoOffsets:
-    neutral: Rotation2d
-    full_range: Rotation2d
-
-
 class VisualLocalizer(HasPerLoopCache):
     """
     This localizes the robot from AprilTags on the field,
     using information from a single PhotonVision camera.
     """
-
-    # Give bias to the best pose by multiplying this const to the alt dist
-    BEST_POSE_BIAS = 1.2
 
     # Time since the last target sighting we allow before informing drivers
     TIMEOUT = 1.0  # s
@@ -55,13 +46,19 @@ class VisualLocalizer(HasPerLoopCache):
     CAMERA_FOV = math.radians(
         68
     )  # photon vision says 69.8, but we are being conservative
+
     CAMERA_MAX_RANGE = 4.0  # m
+
+    # More than 90 degrees means the tag faces the turret; 100 keeps us
+    # away from viewing it close to edge-on.
+    FACING_ANGLE_THRESHOLD: units.degrees = 100
+
+    # currently just any tag on either hub. It will still localise if it sees others but wont try to aim at them.
+    TAG_AIM_WHITELIST = [3, 4, 5, 8, 9, 10, 11, 2, 25, 26, 18, 27, 19, 20, 21, 24]
 
     add_to_estimator = tunable(True)
     only_use_multitag = tunable(True)
-    should_log = tunable(True)
 
-    last_pose_z = tunable(0.0, writeDefault=False)
     linear_uncertainty_single_tag = tunable(0.30)
     rotation_uncertainty_single_tag = tunable(0.6)
 
@@ -74,10 +71,13 @@ class VisualLocalizer(HasPerLoopCache):
 
     chassis: ChassisComponent
 
+    TURRET_DEADBAND = math.radians(5)
+
     def __init__(
         self,
         # The name of the camera in PhotonVision.
         name: str,
+        turret: ServoTurret,
         # Position of the camera relative to the center of the robot
         turret_pos: Translation3d,
         # The turret rotation at its neutral position (ie centred).
@@ -86,89 +86,88 @@ class VisualLocalizer(HasPerLoopCache):
         camera_offset: Translation3d,
         # The camera pitch on the mount, relative to horizontal
         camera_pitch: float,
-        servo_id: int,
-        servo_offsets: ServoOffsets,
-        encoder_id: int,
-        encoder_offset: Rotation2d,
-        # Encoder rotations at min and max of desired rotation range
-        rotation_range: tuple[Rotation2d, Rotation2d],
         field: wpilib.Field2d,
         data_log: wpiutil.log.DataLog,
     ) -> None:
         super().__init__()
         self.camera = PhotonCamera(name)
-        self.encoder = wpilib.DutyCycleEncoder(encoder_id, math.tau, 0.0)
-        configure_through_bore_encoder(self.encoder)
-        # Offset of encoder in radians when facing forwards (the desired zero)
-        # To find this value, manually point the camera forwards and record the encoder value
-        # This has nothing to do with the servo - do it by hand!!
-        self.encoder_offset = encoder_offset
+        self.turret = turret
+
         self.last_innovation = Transform2d()
         self.last_mahalanobis = 0.0
 
-        # To find the servo offsets, command the servo to neutral in test mode and record the encoder value
-        # Repeat for full range
-        self.servo_offsets = servo_offsets
-        self.servo_half_range = (
-            servo_offsets.full_range - servo_offsets.neutral
-        ).radians()
-        while self.servo_half_range < 0.0:
-            self.servo_half_range += math.tau
-
-        def fix_signs(angles: list[float]) -> list[float]:
-            # First value should be negative, and the second positive
-            if angles[0] > 0.0:
-                angles[0] -= math.tau
-            if angles[1] < 0.0:
-                angles[1] += math.tau
-            return angles
-
-        relative_servo_rotations = fix_signs(
-            [
-                (r - encoder_offset).radians()
-                for r in [
-                    servo_offsets.neutral
-                    - (servo_offsets.full_range - servo_offsets.neutral),
-                    servo_offsets.full_range,
-                ]
-            ]
-        )
-        relative_rotations = fix_signs(
-            [(r - encoder_offset).radians() for r in rotation_range]
-        )
-        self.min_rotation = max(relative_rotations[0], relative_servo_rotations[0])
-        self.max_rotation = min(relative_rotations[1], relative_servo_rotations[1])
-
-        self.servo = wpilib.Servo(servo_id)
-        self.pos = turret_pos
         self.robot_to_turret = Transform3d(turret_pos, Rotation3d(turret_rot))
         self.robot_to_turret_2d = Transform2d(turret_pos.toTranslation2d(), turret_rot)
         self.turret_to_camera = Transform3d(
             camera_offset, Rotation3d(roll=0.0, pitch=camera_pitch, yaw=0.0)
         )
-        self.turret_rotation_buffer = TimeInterpolatableRotation2dBuffer(2.0)
         self.heading_buffer = TimeInterpolatableRotation2dBuffer(2.0)
-        self.turret_setpoint = 0.5
-        self.min_servo_movement = 5.0 / 180.0  # In duty cycle between 0.0 and 1.0
+
         self.estimator = PhotonPoseEstimator(apriltag_layout, Transform3d())
         self.last_timestamp = -1.0
         self.best_log = field.getObject(name + "_best_log")
         self.field_pos_obj = field.getObject(name + "_vision_pose")
-        self.pose_log_entry = wpiutil.log.FloatArrayLogEntry(
-            data_log, name + "_vision_pose"
-        )
 
         self.current_reproj = 0.0
         self.has_multitag = False
         self.has_seen_multitag = False
 
-        self._has_pairs = False
-
         self.override_setpoint = 0.5
+        self.allowed_tags = [
+            tag for tag in APRILTAGS_2D if tag.id in VisualLocalizer.TAG_AIM_WHITELIST
+        ]
 
     @feedback
-    def get_rotation_limits(self) -> list[float]:
-        return [self.min_rotation, self.max_rotation]
+    @cache_per_loop
+    def relative_bearing_to_best_cluster(self) -> float:
+        tags = self.get_visible_tags()
+        if len(tags) == 0:
+            return 0.0
+        relative_bearings = sorted(tag.relative_bearing for tag in tags)
+        for offset in range(len(relative_bearings) - 1, 0, -1):
+            bearing_pairs = zip(relative_bearings, relative_bearings[offset:])
+            for pair in bearing_pairs:
+                if abs(pair[0] - pair[1]) < self.CAMERA_FOV:
+                    return (pair[1] + pair[0]) * 0.5
+
+        return min(tags, key=lambda v: v.range).relative_bearing
+
+    @feedback
+    @cache_per_loop
+    def get_visible_tags(self) -> list[VisibleTag]:
+        tags_in_view: list[VisibleTag] = []
+
+        robot_pose = self.chassis.get_pose()
+        turret_pose = robot_pose.transformBy(self.robot_to_turret_2d)
+        turret_translation = turret_pose.translation()
+        turret_rotation = turret_pose.rotation()
+
+        for tag in self.allowed_tags:
+            tag_pose = tag.pose
+            turret_to_tag = tag_pose.translation() - turret_translation
+            turret_angle_to_tag = turret_to_tag.angle()
+            distance = turret_to_tag.norm()
+            relative_facing = tag_pose.rotation() - turret_angle_to_tag
+
+            relative_bearing = self.turret.wrap_into_range(
+                (turret_angle_to_tag - turret_rotation).radians()
+            )
+
+            if (
+                relative_bearing is not None
+                and abs(relative_facing.degrees()) > self.FACING_ANGLE_THRESHOLD
+                and distance < self.CAMERA_MAX_RANGE
+            ):
+                # Test for relative facing is more than 90 degrees because we don't want to be too
+                # close to parallel to the tag
+                tags_in_view.append(VisibleTag(tag.id, relative_bearing, distance))
+
+        return tags_in_view
+
+    @feedback
+    def get_desired_turret_angle(self) -> float:
+        # Read encoder angle and account for offset
+        return self.relative_bearing_to_best_cluster()
 
     @feedback
     def reproj(self) -> float:
@@ -181,92 +180,29 @@ class VisualLocalizer(HasPerLoopCache):
     @feedback
     def get_raw_encoder_rotation(self) -> Rotation2d:
         # The encoder has been set up to return values in the interval [0, 2pi]
-        return Rotation2d(self.encoder.get())
+        return self.turret.raw_encoder_reading_()
+
+    def camera_connected(self) -> bool:
+        return self.camera.isConnected()
 
     @feedback
-    def has_pairs(self) -> bool:
-        return self._has_pairs
+    def sees_multi_tag_target(self) -> bool:
+        return self.has_multitag and self.sees_target()
 
     @feedback
-    @cache_per_loop
-    def relative_bearing_to_best_cluster(self) -> float:
-        tags = self.get_visible_tags()
-        if len(tags) == 0:
-            return 0.0
-        relative_bearings = [tag.relative_bearing for tag in tags]
-        relative_bearings.sort()
-        for offset in range(len(relative_bearings) - 1, 0, -1):
-            bearing_pairs = zip(relative_bearings, relative_bearings[offset:])
-            for pair in bearing_pairs:
-                if abs(pair[0] - pair[1]) < self.CAMERA_FOV:
-                    self._has_pairs = True
-                    return (pair[1] + pair[0]) * 0.5
-        # If we get here there are no pairs, so choose the closest
-        self._has_pairs = False
-        tags.sort(key=lambda v: v.range)
-        return tags[0].relative_bearing
+    def get_last_mahalanobis(self):
+        return self.last_mahalanobis
 
     @feedback
-    @cache_per_loop
-    def get_visible_tags(self) -> list[VisibleTag]:
-        tags_in_view: list[VisibleTag] = []
-
-        robot_pose = self.chassis.get_pose()
-        turret_pose = robot_pose.transformBy(self.robot_to_turret_2d)
-        turret_translation = turret_pose.translation()
-        turret_rotation = turret_pose.rotation()
-
-        for tag in APRILTAGS_2D:
-            tag_pose = tag.pose
-            turret_to_tag = tag_pose.translation() - turret_translation
-            turret_angle_to_tag = turret_to_tag.angle()
-            relative_bearing = turret_angle_to_tag - turret_rotation
-            distance = turret_to_tag.norm()
-            relative_facing = tag_pose.rotation() - turret_angle_to_tag
-            relative_bearing_rad = relative_bearing.radians()
-            # Make the angle less than the max rotation, then see if we are above the min too
-            in_rotation_range = False
-            while relative_bearing_rad > self.max_rotation:
-                relative_bearing_rad -= math.tau
-            if relative_bearing_rad > self.min_rotation:
-                # We are good
-                in_rotation_range = True
-            # Try in the other direction in case we started below the min
-            while relative_bearing_rad < self.min_rotation:
-                relative_bearing_rad += math.tau
-            if relative_bearing_rad < self.max_rotation:
-                # We are good
-                in_rotation_range = True
-
-            if (
-                in_rotation_range
-                and abs(relative_facing.degrees()) > 100
-                and distance < self.CAMERA_MAX_RANGE
-            ):
-                # Test for relative facing is more than 90 degrees because we don't want to be too
-                # close to parallel to the tag
-                tags_in_view.append(VisibleTag(tag.id, relative_bearing_rad, distance))
-
-        return tags_in_view
+    def get_last_innovation(self) -> Transform2d:
+        return self.last_innovation
 
     @feedback
-    def get_desired_turret_rotation(self) -> float:
-        # Read encoder angle and account for offset
-        return self.relative_bearing_to_best_cluster()
-
-    @feedback
-    def get_desired_servo_rotation(self) -> float:
-        return self.convert_turret_to_servo(self.get_desired_turret_rotation())
-
-    def convert_turret_to_servo(self, turret: float) -> float:
-        return turret - (self.servo_offsets.neutral - self.encoder_offset).radians()
-
-    @property
-    def turret_rotation(self) -> Rotation2d:
-        return self.get_raw_encoder_rotation() - self.encoder_offset
+    def sees_target(self) -> bool:
+        return wpilib.Timer.getFPGATimestamp() - self.last_timestamp < self.TIMEOUT
 
     def robot_to_camera(self, timestamp: float) -> Transform3d:
-        turret_rotation = self.turret_rotation_buffer.sample(timestamp)
+        turret_rotation = self.turret.rotation_at(timestamp)
         if turret_rotation is None:
             return self.robot_to_turret
 
@@ -277,51 +213,26 @@ class VisualLocalizer(HasPerLoopCache):
         )
 
     def zero_servo_(self) -> None:
-        # ONLY CALL THIS IN TEST MODE!
-        # This is used to put the servo in a neutral position to record the encoder value at that point
-        self.should_override = True
-        self.override_setpoint = 0.5
+        self.turret.hold_neutral_()
 
     def full_range_servo_(self) -> None:
-        # ONLY CALL THIS IN TEST MODE!
-        # This is used to put the servo to the full range position to record the encoder value at that point
-        self.should_override = True
-        self.override_setpoint = 0.99
-
-    @feedback
-    def camera_connected(self) -> bool:
-        return self.camera.isConnected()
+        self.turret.hold_full_range_()
 
     def execute(self) -> None:
-        desired = self.convert_turret_to_servo(self.get_desired_turret_rotation())
-        new_turret_setpoint = clamp(
-            (desired / self.servo_half_range + 1.0) / 2.0, 0.01, 0.99
+        self.aim_turret()
+        self.turret.update()
+
+        self.heading_buffer.addSample(
+            wpilib.Timer.getFPGATimestamp(), self.chassis.get_rotation()
         )
-        # Only move if the new setpoint is far enough away from our current setpoint, or at the ends of the range
-        # This means the servo is stationary for longer periods of time, giving more stable results
-        if (
-            abs(self.turret_setpoint - new_turret_setpoint) > self.min_servo_movement
-            or new_turret_setpoint < self.min_servo_movement
-            or 0.99 - new_turret_setpoint < self.min_servo_movement
-        ):
-            self.turret_setpoint = new_turret_setpoint
 
-        if self.should_override:
-            self.servo.set(self.override_setpoint)
-        else:
-            self.servo.set(self.turret_setpoint)
+        if self.add_to_estimator:
+            self.process_camera_results()
 
-        now = wpilib.Timer.getFPGATimestamp()
-        self.turret_rotation_buffer.addSample(now, self.turret_rotation)
-        self.heading_buffer.addSample(now, self.chassis.get_rotation())
-
-        if not self.add_to_estimator:
-            return
-
+    def process_camera_results(self) -> None:
         all_results = self.camera.getAllUnreadResults()
 
-        self.camera.isConnected()
-        # Skip processing results other than the most recent.
+        # Prefer the most recent multitag result; otherwise the most recent result.
         last_results: PhotonPipelineResult | None = None
         multitag_result: MultiTargetPNPResult | None = None
         for results in all_results:
@@ -338,6 +249,10 @@ class VisualLocalizer(HasPerLoopCache):
         if last_results is None:
             return
 
+        # We have a new frame to judge, so clear the flag and only set it
+        # again if a multitag measurement is actually accepted below.
+        self.has_multitag = False
+
         timestamp = last_results.getTimestampSeconds()
 
         self.estimator.robotToCamera = self.robot_to_camera(timestamp)
@@ -352,14 +267,13 @@ class VisualLocalizer(HasPerLoopCache):
                 return
             linear_vision_uncertainty = self.linear_uncertainty_multi_tag
             rotation_vision_uncertainty = self.rotation_uncertainty_multi_tag
-            self.has_multitag = True
 
             self.current_reproj = multitag_result.estimatedPose.bestReprojErr
             if self.current_reproj > self.reproj_error_threshold:
                 return
             self.has_seen_multitag = True
+            is_multitag = True
         else:
-            self.has_multitag = False
             if self.only_use_multitag:
                 return
             if self.has_seen_multitag:
@@ -376,7 +290,10 @@ class VisualLocalizer(HasPerLoopCache):
             rotation_vision_uncertainty = self.rotation_uncertainty_single_tag
             if pipeline_result.targetsUsed[0].getPoseAmbiguity() > 0.1:
                 return
+            is_multitag = False
 
+        # Measurement accepted from here on
+        self.has_multitag = is_multitag
         self.last_timestamp = timestamp
 
         pose = pipeline_result.estimatedPose.toPose2d()
@@ -408,18 +325,15 @@ class VisualLocalizer(HasPerLoopCache):
         self.field_pos_obj.setPose(pose)
         self.best_log.setPose(pose)
 
-    @feedback
-    def sees_target(self) -> bool:
-        return wpilib.Timer.getFPGATimestamp() - self.last_timestamp < self.TIMEOUT
-
-    @feedback
-    def sees_multi_tag_target(self) -> bool:
-        return self.has_multitag and self.sees_target()
-
-    @feedback
-    def get_last_mahalanobis(self):
-        return self.last_mahalanobis
-
-    @feedback
-    def get_last_innovation(self) -> Transform2d:
-        return self.last_innovation
+    def aim_turret(self) -> None:
+        desired = self.turret.clamp_angle(self.get_desired_turret_angle())
+        # Always allow moves to the limits, so the turret can reach its full range.
+        near_a_limit = (
+            desired - self.turret.min_angle < self.TURRET_DEADBAND
+            or self.turret.max_angle - desired < self.TURRET_DEADBAND
+        )
+        if (
+            abs(desired - self.turret.target_angle) > self.TURRET_DEADBAND
+            or near_a_limit
+        ):
+            self.turret.set_target(desired)
