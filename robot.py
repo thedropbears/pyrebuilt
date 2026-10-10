@@ -28,7 +28,7 @@ from utilities.scalers import rescale_js
 
 class MyRobot(magicbot.MagicRobot):
     # These components have specific ordering concerns with data flow.
-    port_vision: VisualLocalizer
+    linear_vision: VisualLocalizer
     chassis: ChassisComponent
     targeter: Targeter
 
@@ -104,20 +104,20 @@ class MyRobot(magicbot.MagicRobot):
 
         self.status_lights_strip_length = 112 * 4
 
-        self.port_vision_encoder_id = DioChannel.PORT_VISION_ENCODER
-        self.port_vision_servo_id = PwmChannel.PORT_VISION_SERVO
+        self.linear_vision_encoder_id = DioChannel.LINEAR_VISION_ENCODER
+        self.linear_vision_servo_id = PwmChannel.LINEAR_VISION_SERVO
 
-        self.port_vision_name = "port_turret"
-        self.port_vision_turret_pos = Translation3d(0.161, 0.169, 0.401)
-        self.port_vision_turret_rot = Rotation2d()
-        self.port_vision_camera_offset = Translation3d(0.027501, 0, 0.026724)
-        self.port_vision_camera_pitch = math.radians(-5.0)
-        self.port_vision_encoder_offset = Rotation2d(2.055)
-        self.port_vision_servo_offsets = ServoOffsets(
+        self.linear_vision_name = "linear_turret"
+        self.linear_vision_turret_pos = Translation3d(0.161, 0.169, 0.401)
+        self.linear_vision_turret_rot = Rotation2d()
+        self.linear_vision_camera_offset = Translation3d(0.027501, 0, 0.026724)
+        self.linear_vision_camera_pitch = math.radians(-5.0)
+        self.linear_vision_encoder_offset = Rotation2d(2.055)
+        self.linear_vision_servo_offsets = ServoOffsets(
             neutral=Rotation2d(1.928),
             full_range=Rotation2d(3.960),
         )
-        self.port_vision_rotation_range = (
+        self.linear_vision_rotation_range = (
             Rotation2d(0.952),
             Rotation2d(3.482),
         )
@@ -164,7 +164,10 @@ class MyRobot(magicbot.MagicRobot):
             self.conductor.caged_shoot()
 
         if self.gamepad.getAButton():
-            self.port_vision.zero_servo_()
+            self.linear_vision.zero_servo_()
+
+        if self.gamepad.getLeftBumper():
+            self.conductor.outtake_intake()
 
         if self.gamepad.getLeftBumper():
             self.conductor.outtake_intake()
@@ -178,9 +181,9 @@ class MyRobot(magicbot.MagicRobot):
         if self.codriver_joystick.getRawButton(3):
             self.ballistics.LATENCY_FACTOR -= 0.01
 
-        if not self.port_vision.camera_connected():
+        if not self.linear_vision.camera_connected():
             self.leds.camera_dead()
-        elif self.port_vision.sees_target():
+        elif self.linear_vision.sees_target():
             self.leds.teleop_vision()
         else:
             self.leds.teleop_no_vision()
@@ -243,11 +246,11 @@ class MyRobot(magicbot.MagicRobot):
             self.hopper.feed(self.test_hopper_surface_speed)
 
         if self.gamepad.getLeftStickButton():
-            self.port_vision.zero_servo_()
+            self.linear_vision.zero_servo_()
         elif self.gamepad.getRightStickButton():
-            self.port_vision.full_range_servo_()
+            self.linear_vision.full_range_servo_()
 
-        self.port_vision.execute()
+        self.linear_vision.execute()
         self.chassis.execute()
         self.targeter.execute()
         if self.gamepad.getRightTriggerAxis() > 0.5:
@@ -276,9 +279,9 @@ class MyRobot(magicbot.MagicRobot):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
-        if not self.port_vision.camera_connected():
+        if not self.linear_vision.camera_connected():
             self.leds.camera_dead()
-        elif self.port_vision.sees_multi_tag_target():
+        elif self.linear_vision.sees_multi_tag_target():
             selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
             if selected_auto is not None:
                 if isinstance(selected_auto, AutoBase):
@@ -309,7 +312,7 @@ class MyRobot(magicbot.MagicRobot):
 
         self.climber.try_index()
         self.chassis.update_alliance()
-        self.port_vision.execute()
+        self.linear_vision.execute()
         self.chassis.update_odometry()
         self.targeter.execute()
         self.conductor.dispatch_ballistics_setpoints()
@@ -318,6 +321,6 @@ class MyRobot(magicbot.MagicRobot):
     @override
     def robotPeriodic(self) -> None:
         super().robotPeriodic()
-        self.port_vision._per_loop_cache.clear()  # pyright: ignore[reportPrivateUsage]
+        self.linear_vision._per_loop_cache.clear()
         self.turret.periodic()
         self.intake.periodic()
