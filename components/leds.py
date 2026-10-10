@@ -31,6 +31,7 @@ class States(IntEnum):
     READY_TO_RUN = auto()
     TELEOP_VISION = auto()
     TELEOP_NO_VISION = auto()
+    RAINBOW_OVERRIDE = auto()
 
 
 class LEDComponent:
@@ -80,6 +81,9 @@ class LEDComponent:
 
     def camera_dead(self) -> None:
         self._update_led_state(States.CAMERA_DEAD)
+
+    def rainbow_override(self) -> None:
+        self._update_led_state(States.RAINBOW_OVERRIDE)
 
     def mispositioned(self, position_error: Translation2d):
         self._update_led_state(States.AUTO_MISALIGNED)
@@ -178,3 +182,6 @@ class LEDComponent:
                 self.candle.set_control(
                     StrobeAnimation(self.LED_START, self.LED_END, color=Colors.purple)
                 )
+
+            case States.RAINBOW_OVERRIDE:
+                self.candle.set_control(RainbowAnimation(self.LED_START, self.LED_END))
