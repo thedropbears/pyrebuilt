@@ -222,13 +222,23 @@ class VisualLocalizer(HasPerLoopCache):
         self.turret.hold_full_range_()
 
     def execute(self) -> None:
+        loop_stamp = wpilib.Timer.getFPGATimestamp()
         self.aim_turret()
         self.turret.update()
 
-        self.heading_buffer.addSample(
-            wpilib.Timer.getFPGATimestamp(), self.chassis.get_rotation()
+        self.heading_buffer.addSample(loop_stamp, self.chassis.get_rotation())
+
+        current_robot_to_cam = self.robot_to_camera(loop_stamp)
+        self.turret_pose.setPose(
+            self.chassis.get_pose()
+            + Transform2d(
+                current_robot_to_cam.translation().toTranslation2d(),
+                current_robot_to_cam.rotation().toRotation2d(),
+            )
         )
 
+        if self.add_to_estimator:
+            self.process_camera_results()
 
     def process_camera_results(self) -> None:
         all_results = self.camera.getAllUnreadResults()
@@ -325,13 +335,6 @@ class VisualLocalizer(HasPerLoopCache):
         )
         self.field_pos_obj.setPose(pose)
         self.best_log.setPose(pose)
-        self.turret_pose.setPose(
-                    self.chassis.get_pose()
-                    + Transform2d(
-                        current_robot_to_cam.translation().toTranslation2d(),
-                        current_robot_to_cam.rotation().toRotation2d(),
-                    )
-                )
 
     def aim_turret(self) -> None:
         desired = self.turret.clamp_angle(self.get_desired_turret_angle())
