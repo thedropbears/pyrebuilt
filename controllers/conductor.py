@@ -30,12 +30,6 @@ class Conductor(StateMachine):
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
     shot_succesful = will_reset_to(False)
 
-    def setup(self) -> None:
-        self.turret_pose = self.field.getObject("Turret Pose")
-        turret_base_pose, _ = self.get_current_turret_config()
-
-        self.turret_pose.setPose(turret_base_pose)
-
     def get_current_turret_config(self) -> tuple[Pose2d, Translation2d]:
         """Return the turret's pose and linear velocity, both in the field frame."""
         chassis_pose = self.chassis.get_pose()
