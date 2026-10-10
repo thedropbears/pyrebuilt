@@ -1,4 +1,11 @@
-from magicbot import StateMachine, default_state, feedback, state, will_reset_to
+from magicbot import (
+    StateMachine,
+    default_state,
+    feedback,
+    state,
+    tunable,
+    will_reset_to,
+)
 from wpilib import Field2d
 from wpimath import units
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
@@ -15,20 +22,22 @@ from controllers.gobbler import Gobbler
 
 
 class Conductor(StateMachine):
-    intake: IntakeComponent
     ballistics: BallisticsSolver
     gobbler: Gobbler
     hopper: HopperComponent
+    intake: IntakeComponent
     shooter: ShooterComponent
     chassis: ChassisComponent
     turret: TurretComponent
     targeter: Targeter
     field: Field2d
+
     keep_shooting = will_reset_to(False)
     keep_deploying = will_reset_to(False)
     TURRET_OFFSET = Transform2d(Translation2d(0.149, -0.171), Rotation2d())
     MAX_DRIVE_SPEED_FOR_SHOOTING: units.meters_per_second = 2
     shot_succesful = will_reset_to(False)
+    backdriving_rps = tunable(50)
 
     def setup(self) -> None:
         self.turret_pose = self.field.getObject("Turret Pose")
@@ -106,6 +115,9 @@ class Conductor(StateMachine):
         self.engage(self.deploying_only, force=True)
         self.keep_deploying = True
 
+    def backdrive(self) -> None:
+        self.engage(self.backdriving, force=True)
+
     @default_state
     def priming(self) -> None:
         self.dispatch_ballistics_setpoints(False)
@@ -147,3 +159,7 @@ class Conductor(StateMachine):
 
         if self.intake.is_retracted():
             self.done()
+
+    @state
+    def backdriving(self) -> None:
+        self.hopper.backdrive(self.backdriving_rps)
