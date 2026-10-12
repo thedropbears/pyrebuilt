@@ -35,7 +35,7 @@ class IntakeComponent:
     target_roller_rps = will_reset_to(0.0)
 
     RETRACTED_INTAKE_ANGLE: units.turns = 0.325
-    DEPLOYED_INTAKE_ANGLE: units.turns = 0.05
+    DEPLOYED_INTAKE_ANGLE: units.turns = 0.02
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 

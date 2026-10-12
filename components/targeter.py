@@ -1,4 +1,3 @@
-import wpilib
 from magicbot import feedback
 from wpilib import Field2d
 from wpimath.geometry import Rotation2d, Translation2d
@@ -86,23 +85,6 @@ class Targeter:
         return close_pos
 
     def execute(self) -> None:
-        current_pos = self.chassis.get_pose().translation()
 
-        if is_in_alliance_zone(current_pos):
-            self.target = self.get_optimal_target_from_alliance_zone()
-
-        elif is_in_transition_zone(current_pos):
-            self.target = self.get_optimal_target_from_transition_zone()
-
-        elif is_in_neutral_zone(current_pos):
-            self.target = self.get_optimal_target_from_neutral_zone()
-
-        else:
-            self.target = self.get_optimal_target_from_enemy_zone()
-
-        if (
-            wpilib.DriverStation.isAutonomous()
-        ):  # Temp check, if auto we always want to shoot at the hub
-            self.target = self.get_optimal_target_from_alliance_zone()
-
+        self.target = alliance_hub_pos(is_red())
         self.target_pos_obj.setPose(self.target.x, self.target.y, Rotation2d())

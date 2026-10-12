@@ -68,7 +68,7 @@ class BallisticsSolution:
 
 
 class BallisticsSolver:
-    LATENCY_FACTOR = tunable(0.052)
+    LATENCY_FACTOR = tunable(0.0)
 
     def __init__(self):
         self.target_position = Translation2d()
