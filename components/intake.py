@@ -35,7 +35,7 @@ class IntakeComponent:
     target_roller_rps = will_reset_to(0.0)
 
     RETRACTED_INTAKE_ANGLE: units.turns = 0.325
-    DEPLOYED_INTAKE_ANGLE: units.turns = 0.02
+    DEPLOYED_INTAKE_ANGLE: units.turns = 0.0
 
     target_deployer_angle = will_reset_to(RETRACTED_INTAKE_ANGLE)
 
@@ -58,7 +58,6 @@ class IntakeComponent:
         self.roller_motor = TalonFX(TalonId.INTAKE_ROLLER)
         self.deployer_motor = TalonFX(TalonId.INTAKE_DEPLOYER)
         self.deployer_encoder = CANcoder(CancoderId.INTAKE)
-
         roller_slot_config = (
             Slot0Configs()
             .with_k_v(0.15879)
