@@ -69,6 +69,8 @@ class BallisticsSolution:
 
 class BallisticsSolver:
     LATENCY_FACTOR = tunable(1.125)
+    HORIZONTAL_LATENCY_FACTOR = 1.125
+    VERTICAL_LATENCY_FACTOR = 0.125  # fill in value until we get the actual measurement
 
     def __init__(self):
         self.target_position = Translation2d()
@@ -123,6 +125,17 @@ class BallisticsSolver:
     def interpolated_flywheel_speed(self) -> float:
         return TABLE.speed_for(self.distance_to_target)
 
+    def set_latency_factor(self, velocity_x, velocity_y):
+        if velocity_x == 0 and velocity_y == 0:
+            return
+        Latency_difference = (
+            self.HORIZONTAL_LATENCY_FACTOR - self.VERTICAL_LATENCY_FACTOR
+        )
+        Latency_percentage = velocity_x / (velocity_x + velocity_y)
+        self.LATENCY_FACTOR = self.VERTICAL_LATENCY_FACTOR + (
+            Latency_difference * Latency_percentage
+        )
+
     def solve_for(
         self,
         initial_pose: Pose2d,
@@ -131,6 +144,7 @@ class BallisticsSolver:
     ):
         # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
         # See heading full integration example
+        self.set_latency_factor(initial_velocity.X(), initial_velocity.Y())
         future_position = (
             initial_pose.translation() + initial_velocity * self.LATENCY_FACTOR
         )
