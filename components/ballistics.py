@@ -70,7 +70,7 @@ class BallisticsSolution:
 class BallisticsSolver:
     LATENCY_FACTOR = tunable(1.125)
     HORIZONTAL_LATENCY_FACTOR = 1.125
-    VERTICAL_LATENCY_FACTOR = 0.125  # fill in value until we get the actual measurement
+    VERTICAL_LATENCY_FACTOR = 0.175  # fill in value until we get the actual measurement
 
     def __init__(self):
         self.target_position = Translation2d()
@@ -125,16 +125,23 @@ class BallisticsSolver:
     def interpolated_flywheel_speed(self) -> float:
         return TABLE.speed_for(self.distance_to_target)
 
-    def set_latency_factor(self, velocity_x, velocity_y):
-        if velocity_x == 0 and velocity_y == 0:
-            return
+    def set_latency_factor(self, tangential_velocity, radial_velocity):
+        if tangential_velocity == 0 and radial_velocity == 0:
+            return Translation2d(0, 0)
         Latency_difference = (
             self.HORIZONTAL_LATENCY_FACTOR - self.VERTICAL_LATENCY_FACTOR
         )
-        Latency_percentage = velocity_x / (velocity_x + velocity_y)
+        Latency_percentage = tangential_velocity / (
+            tangential_velocity + radial_velocity
+        )
         self.LATENCY_FACTOR = self.VERTICAL_LATENCY_FACTOR + (
             Latency_difference * Latency_percentage
         )
+        self.future_pose = Translation2d(
+            self.LATENCY_FACTOR * tangential_velocity,
+            self.LATENCY_FACTOR * radial_velocity,
+        )
+        return self.future_pose
 
     def solve_for(
         self,
@@ -144,9 +151,11 @@ class BallisticsSolver:
     ):
         # https://blog.eeshwark.com/robotblog/shooting-on-the-fly-pt2
         # See heading full integration example
-        self.set_latency_factor(initial_velocity.X(), initial_velocity.Y())
+        velocity_offset = self.set_latency_factor(
+            initial_velocity.X(), initial_velocity.Y()
+        )
         future_position = (
-            initial_pose.translation() + initial_velocity * self.LATENCY_FACTOR
+            Translation2d(initial_pose.X(), initial_pose.Y()) + velocity_offset
         )
         to_goal = target_position - future_position
 
