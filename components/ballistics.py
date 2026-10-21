@@ -126,22 +126,12 @@ class BallisticsSolver:
         return TABLE.speed_for(self.distance_to_target)
 
     def set_latency_factor(self, tangential_velocity, radial_velocity):
-        if tangential_velocity == 0 and radial_velocity == 0:
-            return Translation2d(0, 0)
-        Latency_difference = (
-            self.HORIZONTAL_LATENCY_FACTOR - self.VERTICAL_LATENCY_FACTOR
-        )
-        Latency_percentage = tangential_velocity / (
-            tangential_velocity + radial_velocity
-        )
-        self.LATENCY_FACTOR = self.VERTICAL_LATENCY_FACTOR + (
-            Latency_difference * Latency_percentage
-        )
-        self.future_pose = Translation2d(
-            self.LATENCY_FACTOR * tangential_velocity,
-            self.LATENCY_FACTOR * radial_velocity,
-        )
-        return self.future_pose
+        # get the coordinates in field
+        # transform velocity relative to the goal rotationally
+        # multiply tangential velocity by tangential latency factor
+        # multiply radial velocity by vertical radial factor
+        # add the factors we got together
+        return
 
     def solve_for(
         self,
