@@ -70,7 +70,7 @@ class BallisticsSolution:
 class BallisticsSolver:
     LATENCY_FACTOR = tunable(1.125)
     HORIZONTAL_LATENCY_FACTOR = 1.125
-    VERTICAL_LATENCY_FACTOR = 0.175  # fill in value until we get the actual measurement
+    VERTICAL_LATENCY_FACTOR = 0.175
 
     def __init__(self):
         self.target_position = Translation2d()
