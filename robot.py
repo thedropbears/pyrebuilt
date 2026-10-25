@@ -68,6 +68,9 @@ class MyRobot(magicbot.MagicRobot):
     START_POS_TOLERANCE = 0.2
     ALLOWABLE_OFFSET = 0.05  # metres
 
+    rainbow_override = tunable(True)
+    # this is for information day and allows us to permanently make the lights rainbow while disabled
+
     @override
     def createObjects(self) -> None:
         self.event_loop = wpilib.event.EventLoop()
@@ -276,36 +279,39 @@ class MyRobot(magicbot.MagicRobot):
             intended_start_pose = selected_auto.get_starting_pose()
             if intended_start_pose is not None:
                 self.field.getObject("Intended start pos").setPose(intended_start_pose)
-        if not self.port_vision.camera_connected():
-            self.leds.camera_dead()
-        elif self.port_vision.sees_multi_tag_target():
-            selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
-            if selected_auto is not None:
-                if isinstance(selected_auto, AutoBase):
-                    intended_start_pose = selected_auto.get_starting_pose()
-                    current_pose = self.chassis.get_pose()
-                    if intended_start_pose is not None:
-                        self.field.getObject("Intended start pos").setPose(
-                            intended_start_pose
-                        )
-                        relative_translation = intended_start_pose.relativeTo(
-                            current_pose
-                        ).translation()
-                        if not (
-                            relative_translation.x < self.ALLOWABLE_OFFSET
-                            and relative_translation.y < self.ALLOWABLE_OFFSET
-                        ):
-                            self.leds.mispositioned(relative_translation)
+        if not self.rainbow_override:
+            if not self.port_vision.camera_connected():
+                self.leds.camera_dead()
+            elif self.port_vision.sees_multi_tag_target():
+                selected_auto = self._automodes.chooser.getSelected()  # pyright: ignore[reportAny]
+                if selected_auto is not None:
+                    if isinstance(selected_auto, AutoBase):
+                        intended_start_pose = selected_auto.get_starting_pose()
+                        current_pose = self.chassis.get_pose()
+                        if intended_start_pose is not None:
+                            self.field.getObject("Intended start pos").setPose(
+                                intended_start_pose
+                            )
+                            relative_translation = intended_start_pose.relativeTo(
+                                current_pose
+                            ).translation()
+                            if not (
+                                relative_translation.x < self.ALLOWABLE_OFFSET
+                                and relative_translation.y < self.ALLOWABLE_OFFSET
+                            ):
+                                self.leds.mispositioned(relative_translation)
+                            else:
+                                self.leds.ready_to_run()
                         else:
                             self.leds.ready_to_run()
                     else:
                         self.leds.ready_to_run()
                 else:
-                    self.leds.ready_to_run()
+                    self.leds.no_auto()
             else:
-                self.leds.no_auto()
+                self.leds.no_multitag_solution()
         else:
-            self.leds.no_multitag_solution()
+            self.leds.rainbow_override()
 
         self.climber.try_index()
         self.chassis.update_alliance()
