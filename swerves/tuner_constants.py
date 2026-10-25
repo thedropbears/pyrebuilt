@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from phoenix6 import CANBus, configs, swerve, units
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TunerConstants[
     DriveMotorConfigsT: configs.SupportsSerialization,
     SteerMotorConfigsT: configs.SupportsSerialization,
@@ -31,7 +31,8 @@ class TunerConstants[
     _drive_initial_configs: DriveMotorConfigsT
     _steer_initial_configs: SteerMotorConfigsT
     _encoder_initial_configs: EncoderConfigsT
-    _pigeon_configs: configs.Pigeon2Configuration | None
+    # Configs for the Pigeon 2; leave this None to skip applying Pigeon 2 configs
+    _pigeon_configs: configs.Pigeon2Configuration | None = None
 
     canbus: CANBus
     speed_at_12_volts: units.meters_per_second
