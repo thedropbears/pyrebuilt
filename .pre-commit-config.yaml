@@ -4,6 +4,7 @@ ci:
   autofix_prs: false
 
 minimum_pre_commit_version: '3.2.0'
+minimum_prek_version: '0.5.7'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
