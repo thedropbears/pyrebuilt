@@ -24,8 +24,12 @@ class TunerConstants[
     _drive_closed_loop_output: swerve.ClosedLoopOutputType
     _drive_motor_type: swerve.DriveMotorArrangement
     _steer_motor_type: swerve.SteerMotorArrangement
+    # The remote sensor feedback type to use for the steer motors;
+    # When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
     _steer_feedback_type: swerve.SteerFeedbackType
 
+    # The stator current at which the wheels start to slip;
+    # This needs to be tuned to your individual robot
     _slip_current: units.ampere
 
     _drive_initial_configs: DriveMotorConfigsT
@@ -34,10 +38,16 @@ class TunerConstants[
     # Configs for the Pigeon 2; leave this None to skip applying Pigeon 2 configs
     _pigeon_configs: configs.Pigeon2Configuration | None = None
 
+    # CAN bus that the devices are located on;
+    # All swerve devices must share the same CAN bus
     canbus: CANBus
+
     speed_at_12_volts: units.meters_per_second
 
+    # Every 1 rotation of the azimuth results in _couple_ratio drive motor turns;
+    # This may need to be tuned to your individual robot
     _couple_ratio: float
+
     _drive_gear_ratio: float
     _steer_gear_ratio: float
     _wheel_radius: units.meter
@@ -47,8 +57,10 @@ class TunerConstants[
 
     _pigeon_id: int
 
+    # These are only used for simulation
     _steer_inertia: units.kilogram_square_meter
     _drive_inertia: units.kilogram_square_meter
+    # Simulated voltage necessary to overcome friction
     _steer_friction_voltage: units.volt
     _drive_friction_voltage: units.volt
 
