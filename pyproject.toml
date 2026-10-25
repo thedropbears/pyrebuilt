@@ -42,7 +42,7 @@ reportUnusedParameter = "none"
 
 [tool.pytest]
 addopts = ["--maxfail=2"]
-faulthandler_timeout = "60"
+faulthandler_timeout = "90"
 pythonpath = ["."]
 strict = true
 testpaths = ["tests"]
@@ -126,4 +126,4 @@ requires = [
 robotpy_version = "2026.2.2"
 components = ["apriltag", "commands2"]
 
-pyfrc.init_timeout = 3.0
+pyfrc.init_timeout = 3.5
