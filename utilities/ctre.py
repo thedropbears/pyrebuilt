@@ -32,7 +32,7 @@ FALCON_FREE_RPS = 100
 
 def _read_config[ConfigT](configurator: typing.Any, config: ConfigT) -> ConfigT:
     """Read a config group back from a Phoenix device."""
-    status = configurator.refresh(config)
+    status = configurator.refresh(config, timeout_seconds=0.5)
     if not status.is_ok():
         raise RuntimeError(
             f"Failed to read {type(config).__name__} from device: {status.name}"
