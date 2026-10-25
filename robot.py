@@ -47,7 +47,7 @@ class MyRobot(magicbot.MagicRobot):
     leds: LEDComponent
 
     # Driving constraints
-    max_speed = tunable(3.0)  # m/s
+    max_speed = tunable(0.8)  # m/s
     max_spin_rate = tunable(2.5)  # rad/s
 
     slowed_speed = tunable(1)
