@@ -154,12 +154,6 @@ class MyRobot(magicbot.MagicRobot):
                 drive_y = -drive_y
             self.chassis.drive_field(drive_x, drive_y, drive_z)
 
-        if self.gamepad.getYButton():
-            self.climber.deploy()
-
-        if self.gamepad.getXButton():
-            self.climber.retract()
-
         if self.gamepad.getRightTriggerAxis() > 0.5:
             self.conductor.shoot()
 
@@ -192,79 +186,8 @@ class MyRobot(magicbot.MagicRobot):
 
     @override
     def testPeriodic(self) -> None:
-        allowed_to_drive = self.gamepad.getRightBumperButton()
 
-        if allowed_to_drive:
-            # Set max speed
-            max_speed = self.test_max_speed
-            max_spin_rate = self.test_spin_rate
-
-            if self.gamepad.getXButton():
-                drive_x = 0.75 * max_speed
-                drive_y = 0.0
-                drive_z = 0.0
-            else:
-                # Driving
-                drive_x = -rescale_js(self.gamepad.getLeftY(), 0.05, 15) * max_speed
-                drive_y = -rescale_js(self.gamepad.getLeftX(), 0.05, 15) * max_speed
-                drive_z = (
-                    -rescale_js(self.gamepad.getRightX(), 0.1, exponential=20)
-                    * max_spin_rate
-                )
-
-            self.chassis.drive_robot(drive_x, drive_y, drive_z)
-        else:
-            self.chassis.stop()
-
-        if self.gamepad.getLeftTriggerAxis() > 0.5:
-            self.gobbler.gobble()
-
-        if self.is_command_driving:
-            self.test_drive_inverted = -1 if self.gamepad.getLeftStickButton() else 1
-
-            if self.gamepad.getXButton():
-                self.chassis.drive_robot(self.test_x * self.test_drive_inverted, 0, 0)
-
-            if self.gamepad.getYButton():
-                self.chassis.drive_robot(0, self.test_y * self.test_drive_inverted, 0)
-
-            if self.gamepad.getAButton():
-                self.chassis.drive_robot(
-                    0, 0, self.test_omega * self.test_drive_inverted
-                )
-        else:
-            if self.gamepad.getAButton():
-                self.climber.deploy()
-
-            if self.gamepad.getBButton():
-                self.climber.retract()
-
-        if self.gamepad.getXButton():
-            self.intake.intake()
-
-        if self.gamepad.getLeftBumperButton():
-            self.hopper.feed(self.test_hopper_surface_speed)
-
-        if self.gamepad.getLeftStickButton():
-            self.port_vision.zero_servo_()
-        elif self.gamepad.getRightStickButton():
-            self.port_vision.full_range_servo_()
-
-        self.port_vision.execute()
-        self.chassis.execute()
-        self.targeter.execute()
-        if self.gamepad.getRightTriggerAxis() > 0.5:
-            self.hopper.feed(self.test_hopper_surface_speed)
-            self.turret.slew_to(math.radians(self.test_turret_angle))
-            self.shooter.set_flywheel(self.test_flywheel_speed)
-
-        self.gobbler.execute()
-        self.shooter.execute()
         self.climber.execute()
-        self.intake.execute()
-        self.leds.execute()
-        self.turret.execute()
-        self.hopper.execute()
 
     @magicbot.feedback
     def get_robot_voltage(self) -> float:
@@ -313,7 +236,6 @@ class MyRobot(magicbot.MagicRobot):
         else:
             self.leds.rainbow_override()
 
-        self.climber.try_index()
         self.chassis.update_alliance()
         self.port_vision.execute()
         self.chassis.update_odometry()
