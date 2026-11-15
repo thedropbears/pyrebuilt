@@ -129,6 +129,7 @@ class MyRobot(magicbot.MagicRobot):
     def teleopInit(self) -> None:
         self.field.getObject("Intended start pos").setPoses([])
         self.leds.teleop_vision()
+        self.climber.retract()
 
     @override
     def teleopPeriodic(self) -> None:
