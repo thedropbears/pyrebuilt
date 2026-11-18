@@ -34,6 +34,8 @@ class ClimberComponent:
     RETRACT_LIMIT = 0.0
     SENSOR_TO_MECH_RATIO = (1.0 / 1.0) * (1.0 / 7.0) * (1.0 / 4.0)
     MOTION_VOLTAGE = 6.0
+    is_deploying = False
+    is_retracting = False
 
     def __init__(self):
         self.motor = TalonFX(self.DEVICE_ID)
@@ -85,9 +87,13 @@ class ClimberComponent:
 
     def extend(self):
         self.target_output = self.MOTION_VOLTAGE
+        self.is_deploying = True
+        self.is_retracting = False
 
     def retract(self):
         self.target_output = -self.MOTION_VOLTAGE
+        self.is_retracting = True
+        self.is_deploying = False
 
     def is_extended(self) -> bool:
         return self.switch_candi.get_s2_closed().value
@@ -99,12 +105,19 @@ class ClimberComponent:
         if self.is_extended():
             self.motor.set_position(ClimberComponent.MAXIMUM_HEIGHT)
             self.has_indexed = True
+            self.target_output = 0
 
         if self.is_retracted():
             self.motor.set_position(ClimberComponent.RETRACT_LIMIT)
             self.has_indexed = True
+            self.target_output = 0
 
     def execute(self) -> None:
+        if self.is_retracting:
+            self.target_output = -self.MOTION_VOLTAGE
+
+        if self.is_deploying:
+            self.target_output = self.MOTION_VOLTAGE
 
         self.try_index()
 
