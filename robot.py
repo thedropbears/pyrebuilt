@@ -187,6 +187,11 @@ class MyRobot(magicbot.MagicRobot):
     @override
     def testPeriodic(self) -> None:
 
+        if self.gamepad.getAButton():
+            self.climber.retract()
+        if self.gamepad.getYButton():
+            self.climber.extend()
+
         self.climber.execute()
 
     @magicbot.feedback
